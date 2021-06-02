@@ -1,0 +1,980 @@
+---
+title: "Simulation Results Overview"
+output: 
+  flexdashboard::flex_dashboard
+runtime: shiny
+---
+
+```{r global, include=FALSE}
+
+# devtools::install_github("matherealize/loopR")
+
+options(shiny.sanitize.errors = FALSE)
+
+library("flexdashboard")
+library("plotly")
+library("loopR")
+library("tidyverse")
+library("DT")
+
+if (Sys.info()[['sysname']] == "Windows") {
+
+results1 <- openxlsx::read.xlsx(
+  "E:\\Nextcloud_IMS\\Dissertation\\Novartis_NASH_Collaboration\\Simulationen\\Paper\\Results\\CombinedResults_new.xlsx",
+  sheet = 1
+  )
+
+results2 <- openxlsx::read.xlsx(
+  "E:\\Nextcloud_IMS\\Dissertation\\Novartis_NASH_Collaboration\\Simulationen\\Paper\\Results\\CombinedResults_new.xlsx",
+  sheet = 2
+  )
+
+} else {
+
+results1 <- read_csv("CombinedResults_new1.csv")
+results2 <- read_csv("CombinedResults_new2.csv")
+
+}
+
+results <- as_tibble(cbind(results1, results2))
+
+results <-
+  results %>% 
+  mutate(
+    DR = factor(as.numeric(Bayes_Sup == "list(list(c(0.05, 0.8, 1), c(0.05, 0.8, 1), c(0, 0.8, 1), c(0, 0.8, 1)), list(c(0.1, 0.8, 1), c(0.1, 0.8, 1), c(0.05, 0.8, 1), c(0.05, 0.8, 1)))"), levels = c(0,1), labels = c("NI", "SUP"))
+  )
+
+```
+
+
+Input {.sidebar data-width=325}
+=====================================
+
+```{r}
+
+selectInput("sharing_type", "Placebo and backbone sharing (sharing_type):", c(unique(results$sharing_type), "Omnis"), selected = "Omnis")
+
+selectInput("trial_struc", "Trial structure (trial_struc):", c(unique(results$trial_struc), "Omnis"))
+
+selectInput("setting", "Treatment effect setting (setting):", c(unique(results$setting), "Omnis"))
+
+selectInput("rr_comb", "Combination response rate (rr_comb):", c(unique(results$rr_comb), "Omnis"), selected = "Omnis")
+
+selectInput("rr_mono", "Mono response rate (rr_mono):", c(unique(results$rr_mono), "Omnis"), selected = "Omnis")
+
+selectInput("rr_back", "Backbone response rate (rr_back):", c(unique(results$rr_back), "Omnis"), selected = "Omnis")
+
+selectInput("rr_plac", "SoC response rate (rr_plac):", c(unique(results$rr_plac), "Omnis"), selected = "Omnis")
+
+selectInput("sensitivity_biomarker", "Sensitivity and Specificity Biomarker (sensitivity_biomarker):", c(unique(results$sensitivity_biomarker), "Omnis"), selected = "Omnis")
+
+selectInput("specificity_biomarker", "Specificity Biomarker (specificity_biomarker):", c(unique(results$specificity_biomarker), "Omnis", "Sensitivity_Biomarker"), selected = "Sensitivity_Biomarker")
+
+selectInput("cohort_offset", "Cohort offset (cohort_offset):", c(unique(results$cohort_offset), "Omnis"))
+
+selectInput("cohort_random", "Cohort inclusion probability (cohort_random):", c(unique(results$cohort_random), "Omnis"))
+
+selectInput("cohorts_max", "Maximum number of cohorts (cohorts_max):", c(unique(results$cohorts_max), "Omnis"), selected = "Omnis")
+
+selectInput("safety_prob", "Cohort safety stopping probability (safety_prob):", c(unique(results$safety_prob), "Omnis"))
+
+selectInput("sr_drugs_pos", "Stopping rule maximum number of positive cohorts (sr_drugs_pos):", c(unique(results$sr_drugs_pos), "Omnis"))
+
+selectInput("sr_pats", "Stopping rule maximum number of patients (sr_pats):", c(unique(results$sr_pats), "Omnis"))
+
+selectInput("n_int", "Interim sample size (n_int):", c(unique(results$n_int), "Omnis"), selected = "Omnis")
+
+selectInput("n_fin", "Final sample size (n_fin):", c(unique(results$n_fin), "Omnis", "2n_int"), selected = "2n_int")
+
+selectInput("DR", "Decision rules:", c("SUP", "NI", "Omnis"), "SUP")
+
+checkboxGroupInput(
+  "OCS",
+  "Which Operating Characteristics should be displayed?",
+  colnames(results2),
+  selected = "PTT1ER"
+)
+
+
+vars <- c(
+  "sharing_type", 
+  "trial_struc",
+  "setting", 
+  "rr_comb",
+  "rr_mono",
+  "rr_back",
+  "rr_plac",
+  "sensitivity_biomarker", 
+  "specificity_biomarker",
+  "cohort_offset",
+  "cohort_random",
+  "cohorts_max",
+  "safety_prob",
+  "sr_drugs_pos",
+  "sr_pats",
+  "n_int",
+  "n_fin",
+  "DR"
+  )
+
+selectInput("var_col", "Which variable columns:", vars, selected = "plac_type")
+
+selectInput("var_row", "Which variable rows:", vars, selected = "cohorts_max")
+
+selectInput("var_x", "Which variable x-axis:", vars, selected = "n_int")
+
+selectInput("var_nest", "Which variable nested:", vars, selected = "sensitivity_biomarker")
+
+
+
+actionButton("goButton", "Go!")
+
+```
+
+Visualization
+=====================================
+
+
+```{r}
+
+renderPlot({
+
+  input$goButton
+  
+  results_new <- results
+  
+  
+  sharing_type_choice <- isolate(input$sharing_type)
+  
+  if (sharing_type_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        sharing_type == sharing_type_choice
+      )
+  }
+  
+  
+    trial_struc_choice <- isolate(input$trial_struc)
+  
+  if (trial_struc_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        trial_struc == trial_struc_choice
+      )
+  }
+  
+
+  setting_choice <- isolate(input$setting)
+  
+  if (setting_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        setting == setting_choice
+      )
+  }
+  
+  rr_comb_choice <- isolate(input$rr_comb)
+  
+  if (rr_comb_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_comb == rr_comb_choice
+      )
+  }
+  
+  rr_mono_choice <- isolate(input$rr_mono)
+  
+  if (rr_mono_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_mono == rr_mono_choice
+      )
+  }
+  
+  rr_back_choice <- isolate(input$rr_back)
+  
+  if (rr_back_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_back == rr_back_choice
+      )
+  }
+  
+  rr_plac_choice <- isolate(input$rr_plac)
+  
+  if (rr_plac_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_plac == rr_plac_choice
+      )
+  }
+
+ 
+  sensitivity_biomarker_choice <- isolate(input$sensitivity_biomarker)
+  
+  if (sensitivity_biomarker_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        sensitivity_biomarker == sensitivity_biomarker_choice
+      )
+  }
+
+  specificity_biomarker_choice <- isolate(input$specificity_biomarker)
+  
+  if (!(specificity_biomarker_choice %in% c("Omnis", "Sensitivity_Biomarker"))) {
+    results_new <- 
+      results_new %>% 
+      filter(
+        specificity_biomarker == specificity_biomarker_choice
+      )
+  }
+  
+  if (specificity_biomarker_choice == "Sensitivity_Biomarker") {
+    results_new <-
+      results_new %>%
+      mutate(
+        sensitivity_biomarker = as.numeric(sensitivity_biomarker),
+        specificity_biomarker = as.numeric(specificity_biomarker)
+      ) %>% 
+      filter(
+        specificity_biomarker == sensitivity_biomarker
+      )
+  }
+  
+  
+  cohort_offset_choice <- isolate(input$cohort_offset)
+  
+  if (cohort_offset_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        cohort_offset == cohort_offset_choice
+      )
+  }
+
+  cohort_random_choice <- isolate(input$cohort_random)
+
+  if (cohort_random_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        cohort_random == cohort_random_choice
+      )
+  }
+
+
+  cohorts_max_choice <- isolate(input$cohorts_max)
+
+  if (cohorts_max_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        cohorts_max == cohorts_max_choice
+      )
+  }
+
+
+  safety_prob_choice <- isolate(input$safety_prob)
+
+  if (safety_prob_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        safety_prob == safety_prob_choice
+      )
+  }
+
+
+  sr_drugs_pos_choice <- isolate(input$sr_drugs_pos)
+
+  if (sr_drugs_pos_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        sr_drugs_pos == sr_drugs_pos_choice
+      )
+  }
+  
+  sr_pats_choice <- isolate(input$sr_pats)
+
+  if (sr_pats_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        sr_pats == sr_pats_choice
+      )
+  }
+
+
+    n_int_choice <- isolate(input$n_int)
+
+  if (n_int_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        n_int == n_int_choice
+      )
+  }
+    
+
+  n_fin_choice <- isolate(input$n_fin)
+
+  if (!(n_fin_choice %in% c("Omnis", "2n_int"))) {
+    results_new <-
+      results_new %>%
+      filter(
+        n_fin == n_fin_choice
+      )
+  }
+  
+    if (n_fin_choice == "2n_int") {
+    results_new <-
+      results_new %>%
+      mutate(
+        n_int = as.numeric(n_int),
+        n_fin = as.numeric(n_fin)
+      ) %>% 
+      filter(
+        n_fin == 2*n_int
+      )
+  }
+
+
+  DR_choice <- isolate(input$DR)
+
+  if (DR_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        DR == DR_choice
+      )
+  }
+
+  var_col <- isolate(input$var_col)
+  var_row <- isolate(input$var_row)
+  var_x <- isolate(input$var_x)
+  var_nest <- isolate(input$var_nest)
+  
+  x_axis <- as.numeric(pull(results_new, var_x))
+  ocs <- isolate(input$OCS)
+  
+  results_new <- 
+    results_new %>% 
+  select(
+    var_col,
+    var_row,
+    var_x,
+    var_nest,
+    
+    ocs
+  ) %>% 
+  mutate(
+    !!var_col := as.factor(pull(results_new, var_col)),
+    !!var_row := as.factor(pull(results_new, var_row)),
+    !!var_x := as.numeric(pull(results_new, var_x)),
+    !!var_nest := as.factor(pull(results_new, var_nest)),
+    
+    # PTP = as.numeric(PTP),
+    # PTT1ER = as.numeric(PTT1ER),
+    # FWER = as.numeric(FWER),
+    # Disj_Power = as.numeric(Disj_Power),
+    # FWER = as.numeric(FWER),
+    # Disj_Power = as.numeric(Disj_Power)
+  )
+  
+  results_ocs <- 
+    results_new %>% 
+    select(ocs)
+  
+  # for (i in 1:length(ocs)) {
+  #   results_new[, ocs[i]] <- as.numeric(results_new[, ocs[i]])
+  # }
+  
+  
+p <- nested_loop_plot(
+  legend_name = "ErrorRate",
+  # colors = c("slateblue1", "red4", "red", "slateblue4"),
+  colors = scales::brewer_pal(palette = "Dark2"),
+  resdf = results_new, 
+  x = var_x, 
+  steps = var_nest,
+  grid_rows = var_row, 
+  grid_cols = var_col, 
+  # steps_y_base = -0.01, 
+  # steps_y_height = 0.01, 
+  steps_y_base = -(range(results_ocs, na.rm = T)[2] - range(results_ocs, na.rm = T)[1])/10, 
+  steps_y_height = (range(results_ocs, na.rm = T)[2] - range(results_ocs, na.rm = T)[1])/10, 
+  x_name = var_x, 
+  y_name = "Probability",
+  spu_x_shift = 0.2*(range(x_axis, na.rm = T)[2] - range(x_axis, na.rm = T)[1]),
+  hline_intercept = 0,
+  steps_values_annotate = TRUE, 
+  steps_annotation_size = 2,
+  post_processing = list(
+    add_custom_theme = list(
+      panel.grid.major.y = element_line(
+        color = "grey50", size = 0.1
+      ),
+      panel.grid.minor.y = element_line(
+        color = "grey50", size = 0.1
+      ),
+      axis.text.x = element_text(angle = -90, 
+                                 vjust = 0.5, 
+                                 size = 8) 
+    ),
+    add_text = list(
+      decimals = 2, size = 4, vjust = -0.5, hjust = 0.5
+    )
+  )
+)
+
+print(p)
+
+})
+```
+
+
+Table Summary {data-orientation=rows}
+=====================================
+
+Row {data-height=500}
+-------------------------------------
+
+```{r}
+
+DT::renderDT({
+  
+  input$goButton
+  
+  results_new <- results
+  
+  
+    sharing_type_choice <- isolate(input$sharing_type)
+  
+  if (sharing_type_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        sharing_type == sharing_type_choice
+      )
+  }
+  
+          trial_struc_choice <- isolate(input$trial_struc)
+  
+  if (trial_struc_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        trial_struc == trial_struc_choice
+      )
+  }
+  
+    setting_choice <- isolate(input$setting)
+  
+  if (setting_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        setting == setting_choice
+      )
+  }
+    
+    rr_comb_choice <- isolate(input$rr_comb)
+  
+  if (rr_comb_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_comb == rr_comb_choice
+      )
+  }
+  
+  rr_mono_choice <- isolate(input$rr_mono)
+  
+  if (rr_mono_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_mono == rr_mono_choice
+      )
+  }
+  
+  rr_back_choice <- isolate(input$rr_back)
+  
+  if (rr_back_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_back == rr_back_choice
+      )
+  }
+  
+  rr_plac_choice <- isolate(input$rr_plac)
+  
+  if (rr_plac_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_plac == rr_plac_choice
+      )
+  }
+  
+
+  sensitivity_biomarker_choice <- isolate(input$sensitivity_biomarker)
+  
+  if (sensitivity_biomarker_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        sensitivity_biomarker == sensitivity_biomarker_choice
+      )
+  }
+
+  specificity_biomarker_choice <- isolate(input$specificity_biomarker)
+  
+  if (!(specificity_biomarker_choice %in% c("Omnis", "Sensitivity_Biomarker"))) {
+    results_new <- 
+      results_new %>% 
+      filter(
+        specificity_biomarker == specificity_biomarker_choice
+      )
+  }
+  
+  if (specificity_biomarker_choice == "Sensitivity_Biomarker") {
+    results_new <-
+      results_new %>%
+      mutate(
+        sensitivity_biomarker = as.numeric(sensitivity_biomarker),
+        specificity_biomarker = as.numeric(specificity_biomarker)
+      ) %>% 
+      filter(
+        specificity_biomarker == sensitivity_biomarker
+      )
+  }
+  
+  
+  cohort_offset_choice <- isolate(input$cohort_offset)
+  
+  if (cohort_offset_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        cohort_offset == cohort_offset_choice
+      )
+  }
+
+  cohort_random_choice <- isolate(input$cohort_random)
+
+  if (cohort_random_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        cohort_random == cohort_random_choice
+      )
+  }
+
+
+  cohorts_max_choice <- isolate(input$cohorts_max)
+
+  if (cohorts_max_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        cohorts_max == cohorts_max_choice
+      )
+  }
+
+
+  safety_prob_choice <- isolate(input$safety_prob)
+
+  if (safety_prob_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        safety_prob == safety_prob_choice
+      )
+  }
+
+
+  sr_drugs_pos_choice <- isolate(input$sr_drugs_pos)
+
+  if (sr_drugs_pos_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        sr_drugs_pos == sr_drugs_pos_choice
+      )
+  }
+  
+      sr_pats_choice <- isolate(input$sr_pats)
+
+  if (sr_pats_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        sr_pats == sr_pats_choice
+      )
+  }
+
+
+  n_int_choice <- isolate(input$n_int)
+
+  if (n_int_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        n_int == n_int_choice
+      )
+  }
+
+  n_fin_choice <- isolate(input$n_fin)
+
+  if (!(n_fin_choice %in% c("Omnis", "2n_int"))) {
+    results_new <-
+      results_new %>%
+      filter(
+        n_fin == n_fin_choice
+      )
+  }
+  
+    if (n_fin_choice == "2n_int") {
+    results_new <-
+      results_new %>%
+      mutate(
+        n_int = as.numeric(n_int),
+        n_fin = as.numeric(n_fin)
+      ) %>% 
+      filter(
+        n_fin == 2*n_int
+      )
+  }
+
+
+  DR_choice <- isolate(input$DR)
+
+  if (DR_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        DR == DR_choice
+      )
+  }
+
+  
+plot_table_function <- function(.) {
+  DT::datatable(.,
+    class = 'cell-border stripe',
+    extensions = c('Buttons', 'Scroller', 'FixedColumns'),
+    options = list(
+      dom = 'Bfrtip',
+      buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+      scrollX = TRUE,
+      fixedColumns = TRUE,
+      deferRender = TRUE,
+      
+      scrollY = 200,
+      scroller = TRUE,
+      fixedColumns = list(leftColumns = 1, rightColumns = 0)
+    )
+  )
+  }
+
+results_new %>% plot_table_function()
+
+})
+```
+
+
+Row {data-height=500}
+-------------------------------------
+
+```{r}
+
+DT::renderDT({
+  
+  input$goButton
+  
+  results_new <- results
+  
+    sharing_type_choice <- isolate(input$sharing_type)
+  
+  if (sharing_type_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        sharing_type == sharing_type_choice
+      )
+  }
+  
+      trial_struc_choice <- isolate(input$trial_struc)
+  
+  if (trial_struc_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        trial_struc == trial_struc_choice
+      )
+  }
+
+  
+  setting_choice <- isolate(input$setting)
+  
+  if (setting_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        setting == setting_choice
+      )
+  }
+  
+  rr_comb_choice <- isolate(input$rr_comb)
+  
+  if (rr_comb_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_comb == rr_comb_choice
+      )
+  }
+  
+  rr_mono_choice <- isolate(input$rr_mono)
+  
+  if (rr_mono_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_mono == rr_mono_choice
+      )
+  }
+  
+  rr_back_choice <- isolate(input$rr_back)
+  
+  if (rr_back_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_back == rr_back_choice
+      )
+  }
+  
+  rr_plac_choice <- isolate(input$rr_plac)
+  
+  if (rr_plac_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        rr_plac == rr_plac_choice
+      )
+  }
+
+  sensitivity_biomarker_choice <- isolate(input$sensitivity_biomarker)
+  
+  if (sensitivity_biomarker_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        sensitivity_biomarker == sensitivity_biomarker_choice
+      )
+  }
+
+  specificity_biomarker_choice <- isolate(input$specificity_biomarker)
+  
+  if (!(specificity_biomarker_choice %in% c("Omnis", "Sensitivity_Biomarker"))) {
+    results_new <- 
+      results_new %>% 
+      filter(
+        specificity_biomarker == specificity_biomarker_choice
+      )
+  }
+  
+  if (specificity_biomarker_choice == "Sensitivity_Biomarker") {
+    results_new <-
+      results_new %>%
+      mutate(
+        sensitivity_biomarker = as.numeric(sensitivity_biomarker),
+        specificity_biomarker = as.numeric(specificity_biomarker)
+      ) %>% 
+      filter(
+        specificity_biomarker == sensitivity_biomarker
+      )
+  }
+  
+  
+  cohort_offset_choice <- isolate(input$cohort_offset)
+  
+  if (cohort_offset_choice != "Omnis") {
+    results_new <- 
+      results_new %>% 
+      filter(
+        cohort_offset == cohort_offset_choice
+      )
+  }
+
+  cohort_random_choice <- isolate(input$cohort_random)
+
+  if (cohort_random_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        cohort_random == cohort_random_choice
+      )
+  }
+
+
+  cohorts_max_choice <- isolate(input$cohorts_max)
+
+  if (cohorts_max_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        cohorts_max == cohorts_max_choice
+      )
+  }
+
+
+  safety_prob_choice <- isolate(input$safety_prob)
+
+  if (safety_prob_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        safety_prob == safety_prob_choice
+      )
+  }
+
+
+  sr_drugs_pos_choice <- isolate(input$sr_drugs_pos)
+
+  if (sr_drugs_pos_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        sr_drugs_pos == sr_drugs_pos_choice
+      )
+  }
+  
+      sr_pats_choice <- isolate(input$sr_pats)
+
+  if (sr_pats_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        sr_pats == sr_pats_choice
+      )
+  }
+
+
+  n_int_choice <- isolate(input$n_int)
+
+  if (n_int_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        n_int == n_int_choice
+      )
+  }
+
+  n_fin_choice <- isolate(input$n_fin)
+
+  if (!(n_fin_choice %in% c("Omnis", "2n_int"))) {
+    results_new <-
+      results_new %>%
+      filter(
+        n_fin == n_fin_choice
+      )
+  }
+  
+    if (n_fin_choice == "2n_int") {
+    results_new <-
+      results_new %>%
+      mutate(
+        n_int = as.numeric(n_int),
+        n_fin = as.numeric(n_fin)
+      ) %>% 
+      filter(
+        n_fin == 2*n_int
+      )
+  }
+
+
+  DR_choice <- isolate(input$DR)
+
+  if (DR_choice != "Omnis") {
+    results_new <-
+      results_new %>%
+      filter(
+        DR == DR_choice
+      )
+  }
+  
+plot_table_function <- function(.) {
+  DT::datatable(.,
+    class = 'cell-border stripe',
+    extensions = c('Buttons', 'Scroller', 'FixedColumns'),
+    options = list(
+      dom = 'Bfrtip',
+      buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+      scrollX = TRUE,
+      fixedColumns = TRUE,
+      deferRender = TRUE,
+      
+      scrollY = 200,
+      scroller = TRUE,
+      fixedColumns = list(leftColumns = 1, rightColumns = 0)
+    )
+  )
+}
+
+var_col <- isolate(input$var_col)
+var_row <- isolate(input$var_row)
+var_x <- isolate(input$var_x)
+var_nest <- isolate(input$var_nest)
+
+results_new %>% 
+  select(
+    var_col,
+    var_row,
+    var_x,
+    var_nest,
+    
+    Avg_Pat,
+    Avg_Suc_Hist,
+    PTP,
+    PTT1ER,
+    FWER,
+    FWER_BA,
+    FDR,
+    Disj_Power,
+    Disj_Power_BA
+  ) %>% 
+  arrange(
+    !!sym(var_col),
+    !!sym(var_row),
+    !!sym(var_x),
+    !!sym(var_nest)
+  ) %>% 
+  mutate(
+    Avg_Pat = round(Avg_Pat),
+    Avg_Suc_Hist = round(Avg_Suc_Hist),
+    PTP = round(PTP, 3),
+    PTT1ER = round(PTT1ER, 3),
+    FWER = round(FWER, 3),
+    FWER_BA = round(FWER_BA),
+    FDR = round(FDR, 3),
+    Disj_Power = round(Disj_Power, 3),
+    Disj_Power_BA = round(Disj_Power_BA, 3)
+  ) %>% 
+  plot_table_function() %>% 
+  DT::formatStyle(c(4), `border-right` = "solid 2px")
+
+})
+
+```   

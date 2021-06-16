@@ -1,0 +1,1511 @@
+---
+title: "Simulation Results Overview"
+output:
+  flexdashboard::flex_dashboard:
+    theme: cerulean
+runtime: shiny
+---
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+options(shiny.sanitize.errors = FALSE) 
+
+library(shinythemes)
+library(flexdashboard)
+library(shiny)
+library(tidyverse)
+library(dplyr)
+library(readxl)
+library(shinyWidgets)
+library(shinyjs)
+library(shinydashboard)
+library(plotly)
+library(DT)
+
+
+# read in data
+results1 <- read_excel("CombinedResults_new.xlsx", sheet = 1)
+results2 <- read_excel("CombinedResults_new.xlsx", sheet = 2, col_types = "numeric")
+
+
+# # Read in Data @Elias
+# if (Sys.info()[['sysname']] == "Windows") {
+# 
+# 
+# results1 <- openxlsx::read.xlsx(
+#   "E:\\Nextcloud_IMS\\Dissertation\\Novartis_NASH_Collaboration\\Simulationen\\Paper\\Results\\CombinedResults_new.xlsx",
+#   sheet = 1
+#   )
+# 
+# results2 <- openxlsx::read.xlsx(
+#   "E:\\Nextcloud_IMS\\Dissertation\\Novartis_NASH_Collaboration\\Simulationen\\Paper\\Results\\CombinedResults_new.xlsx",
+#   sheet = 2
+#   )
+# 
+# } else {
+# 
+# results1 <- read_csv("CombinedResults_new1.csv")
+# results2 <- read_csv("CombinedResults_new2.csv")
+# 
+# }
+
+
+
+
+results1 <- as.data.frame(results1)
+results2 <- as.data.frame(results2)
+results <- cbind(results1, results2)
+
+
+mode(results$cohorts_max) <- "numeric"
+mode(results$cohort_random) <- "numeric"
+mode(results$n_int) <- "numeric"
+mode(results$n_fin) <- "numeric"
+mode(results$Avg_Pat) <- "numeric"
+mode(results$Avg_Pat_First_Suc) <- "numeric"
+mode(results$Avg_Cohorts) <- "numeric"
+
+mode(results$sensitivity_biomarker) <- "numeric"
+mode(results$specificity_biomarker) <- "numeric"
+
+# filterchoices is later needed for smart filtering, will be reactive
+filterchoices_facet <- colnames(results1)
+filterchoices_facet <- c("setting", "trial_struc", sort(filterchoices_facet[!(filterchoices_facet %in% c("setting", "trial_struc"))]))
+
+# drop choices that are not needed
+filterchoices_facet <- filterchoices_facet[!(filterchoices_facet %in% c("prob_back_rr", "prob_comb_rr", "prob_mono_rr", "prob_plac_rr", "prob_rr_transform", "rr_back", "rr_comb", "rr_mono", "rr_plac", "rr_transform", "target_rr", "V33", "seed", "iter", "coresnum", "sr_pats", "sr_drugs_pos"))]
+
+filterchoices <- filterchoices_facet
+
+
+
+lFilterchoices <- list(filterchoices_facet, filterchoices_facet[!(filterchoices_facet %in% c("n_int", "n_fin"))], filterchoices_facet[!(filterchoices_facet %in% c("sensitivity_biomarker", "specificity_biomarker"))], filterchoices_facet[!(filterchoices_facet %in% c("sensitivity_biomarker", "specificity_biomarker", "n_int", "n_fin"))])
+
+
+order_filter <- list()
+
+for(i in filterchoices_facet){
+  order_filter[[i]] <- unique(results[,i])
+}
+
+order_filter$setting <- paste0("Setting", 1:16)
+
+
+
+
+default_values <- c() # initialising for loop
+
+# Preset default value for every variable
+# Choosing the default value to be the most common value for each variable
+for (i in filterchoices_facet){
+  default_values[i] <- names(sort(table(results[,i]), decreasing = TRUE)[1])
+  #names(default_values)[i] <- names(results[i])
+}
+
+
+# For some variables take default values from Elias' paper
+default_values["n_int"] <- 100
+default_values["Bayes_Sup"] <- "list(list(c(0.05, 0.8, 1), c(0.05, 0.8, 1), c(0, 0.8, 1), c(0, 0.8, 1)), list(c(0.1, 0.8, 1), c(0.1, 0.8, 1), c(0.05, 0.8, 1), c(0.05, 0.8, 1)))"
+default_values["Bayes_Fut"] <- "list(list(c(0, 0.6), c(0, 0.6), c(0, 0.6), c(0, 0.6)), list(c(0, 0.6), c(0, 0.6), c(0, 0.6), c(0, 0.6)))"
+default_values["sharing_type"] <- "cohort"
+default_values["setting"] <- "Setting1"
+default_values["trial_struc"] <- "all_plac"
+default_values["sensitivity_biomarker"] <- 0.9
+
+
+
+
+
+
+
+# Create categories for OCRs (Patients, Cohorts, Assumptions, Error_Rate)
+
+y_topic <- data.frame("variable" = names(results2), "topic" = NA)
+
+
+# Add theme Patient topic
+y_topic[y_topic$variable %in% c("Avg_Pat",
+                                "Avg_Pat_First_Suc", 
+                                "Avg_Pat_Comb", 
+                                "Avg_Pat_Mono",
+                                "Avg_Pat_Back",
+                                "Avg_Pat_Plac",
+                                "Avg_Pat_Plac_First_Suc",
+                                "Avg_Pat_Plac_Pool",
+                                "Avg_Suc_Hist",
+                                "Avg_Suc_Hist_Comb",
+                                "Avg_Suc_Hist_Mono",
+                                "Avg_Suc_Hist_Back",
+                                "Avg_Suc_Hist_Plac",
+                                "Avg_Suc_Bio",
+                                "Avg_Suc_Bio_Comb",
+                                "Avg_Suc_Bio_Mono",
+                                "Avg_Suc_Bio_Back",
+                                "Avg_Suc_Bio_Plac"),"topic"] <- "Patients"
+
+# Add theme Error_Rate topic
+y_topic[y_topic$variable %in% c("PTP",
+                                "Avg_PTP_Trial",
+                                "Disj_Power",
+                                "Avg_Perc_Pat_Sup_Plac_Th", 
+                                "Avg_Perc_Pat_Sup_Plac_Real",
+                                "Avg_FDR_Trial",
+                                "Avg_PTT1ER_Trial",
+                                "Coh_Int_GO_Perc",
+                                "Coh_Int_STOP_Perc",
+                                "Coh_Safety_STOP_Perc",
+                                "FDR",
+                                "PTT1ER",
+                                "FWER",
+                                "FWER_BA",
+                                "Disj_Power_BA"), "topic"] <- "Error_Rate"
+
+# Add theme Assumptions topic
+y_topic[y_topic$variable %in% c("Avg_RR_Comb",
+                                "Avg_RR_Mono",
+                                "Avg_RR_Back",
+                                "Avg_RR_Plac",
+                                "SD_RR_Comb",
+                                "SD_RR_Mono",
+                                "SD_RR_Back",
+                                "SD_RR_Plac"), "topic"] <- "Assumptions"
+
+# Add theme Cohorts topic
+y_topic[y_topic$variable %in% c("Avg_Cohorts",
+                                "Avg_Cohorts_First_Suc",
+                                "Avg_TP",
+                                "Avg_FP",
+                                "Avg_TN",
+                                "Avg_FN",
+                                "Avg_any_P",
+                                "Avg_Int_GO_Trial",
+                                "Avg_Int_STOP_Trial",
+                                "Avg_Safety_STOP_Trial"), "topic"] <- "Cohorts"
+
+
+
+
+```
+
+
+Input {.sidebar data-width=325}
+=====================================
+
+```{r, echo = FALSE}
+# fluidPage(
+#   navbarPage("App",
+#              
+#              ## Tab in Navbar
+#              tabPanel("Shiny App",
+
+# sidebarPanel(
+#   
+tabsetPanel(id = "side", type = "tabs",
+            
+            # First Tab in Sidebar, choice of faceting variables
+            tabPanel("Options",
+                     h3("Displayed facet variables"),
+                     selectInput("rows", choices = filterchoices_facet, selected = "cohorts_max", label = "Select variable for rows"),
+                     
+                     selectInput("cols", choices = filterchoices_facet, selected = "sharing_type", label = "Select variable for cols"),
+                     
+                     selectInput("x", choices = filterchoices_facet, selected = "n_int", label = "Select x-axis variable"),
+                     
+                     
+                     checkboxInput("hidetab.check", "Change default values for remaining input parameters"),
+                     
+                     h3("Choose Operating Characteristics to be displayed"),
+                     
+                     selectInput("y_topic", choices = c("Patients", "Error_Rate", "Assumptions", "Cohorts"), label = "Select topic"),
+                     
+                     checkboxGroupInput("OCS", choices = NULL, selected = NULL, label = "Which Operating Characteristics should be displayed?")
+                     
+                     
+            ),
+            
+            # Second tab in Sidebar (only visible when checking checkbox), select for which variables you want to change default value
+            tabPanel("Default Values",
+                     h3("Choose values for predefined variables"),
+                     selectInput("filter1", choices = filterchoices, label = "Select 1st variable to specify value"),
+                     selectInput("value1", choices = NULL, label = "Select value for 1st variable"), #Choices set to NULL, because later observe function is updating them
+                     
+                     
+                     
+                     checkboxInput("addpanel2", "Change next default value"),
+                     
+                     conditionalPanel(condition = "input.addpanel2 == 1", # needs the "dot" access via input.XXX because it is rendered not in R but in JavaScript
+                                      selectInput("filter2", choices = filterchoices, selected = "n_fin", label = "Select 2nd variable to specify value"),
+                                      selectInput("value2", choices = NULL, label = "Select value for 2nd variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel2 == 1",
+                                      
+                                      checkboxInput("addpanel3", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel3 == 1",
+                                      
+                                      selectInput("filter3", choices = filterchoices, label = "Select 3rd variable to specify value"),
+                                      selectInput("value3", choices = NULL, label = "Select value for 3rd variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel3 == 1",
+                                      
+                                      checkboxInput("addpanel4", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel4 == 1",
+                                      
+                                      selectInput("filter4", choices = filterchoices, label = "Select 4th variable to specify value"),
+                                      selectInput("value4", choices = NULL, label = "Select value for 4th variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel4 == 1",
+                                      
+                                      checkboxInput("addpanel5", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel5 == 1",
+                                      
+                                      selectInput("filter5", choices = filterchoices, label = "Select 5th variable to specify value"),
+                                      selectInput("value5", choices = NULL, label = "Select value for 5th variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel5 == 1",
+                                      
+                                      checkboxInput("addpanel6", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel6 == 1",
+                                      
+                                      
+                                      selectInput("filter6", choices = filterchoices, label = "Select 6th variable to specify value"),
+                                      selectInput("value6", choices = NULL, label = "Select value for 6th variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel6 == 1",
+                                      
+                                      checkboxInput("addpanel7", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel7 == 1",
+                                      
+                                      selectInput("filter7", choices = filterchoices, label = "Select 7th variable to specify value"),
+                                      selectInput("value7", choices = NULL, label = "Select value for 7th variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel7 == 1",
+                                      
+                                      checkboxInput("addpanel8", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel8 == 1",
+                                      
+                                      selectInput("filter8", choices = filterchoices, label = "Select 8th variable to specify value"),
+                                      selectInput("value8", choices = NULL, label = "Select value for 8th variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel8 == 1",
+                                      
+                                      checkboxInput("addpanel9", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel9 == 1",
+                                      
+                                      selectInput("filter9", choices = filterchoices, label = "Select 9th variable to specify value"),
+                                      selectInput("value9", choices = NULL, label = "Select value for 9th variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel9 == 1",
+                                      
+                                      checkboxInput("addpanel10", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel10 == 1",
+                                      
+                                      selectInput("filter10", choices = filterchoices, label = "Select 10th variable to specify value"),
+                                      selectInput("value10", choices = NULL, label = "Select value for 10th variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel10 == 1",
+                                      
+                                      checkboxInput("addpanel11", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel11 == 1",
+                                      
+                                      selectInput("filter11", choices = filterchoices, label = "Select 11th variable to specify value"),
+                                      selectInput("value11", choices = NULL, label = "Select value for 11th variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel11 == 1",
+                                      
+                                      checkboxInput("addpanel12", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel12 == 1",
+                                      
+                                      selectInput("filter12", choices = filterchoices, label = "Select 12th variable to specify value"),
+                                      selectInput("value12", choices = NULL, label = "Select value for 12th variable")
+                     ),
+                     
+                     
+                     conditionalPanel(condition = "input.addpanel12 == 1",
+                                      
+                                      checkboxInput("addpanel13", "Change next default value")),
+                     conditionalPanel(condition = "input.addpanel13 == 1",
+                                      
+                                      selectInput("filter13", choices = filterchoices, label = "Select 13th variable to specify value"),
+                                      selectInput("value13", choices = NULL, label = "Select value for 13th variable")
+                     )
+                     
+                     
+                     
+            )
+)
+# )
+
+
+```
+
+
+
+
+Results
+============================
+
+```{r, echo = FALSE, fig.height = 10}
+
+# mainPanel(
+tabsetPanel(id = "main", type = "tabs",
+            
+            tabPanel("Plot",
+                     
+                      div(style="display: inline-block;",
+                         selectInput("theme", 
+                                     "Choose theme", 
+                                     choices = c(
+                                       "theme_bw", "theme_grey", "theme_linedraw", "theme_light", "theme_dark",
+                                       "theme_minimal", "theme_classic", "theme_void", "theme_test"))),
+                     
+                     
+                     br(),
+                     
+                     
+                     
+                     renderPlot(height = 600,{
+                       p2 <- ggplot(
+                         results[(
+                           (results[input$filter1] == input$value1)
+                           & (results[input$filter2] == input$value2)
+                           & (results[input$filter3] == input$value3)
+                           & (results[input$filter4] == input$value4)
+                           & (results[input$filter5] == input$value5)
+                           & (results[input$filter6] == input$value6)
+                           & (results[input$filter7] == input$value7)
+                           & (results[input$filter8] == input$value8)
+                           & (results[input$filter9] == input$value9)
+                           & (results[input$filter10] == input$value10)
+                           & (results[input$filter11] == input$value11)
+                           & (results[input$filter12] == input$value12)
+                           & (results[input$filter13] == input$value13))
+                           , 
+                         ], aes(get(input$x))
+                       ) 
+                       
+                       
+                       # makes Error messages disappear (which would appear while rendering of updateSelectInput) in exchange for alternative message
+                       validate(
+                         need(nrow(
+                           results[(
+                             (results[input$filter1] == input$value1)
+                             & (results[input$filter2] == input$value2)
+                             & (results[input$filter3] == input$value3)
+                             & (results[input$filter4] == input$value4)
+                             & (results[input$filter5] == input$value5)
+                             & (results[input$filter6] == input$value6)
+                             & (results[input$filter7] == input$value7)
+                             & (results[input$filter8] == input$value8)
+                             & (results[input$filter9] == input$value9)
+                             & (results[input$filter10] == input$value10)
+                             & (results[input$filter11] == input$value11)
+                             & (results[input$filter12] == input$value12)
+                             & (results[input$filter13] == input$value13))
+                             ,
+                           ]
+                         ) > 0, message = "Plot is rendering"
+                         )
+                       )
+                       
+                       
+                       # makes Error message disappear (which would appear if no OCS is ticked)
+                       validate(
+                         need(
+                           length(input$OCS) > 0, message = "Choose OCS")
+                       )
+                       
+                       
+                       
+                       
+                       
+                       # manually adding lines (up to 4) because loop does not work due to reactivity (only plots last ticked OCS)
+                       p2 <- p2 + geom_point(aes(y = get(input$OCS[1]), colour = input$OCS[1]), size = 3*input$line_size) + geom_line(aes(y = get(input$OCS[1]), colour = input$OCS[1]), size = input$line_size) + labs(colour = "OC")
+                       
+                       if(length(input$OCS) == 2){
+                         p2 <- p2 + 
+                           geom_point(aes(y = get(input$OCS[2]), colour= input$OCS[2]), size = 3*input$line_size)+ 
+                           geom_line(aes(y = get(input$OCS[2]), colour = input$OCS[2]), size = input$line_size)
+                       }
+                       else if(length(input$OCS) == 3){
+                         p2 <- p2 + 
+                           geom_point(aes(y = get(input$OCS[2]), colour= input$OCS[2]), size = 3*input$line_size) + 
+                           geom_point(aes(y = get(input$OCS[3]), colour= input$OCS[3]), size = 3*input$line_size) + 
+                           geom_line(aes(y = get(input$OCS[2]), colour = input$OCS[2]), size = input$line_size) + 
+                           geom_line(aes(y = get(input$OCS[3]), colour = input$OCS[3]), size = input$line_size)
+                       }
+                       
+                       else if(length(input$OCS) >= 4){
+                         p2 <- p2 + 
+                           geom_point(aes(y = get(input$OCS[2]), colour= input$OCS[2]), size = 3*input$line_size) + 
+                           geom_point(aes(y = get(input$OCS[3]), colour= input$OCS[3]), size = 3*input$line_size) + 
+                           geom_point(aes(y = get(input$OCS[4]), colour= input$OCS[4]), size = 3*input$line_size) + 
+                           geom_line(aes(y = get(input$OCS[2]), colour = input$OCS[2]), size = input$line_size)+ 
+                           geom_line(aes(y = get(input$OCS[3]), colour = input$OCS[3]), size = input$line_size)+
+                           geom_line(aes(y = get(input$OCS[4]), colour = input$OCS[4]), size = input$line_size)
+                       }
+                       
+                       
+                       
+                       
+                       
+                       p2 <-  p2  + facet_grid(vars(get(input$rows)), vars(get(input$cols))) + 
+                         labs(y = "", x = input$x) + 
+                         #theme(text = element_text(size=20), axis.text.x = element_text(angle = 90,vjust=0.5,hjust = 1)
+                         get(input$theme)(base_size = input$base_size
+                                          
+                         )
+                       
+                       #ggplotly(p2)
+                       
+                       p2
+                       
+                       
+                     }),
+                     
+                     div(style="display: inline-block;",
+                         sliderInput("line_size",
+                                     "Choose line size",
+                                     value = 0.8, min = 0.5, max = 3, step = 0.1)),
+                     
+                     div(style="display: inline-block;",
+                         sliderInput("base_size", 
+                                     "Choose base size",
+                                     value = 11, min = 8, max = 28, step = 1))
+                     
+                     
+                     
+                    
+                     
+                     # conditionalPanel("input.OCS.includes('PTP') || input.OCS.includes('Disj_Power') || input.OCS.includes('Avg_PTP_Trial') || input.OCS.includes('FWER') || input.OCS.includes('PTT1ER')",
+                     #                  p("Note that Operating Characteristics 'PTP', 'Disj_Power', 'PTT1ER', 'FWER' and 'Avg_PTP_Trial' do not exist in all scenarios ", style = "color:blue")),
+                     
+                     
+                     
+                     # Display the explicit choices for variables that have been made
+                     # conditionalPanel("input.addpanel2 == 1", 
+                     #                  renderText({paste(input$filter2, ": ", input$value2)})
+                     # ),
+                     # conditionalPanel("input.addpanel3 == 1",
+                     #                  renderText({paste(input$filter3, ": ", input$value3)})
+                     # )
+                     
+            ),
+            
+            
+            
+            
+            
+            tabPanel("Plotly",
+                     renderPlotly({
+                       p2 <- ggplot(
+                         results[(
+                           (results[input$filter1] == input$value1)
+                           & (results[input$filter2] == input$value2)
+                           & (results[input$filter3] == input$value3)
+                           & (results[input$filter4] == input$value4)
+                           & (results[input$filter5] == input$value5)
+                           & (results[input$filter6] == input$value6)
+                           & (results[input$filter7] == input$value7)
+                           & (results[input$filter8] == input$value8)
+                           & (results[input$filter9] == input$value9)
+                           & (results[input$filter10] == input$value10)
+                           & (results[input$filter11] == input$value11)
+                           & (results[input$filter12] == input$value12)
+                           & (results[input$filter13] == input$value13))
+                           , 
+                         ], aes(get(input$x))
+                       ) 
+                       
+                       
+                       # makes Error messages disappear (which would appear while rendering of updateSelectInput) in exchange for alternative message
+                       validate(
+                         need(nrow(
+                           results[(
+                             (results[input$filter1] == input$value1)
+                             & (results[input$filter2] == input$value2)
+                             & (results[input$filter3] == input$value3)
+                             & (results[input$filter4] == input$value4)
+                             & (results[input$filter5] == input$value5)
+                             & (results[input$filter6] == input$value6)
+                             & (results[input$filter7] == input$value7)
+                             & (results[input$filter8] == input$value8)
+                             & (results[input$filter9] == input$value9)
+                             & (results[input$filter10] == input$value10)
+                             & (results[input$filter11] == input$value11)
+                             & (results[input$filter12] == input$value12)
+                             & (results[input$filter13] == input$value13))
+                             ,
+                           ]
+                         ) > 0, message = "Plot is rendering"
+                         )
+                       )
+                       
+                       
+                       # makes Error message disappear (which would appear if no OCS is ticked)
+                       validate(
+                         need(
+                           length(input$OCS) > 0, message = "Choose OCS")
+                       )
+                       
+                       
+                       
+                       # loop does not work correctly (only last ticked variable is displayes)
+                       # for (i in 1:length(input$OCS)){
+                       #   p2 <- p2 + geom_point(aes(y = get(input$OCS[i])), colour = i) + geom_line(aes(y = get(input$OCS[i])), colour =  i )
+                       # }
+                       
+                       
+                       
+                       # manually adding lines (up to 4)
+                       p2 <- p2 + geom_point(aes(y = get(input$OCS[1]), colour = input$OCS[1])) + geom_line(aes(y = get(input$OCS[1]), colour = input$OCS[1])) + labs(colour = "OC")
+                       
+                       if(length(input$OCS) == 2){
+                         p2 <- p2 + 
+                           geom_point(aes(y = get(input$OCS[2]), colour= input$OCS[2]))+ 
+                           geom_line(aes(y = get(input$OCS[2]), colour = input$OCS[2]))
+                       }
+                       
+                       else if(length(input$OCS) == 3){
+                         p2 <- p2 + 
+                           geom_point(aes(y = get(input$OCS[2]), colour= input$OCS[2])) + 
+                           geom_point(aes(y = get(input$OCS[3]), colour= input$OCS[3])) + 
+                           geom_line(aes(y = get(input$OCS[2]), colour = input$OCS[2])) + 
+                           geom_line(aes(y = get(input$OCS[3]), colour = input$OCS[3]))
+                       }
+                       
+                       else if(length(input$OCS) >= 4){
+                         p2 <- p2 + 
+                           geom_point(aes(y = get(input$OCS[2]), colour= input$OCS[2])) + 
+                           geom_point(aes(y = get(input$OCS[3]), colour= input$OCS[3])) + 
+                           geom_point(aes(y = get(input$OCS[4]), colour= input$OCS[4]))+ 
+                           geom_line(aes(y = get(input$OCS[2]), colour = input$OCS[2]))+ 
+                           geom_line(aes(y = get(input$OCS[3]), colour = input$OCS[3]))+
+                           geom_line(aes(y = get(input$OCS[4]), colour = input$OCS[4]))
+                       }
+                       
+                       
+                       
+                       
+                       
+                       p2 <-  p2  + facet_grid(vars(get(input$rows)), vars(get(input$cols))) + 
+                         labs(y = "", x = input$x) + 
+                         theme(text = element_text(size=15),
+                               axis.text.x = element_text(angle = 90,vjust=0.5,hjust = 1))
+                       
+                       ggplotly(p2, height = 600)
+                       
+                       
+                       
+                       #p2
+                       
+                       
+                     }),
+                     
+                     
+                     
+            ),
+            
+            tabPanel("Table",
+                     
+                     renderDT({
+                       
+                       datatable(
+                         results[(
+                           (results[input$filter1] == input$value1)
+                           & (results[input$filter2] == input$value2)
+                           & (results[input$filter3] == input$value3)
+                           & (results[input$filter4] == input$value4)
+                           & (results[input$filter5] == input$value5)
+                           & (results[input$filter6] == input$value6)
+                           & (results[input$filter7] == input$value7)
+                           & (results[input$filter8] == input$value8)
+                           & (results[input$filter9] == input$value9)
+                           & (results[input$filter10] == input$value10)
+                           & (results[input$filter11] == input$value11)
+                           & (results[input$filter12] == input$value12)
+                           & (results[input$filter13] == input$value13))
+                           , 
+                         ],
+                         extensions = c('Buttons', 'Scroller', 'FixedColumns'),
+                         options = list(
+                           dom = 'Bfrtip',
+                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                           scrollX = TRUE,
+                           fixedColumns = TRUE,
+                           deferRender = TRUE,
+                           
+                           scrollY = 200,
+                           scroller = TRUE,
+                           fixedColumns = list(leftColumns = 1, rightColumns = 0)
+                         )
+                       )
+                       
+                       
+                       # validate(
+                       #   need(nrow(
+                       #   results[(
+                       #     (results[input$filter1] == input$value1)
+                       #     & (results[input$filter2] == input$value2)
+                       #     & (results[input$filter3] == input$value3)
+                       #     & (results[input$filter4] == input$value4)
+                       #     & (results[input$filter5] == input$value5)
+                       #     & (results[input$filter6] == input$value6)
+                       #     & (results[input$filter7] == input$value7)
+                       #     & (results[input$filter8] == input$value8)
+                       #     & (results[input$filter9] == input$value9)
+                       #     & (results[input$filter10] == input$value10)
+                       #     & (results[input$filter11] == input$value11)
+                       #     & (results[input$filter12] == input$value12)
+                       #     & (results[input$filter13] == input$value13)
+                       #     & (results[input$filter14] == input$value14)
+                       #     & (results[input$filter15] == input$value15))
+                       #     ,
+                       #   ]
+                       # ) > 0, message = "Table is rendering"
+                       #   )
+                       # )
+                       
+                       
+                     }),
+                     
+                     
+                     # second table with 4 settings first, then some OCS
+                     
+                     renderDT({
+                       
+                       DT::formatStyle(
+                         datatable(
+                           results[(
+                             (results[input$filter1] == input$value1)
+                             & (results[input$filter2] == input$value2)
+                             & (results[input$filter3] == input$value3)
+                             & (results[input$filter4] == input$value4)
+                             & (results[input$filter5] == input$value5)
+                             & (results[input$filter6] == input$value6)
+                             & (results[input$filter7] == input$value7)
+                             & (results[input$filter8] == input$value8)
+                             & (results[input$filter9] == input$value9)
+                             & (results[input$filter10] == input$value10)
+                             & (results[input$filter11] == input$value11)
+                             & (results[input$filter12] == input$value12)
+                             & (results[input$filter13] == input$value13))
+                             , c(input$rows, input$cols, input$x,
+                                 input$OCS)
+                           ],
+                           extensions = c('Buttons', 'Scroller', 'FixedColumns'),
+                           options = list(
+                             dom = 'Bfrtip',
+                             buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                             scrollX = TRUE,
+                             fixedColumns = TRUE,
+                             deferRender = TRUE,
+                             
+                             scrollY = 200,
+                             scroller = TRUE,
+                             fixedColumns = list(leftColumns = 1, rightColumns = 0)
+                           )
+                         ),
+                         
+                         c(3), `border-right` = "solid 2px"
+                       )
+                       
+                       
+                       
+                       
+                       # validate(
+                       #   need(nrow(
+                       #   results[(
+                       #     (results[input$filter1] == input$value1)
+                       #     & (results[input$filter2] == input$value2)
+                       #     & (results[input$filter3] == input$value3)
+                       #     & (results[input$filter4] == input$value4)
+                       #     & (results[input$filter5] == input$value5)
+                       #     & (results[input$filter6] == input$value6)
+                       #     & (results[input$filter7] == input$value7)
+                       #     & (results[input$filter8] == input$value8)
+                       #     & (results[input$filter9] == input$value9)
+                       #     & (results[input$filter10] == input$value10)
+                       #     & (results[input$filter11] == input$value11)
+                       #     & (results[input$filter12] == input$value12)
+                       #     & (results[input$filter13] == input$value13)
+                       #     & (results[input$filter14] == input$value14)
+                       #     & (results[input$filter15] == input$value15))
+                       #     ,
+                       #   ]
+                       # ) > 0, message = "Table is rendering"
+                       #   )
+                       # )
+                       
+                       
+                     }),
+                     
+                     
+                     renderTable({
+                       
+                       data.frame(variable = c(input$filter1,
+                                               input$filter2,
+                                               input$filter3,
+                                               input$filter4,
+                                               input$filter5,
+                                               input$filter6,
+                                               input$filter7,
+                                               input$filter8,
+                                               input$filter9,
+                                               input$filter10
+                                               ),
+                                    
+                                  value = c(input$value1,
+                                            input$value2,
+                                            input$value3,
+                                            input$value4,
+                                            input$value5,
+                                            input$value6,
+                                            input$value7,
+                                            input$value8,
+                                            input$value9,
+                                            input$value10))
+                     })
+                     
+            )
+)
+# )
+
+#          )
+# ),
+
+```
+
+Manual
+=================================
+
+
+
+```{r, echo = FALSE}
+
+tabPanel("Manual",
+         
+         h3("How the App works"),
+         
+         h4("Sidebar options:"),
+         
+         HTML("In the sidebar you can define 3 variables (row, column, x-axis) whose impact in the simulations you want to observe. For all the remaining variables, a default value is set, to only look at the simulation scenarios with the specified default value."),
+         
+         br(),
+         
+         HTML("Additionally you can choose up to 4 Operating characteristics to be displayed in the plot (main Panel). These OCs are grouped in a meaningful way (patient-related, cohort-related, error-rates, assumption-related)."),
+         
+         br(),
+         
+         HTML("Note that Operating Characteristics 'PTP', 'Disj_Power', 'PTT1ER', 'FWER' and 'Avg_PTP_Trial' do not exist in all scenarios."),
+         
+         h4("Change default values:"),
+         
+         HTML("Checking the checkbox at the bottom of the sidebar displays another tab in the sidebar where you can specify the values for the simulation scenario you want to investigate. One by one you can choose the variable and corresponding value."),
+         
+         h4("Outputs"),
+         HTML("In the main Panel there are three tabs. The first two visualize the configurated scenario, one of them having an interactive feature. The third one shows Table of the results for the configurated simulation scenario")
+         
+         
+)
+# )
+# )
+
+
+
+
+```
+
+
+```{r observers, echo = FALSE}
+
+
+# Show Settings Tab using Checkbox
+observeEvent(input$hidetab.check, {
+  if(isTRUE(input$hidetab.check)) {
+    showTab(inputId = "side",
+            target = "Default Values")
+  } else {
+    hideTab(inputId = "side",
+            target = "Default Values")
+  }
+  
+})
+
+
+# Updating choice for y-axis variable based on range chosen
+
+
+observe({
+  
+  updateCheckboxGroupInput(session, "OCS", choices = y_topic[y_topic$topic == input$y_topic, "variable"])
+})
+#y_topic[y_topic$topic == "Error_Rate", "variable"]
+
+# Smart Filtering:
+# Updates the possible value choices for the remaining variables one by one via filtering.
+# First it subsets the rows with observations filter1 == value1 (i.e. where variable 1 is equal to the value chosen)
+# Then for variable 2 (= filter2) only the values which exist in the filtered dataset can be chosen
+# ...
+# This step is repeated for every variable
+#
+# This is implemented in order to prevent invalid variable combinations that don't exist in the dataset from being chosen.
+
+
+### HERE DEFAULT VALUES CAN BE ENTERED
+# observe({
+#   
+#     
+#     updateSelectInput(session, "filter1"
+#                       , choices = 
+#                         
+#                         if(input$x == "n_int"){
+#                           
+#                           filterchoices_cond[!(filterchoices_cond %in% c(input$rows
+#                                                                          , input$cols
+#                                                                          , input$x))]
+#     
+#                         } else{
+#                           
+#                           filterchoices[!(filterchoices %in% c(input$rows
+#                                                                , input$cols
+#                                                                , input$x))]
+#                         }
+#     )
+#                       
+#   })
+
+
+#
+
+observe({
+  
+  updateSelectInput(session, "filter1"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin and/or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x)) # second filter step "Smart Filtering". exclude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  updateSelectInput(session, "value1", choices = sort(unique(
+    results[, input$filter1]))
+    , selected = default_values[input$filter1])
+  
+  
+})
+
+
+observe({
+  updateSelectInput(session, "filter2"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+
+observe({
+  
+  updateSelectInput(session, "value2", choices = sort(unique(
+    results[
+      (results[input$filter1] == input$value1)
+      ,input$filter2
+    ]
+  )))
+})
+
+
+
+
+
+
+observe({
+  updateSelectInput(session, "filter3"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value3", choices = sort(unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      ,input$filter3
+    ]
+  )))
+})
+
+
+
+
+
+
+observe({
+  updateSelectInput(session, "filter4"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value4", choices = sort(unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      ,input$filter4
+    ]
+  )))
+})
+
+
+
+
+observe({
+  updateSelectInput(session, "filter5"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3
+                              , input$filter4)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value5", choices = sort(unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      & (results[input$filter4] == input$value4)
+      ,input$filter5
+    ]
+  )))
+})
+
+
+
+
+observe({
+  updateSelectInput(session, "filter6"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3
+                              , input$filter4
+                              , input$filter5)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value6", choices = sort(unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      & (results[input$filter4] == input$value4)
+      & (results[input$filter5] == input$value5)
+      ,input$filter6
+    ]
+  )))
+})
+
+
+
+
+observe({
+  updateSelectInput(session, "filter7"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3
+                              , input$filter4
+                              , input$filter5
+                              , input$filter6)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value7", choices = sort(unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      & (results[input$filter4] == input$value4)
+      & (results[input$filter5] == input$value5)
+      & (results[input$filter6] == input$value6)
+      ,input$filter7
+    ]
+  )))
+})
+
+
+observe({
+  updateSelectInput(session, "filter8"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3
+                              , input$filter4
+                              , input$filter5
+                              , input$filter6
+                              , input$filter7)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value8", choices = unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      & (results[input$filter4] == input$value4)
+      & (results[input$filter5] == input$value5)
+      & (results[input$filter6] == input$value6)
+      & (results[input$filter7] == input$value7)
+      ,input$filter8
+    ]
+  ))
+})
+
+
+
+
+observe({
+  updateSelectInput(session, "filter9"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3
+                              , input$filter4
+                              , input$filter5
+                              , input$filter6
+                              , input$filter7
+                              , input$filter8)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value9", choices = unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      & (results[input$filter4] == input$value4)
+      & (results[input$filter5] == input$value5)
+      & (results[input$filter6] == input$value6)
+      & (results[input$filter7] == input$value7)
+      & (results[input$filter8] == input$value8)
+      ,input$filter9
+    ]
+  ))
+})
+
+
+
+
+
+observe({
+  updateSelectInput(session, "filter10"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3
+                              , input$filter4
+                              , input$filter5
+                              , input$filter6
+                              , input$filter7
+                              , input$filter8
+                              , input$filter9)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value10", choices = unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      & (results[input$filter4] == input$value4)
+      & (results[input$filter5] == input$value5)
+      & (results[input$filter6] == input$value6)
+      & (results[input$filter7] == input$value7)
+      & (results[input$filter8] == input$value8)
+      & (results[input$filter9] == input$value9)
+      ,input$filter10
+    ]
+  ))
+})
+
+
+
+
+
+observe({
+  updateSelectInput(session, "filter11"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3
+                              , input$filter4
+                              , input$filter5
+                              , input$filter6
+                              , input$filter7
+                              , input$filter8
+                              , input$filter9
+                              , input$filter10)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value11", choices = unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      & (results[input$filter4] == input$value4)
+      & (results[input$filter5] == input$value5)
+      & (results[input$filter6] == input$value6)
+      & (results[input$filter7] == input$value7)
+      & (results[input$filter8] == input$value8)
+      & (results[input$filter9] == input$value9)
+      & (results[input$filter10] == input$value10)
+      ,input$filter11
+    ]
+  ))
+})
+
+
+
+
+
+observe({
+  updateSelectInput(session, "filter12"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3
+                              , input$filter4
+                              , input$filter5
+                              , input$filter6
+                              , input$filter7
+                              , input$filter8
+                              , input$filter9
+                              , input$filter10
+                              , input$filter11)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value12", choices = unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      & (results[input$filter4] == input$value4)
+      & (results[input$filter5] == input$value5)
+      & (results[input$filter6] == input$value6)
+      & (results[input$filter7] == input$value7)
+      & (results[input$filter8] == input$value8)
+      & (results[input$filter9] == input$value9)
+      & (results[input$filter10] == input$value10)
+      & (results[input$filter11] == input$value11)
+      ,input$filter12
+    ]
+  ))
+})
+
+
+
+
+
+observe({
+  updateSelectInput(session, "filter13"
+                    , choices = lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                                    %in% c("n_int", "n_fin")) 
+                                                + 2*any(c(input$x, input$rows, input$cols) 
+                                                        %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                                + 1]] # first filter step to exclude n_int & n_fin or biomarker characteristics if they are chosen for facet variables
+                    
+                    [!(lFilterchoices[[any(c(input$x, input$rows, input$cols) 
+                                           %in% c("n_int", "n_fin")) 
+                                       + 2*any(c(input$x, input$rows, input$cols) 
+                                               %in% c("specificity_biomarker", "sensitivity_biomarker")) 
+                                       + 1]] 
+                       
+                       %in% c(input$rows
+                              , input$cols
+                              , input$x
+                              , input$filter1
+                              , input$filter2
+                              , input$filter3
+                              , input$filter4
+                              , input$filter5
+                              , input$filter6
+                              , input$filter7
+                              , input$filter8
+                              , input$filter9
+                              , input$filter10
+                              , input$filter11
+                              , input$filter12)) # second filter step "Smart Filtering". exlude variables that have been chosen for faceting or already used as filter
+                    ]
+  )
+})
+
+observe({
+  
+  updateSelectInput(session, "value13", choices = unique(
+    results[
+      (results[input$filter1] == input$value1)
+      & (results[input$filter2] == input$value2)
+      & (results[input$filter3] == input$value3)
+      & (results[input$filter4] == input$value4)
+      & (results[input$filter5] == input$value5)
+      & (results[input$filter6] == input$value6)
+      & (results[input$filter7] == input$value7)
+      & (results[input$filter8] == input$value8)
+      & (results[input$filter9] == input$value9)
+      & (results[input$filter10] == input$value10)
+      & (results[input$filter11] == input$value11)
+      & (results[input$filter12] == input$value12)
+      ,input$filter13
+    ]
+  ))
+})
+
+
+# if more variables enter the dataset, simply add another chunk of updateSelectInput like above, with another extra filter like "results[input$filter15] == input$value15.
+# of course input$filter15 and input$value15 have to be defined above at the SelectInput section.
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

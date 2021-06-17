@@ -2,7 +2,8 @@
 title: "Simulation Results Overview" 
 output: 
   flexdashboard::flex_dashboard:
-    theme: cerulean 
+    theme: cosmo 
+vertical_layout: scroll
 runtime: shiny 
 --- 
 
@@ -761,29 +762,42 @@ tabsetPanel(id = "main", type = "tabs",
                      
                      
                      renderTable({ 
+                       #datatable(
+                         data.frame(variable = c(input$filter1,
+                                                         input$filter2,
+                                                         input$filter3,
+                                                         input$filter4,
+                                                         input$filter5,
+                                                         input$filter6,
+                                                         input$filter7,
+                                                         input$filter8,
+                                                         input$filter9,
+                                                         input$filter10,
+                                                         input$filter11,
+                                                         input$filter12,
+                                                         input$filter13),
+                                            
+                                            value = c(input$value1,
+                                                      input$value2,
+                                                      input$value3,
+                                                      input$value4,
+                                                      input$value5,
+                                                      input$value6,
+                                                      input$value7,
+                                                      input$value8,
+                                                      input$value9,
+                                                      input$value10,
+                                                      input$value11,
+                                                      input$value12,
+                                                      input$value13)
+                       )
+                       #,
+                       # options = list(
+                       #   scrollY = 200,
+                       #   scrollX = TRUE, 
+                       #   scroller = TRUE
+                       # ))
                        
-                       data.frame(variable = c(input$filter1, 
-                                               input$filter2, 
-                                               input$filter3, 
-                                               input$filter4, 
-                                               input$filter5, 
-                                               input$filter6, 
-                                               input$filter7, 
-                                               input$filter8, 
-                                               input$filter9, 
-                                               input$filter10 
-                       ), 
-                       
-                       value = c(input$value1, 
-                                 input$value2, 
-                                 input$value3, 
-                                 input$value4, 
-                                 input$value5, 
-                                 input$value6, 
-                                 input$value7, 
-                                 input$value8, 
-                                 input$value9, 
-                                 input$value10)) 
                      }) 
                      
             ) 
@@ -816,14 +830,14 @@ tabPanel("Manual",
          
          br(), 
          
-         HTML("Note that Operating Characteristics 'PTP', 'Disj_Power', 'PTT1ER', 'FWER' and 'Avg_PTP_Trial' do not exist in all scenarios."), 
+         HTML("Note that Operating Characteristics 'PTP', 'Disj_Power', 'PTT1ER', 'FWER' and 'Avg_PTP_Trial' do not exist in all scenarios. If some lines are not visible, the OCs might perfectly overlap, in this case try unchecking the visible OC to see the other one underneith"), 
          
          h4("Change default values:"), 
          
-         HTML("Checking the checkbox at the bottom of the sidebar displays another tab in the sidebar where you can specify the values for the simulation scenario you want to investigate. One by one you can choose the variable and corresponding value."), 
+         HTML("Checking the checkbox at the bottom of the sidebar displays another tab in the sidebar where you can specify the values for the simulation scenario you want to investigate. One after another you can choose the variable and corresponding value."), 
          
          h4("Outputs"), 
-         HTML("In the main Panel there are three tabs. The first two visualize the configurated scenario, one of them having an interactive feature. The third one shows Table of the results for the configurated simulation scenario") 
+         HTML("In the main Panel there are three tabs. The first two visualize the configurated scenario, one of them having an interactive feature. The third one shows a Table of the results for the configurated simulation scenario. The second table is only listing the chosen input parameters and the chosen Operating Characteristics. Below that the default values are displayed") 
          
          
 ) 

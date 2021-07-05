@@ -3,13 +3,15 @@ title: "Simulation Results Overview"
 output: 
   flexdashboard::flex_dashboard:
     theme: cosmo 
-vertical_layout: scroll
+    # vertical_layout: scroll
 runtime: shiny 
 --- 
 
 
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE} 
-options(shiny.sanitize.errors = FALSE)  
+options(shiny.sanitize.errors = FALSE)
+#options(DT.options = list(scrollY="200px",scrollX="300px", pageLength = 100, autoWidth = TRUE))
 
 library(shinythemes) 
 library(flexdashboard) 
@@ -760,9 +762,9 @@ tabsetPanel(id = "main", type = "tabs",
                        
                      }), 
                      
-                     
-                     renderTable({ 
-                       #datatable(
+                     h3("Default values"),
+                     renderDT({
+                       datatable(
                          data.frame(variable = c(input$filter1,
                                                          input$filter2,
                                                          input$filter3,
@@ -776,7 +778,7 @@ tabsetPanel(id = "main", type = "tabs",
                                                          input$filter11,
                                                          input$filter12,
                                                          input$filter13),
-                                            
+
                                             value = c(input$value1,
                                                       input$value2,
                                                       input$value3,
@@ -791,14 +793,17 @@ tabsetPanel(id = "main", type = "tabs",
                                                       input$value12,
                                                       input$value13)
                        )
-                       #,
-                       # options = list(
-                       #   scrollY = 200,
-                       #   scrollX = TRUE, 
-                       #   scroller = TRUE
-                       # ))
                        
-                     }) 
+                       
+                       ,
+                       options = list(
+                         scrollY = 200,
+                         scrollX = TRUE,
+                         scroller = TRUE
+                        )
+                       )
+
+                     })
                      
             ) 
 ) 

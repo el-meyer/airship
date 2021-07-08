@@ -81,6 +81,12 @@ filterchoices_facet <- filterchoices_facet[!(filterchoices_facet %in% c("prob_ba
 filterchoices <- filterchoices_facet 
 
 
+#  list with 3 different scenarios for defaultvalue inputs 
+# (if one of n_int & n_fin is chosen as investigation parameter, the other one is excluded from default value choice)
+# (if one of sens_biomarker & spec_biomarker is chosen as investigation parameter, the other one is excluded from default value choice)
+# (if one of both n_int & n_fin and sens_biomarker & spec_biomarker are chosen as investigation parameter, the other ones are excluded from default value choice)
+# see implementation at updateSelectInputs below (either list element 1, 2 or 3 is chosen depending on the scenario)
+
 
 lFilterchoices <- list(filterchoices_facet, filterchoices_facet[!(filterchoices_facet %in% c("n_int", "n_fin"))], filterchoices_facet[!(filterchoices_facet %in% c("sensitivity_biomarker", "specificity_biomarker"))], filterchoices_facet[!(filterchoices_facet %in% c("sensitivity_biomarker", "specificity_biomarker", "n_int", "n_fin"))]) 
 
@@ -766,43 +772,43 @@ tabsetPanel(id = "main", type = "tabs",
                      renderDT({
                        datatable(
                          data.frame(variable = c(input$filter1,
-                                                         input$filter2,
-                                                         input$filter3,
-                                                         input$filter4,
-                                                         input$filter5,
-                                                         input$filter6,
-                                                         input$filter7,
-                                                         input$filter8,
-                                                         input$filter9,
-                                                         input$filter10,
-                                                         input$filter11,
-                                                         input$filter12,
-                                                         input$filter13),
-
-                                            value = c(input$value1,
-                                                      input$value2,
-                                                      input$value3,
-                                                      input$value4,
-                                                      input$value5,
-                                                      input$value6,
-                                                      input$value7,
-                                                      input$value8,
-                                                      input$value9,
-                                                      input$value10,
-                                                      input$value11,
-                                                      input$value12,
-                                                      input$value13)
+                                                 input$filter2,
+                                                 input$filter3,
+                                                 input$filter4,
+                                                 input$filter5,
+                                                 input$filter6,
+                                                 input$filter7,
+                                                 input$filter8,
+                                                 input$filter9,
+                                                 input$filter10,
+                                                 input$filter11,
+                                                 input$filter12,
+                                                 input$filter13),
+                                    
+                                    value = c(input$value1,
+                                              input$value2,
+                                              input$value3,
+                                              input$value4,
+                                              input$value5,
+                                              input$value6,
+                                              input$value7,
+                                              input$value8,
+                                              input$value9,
+                                              input$value10,
+                                              input$value11,
+                                              input$value12,
+                                              input$value13)
+                         )
+                         
+                         
+                         ,
+                         options = list(
+                           scrollY = 200,
+                           scrollX = TRUE,
+                           scroller = TRUE
+                         )
                        )
                        
-                       
-                       ,
-                       options = list(
-                         scrollY = 200,
-                         scrollX = TRUE,
-                         scroller = TRUE
-                        )
-                       )
-
                      })
                      
             ) 

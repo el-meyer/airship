@@ -225,7 +225,7 @@ tabsetPanel(id = "side", type = "tabs",
                      
                      h3("Choose Operating Characteristics to be displayed"), 
                      
-                     selectInput("y_topic", choices = c("Patients", "Error_Rate", "Assumptions", "Cohorts"), label = "Select topic"), 
+                     selectInput("y_topic", choices = c("Patients", "Error_Rate", "Assumptions", "Cohorts"), label = "Select topic", selected = "Error_Rate"), 
                      
                      checkboxGroupInput("OCS", choices = NULL, selected = NULL, label = "Which Operating Characteristics should be displayed?") 
                      
@@ -440,7 +440,7 @@ tabsetPanel(id = "main", type = "tabs",
                        # makes Error message disappear (which would appear if no OCS is ticked) 
                        validate( 
                          need( 
-                           length(input$OCS) > 0, message = "Choose OCS") 
+                           length(input$OCS) > 0, message = "No Plot can be shown before OCS on the left are chosen!") 
                        ) 
                        
                        
@@ -573,7 +573,7 @@ tabsetPanel(id = "main", type = "tabs",
                        # makes Error message disappear (which would appear if no OCS is ticked) 
                        validate( 
                          need( 
-                           length(input$OCS) > 0, message = "Choose OCS") 
+                           length(input$OCS) > 0, message = "No Plot can be shown before OCS on the left are chosen!") 
                        ) 
                        
                        

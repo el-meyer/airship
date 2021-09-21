@@ -139,7 +139,7 @@ ui <-
                 
                 checkboxInput(
                   "checkboxFacet",
-                  "Do you want to add a facet grid dimension"
+                  "Do you want to add a facet grid dimension?"
                 ),
                 
                 conditionalPanel(
@@ -163,7 +163,7 @@ ui <-
                 
                 checkboxInput(
                   "checkboxShape", 
-                  "Do you want to add a shape dimension"
+                  "Do you want to add a shape dimension?"
                 ),
                 conditionalPanel(
                   "input.checkboxShape != 0",

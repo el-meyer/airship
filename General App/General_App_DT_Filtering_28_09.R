@@ -1,3 +1,14 @@
+options(shiny.sanitize.errors = FALSE) 
+options(shiny.maxRequestSize = 50*1024^2)
+library(shiny)
+library(readxl)
+library(xlsx)
+library(DT)
+library(shinybusy)
+library(plotly)
+library(tidyverse)
+library(shinyBS)
+library(colourpicker)
 
 
 ui <- 

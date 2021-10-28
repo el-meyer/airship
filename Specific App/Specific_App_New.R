@@ -23,37 +23,9 @@ ui <-
     sidebarLayout(
       
       sidebarPanel(
-        
-        checkboxInput(
-          "exampleData", 
-          "Use example dataset"
-        ),
-        
-        
-        conditionalPanel(
-          "input.exampleData == 0",
-          
-          radioButtons(
-            "sep", 
-            "Csv-Separator", 
-            choices = c(",", ";", "\t")
-          ),
-          
-          fileInput(
-            "file", 
-            "Choose file to upload"
-          ),
-          
-          selectInput(
-            "inputend", 
-            "State last input variable", 
-            choices = NULL
-          )
-          
-          
-          
-        )
-        
+        h3("Color Choices"),
+        uiOutput("colors_ui"), 
+        width = 2
       ),
       
       
@@ -76,62 +48,51 @@ ui <-
                   "goDT", 
                   "Apply filters to dataset"
                 ),
-                verbatimTextOutput("colors"),
-                verbatimTextOutput("search"),
-                verbatimTextOutput("searchInput"),
-                DT::dataTableOutput("filteredDT")
+                # verbatimTextOutput("search"),
+                # verbatimTextOutput("searchInput"),
+                DT::dataTableOutput("filteredDT", width = "120%")
               )
             ),
             
             
-            fluidRow(
-              column(
-                width = 6,
-                HTML("test output to see if list with default values is filled correctly"),
-                verbatimTextOutput("lDefault")
-              ),
-              
-              column(
-                width = 6,
-                actionButton(
-                  "updateDefaultList", 
-                  "Save default values"
-                ),
-                actionButton(
-                  "updateDefaultList2",
-                  "Start Color Picker"
-                )
-                # ,
-                # 
-                # checkboxInput("all_default", 
-                #               "All/None", 
-                #               value = TRUE
-                # ),
-                # 
-                # checkboxGroupInput(
-                #   "checkboxDefault",
-                #   "Which variables should have saved default values?",
-                #   choices = NULL
-                # )
-              )
-              
-              
-            ) 
+            # fluidRow(
+            #   column(
+            #     width = 6,
+            #     HTML("test output to see if list with default values is filled correctly"),
+            #     verbatimTextOutput("lDefault")
+            #   ),
+            #   
+            #   column(
+            #     width = 6,
+            #     actionButton(
+            #       "updateDefaultList", 
+            #       "Save default values"
+            #     ),
+            #     actionButton(
+            #       "updateDefaultList2",
+            #       "Start Color Picker"
+            #     )
+            #    
+            #   )
+            #   
+            #   
+            # ) 
+            
           ),
           
-          tabPanel(
-            "Colors",
-            
-            uiOutput("colors_ui")
-            , verbatimTextOutput("colorText")
-          ),
+          # tabPanel(
+          #   "Colors",
+          #   
+          #   uiOutput("colors_ui")
+          #   , verbatimTextOutput("colorText")
+          # ),
           
           tabPanel(
             "Plot",
             
             fluidRow(
               uiOutput("lineplot_ui")
-              #, plotOutput("lineplot")
+              # plotOutput("lineplot")
             ),
             
             
@@ -139,7 +100,7 @@ ui <-
               column(
                 4,
                 #verbatimTextOutput("test"),
-                
+                h3("Simulation Parameters & Output"),
                 selectInput(
                   "x", 
                   "Choose x-Variable", 
@@ -159,9 +120,11 @@ ui <-
               column(
                 4,
                 
+                h3("Optional simulation parameters"),
                 checkboxInput(
                   "checkboxFacet",
-                  "Do you want to add a facet grid dimension?"
+                  "Do you want to add a facet grid dimension?",
+                  value = TRUE
                 ),
                 
                 conditionalPanel(
@@ -185,7 +148,8 @@ ui <-
                 
                 checkboxInput(
                   "checkboxShape", 
-                  "Do you want to add a shape dimension?"
+                  "Do you want to add a shape dimension?",
+                  value = TRUE
                 ),
                 conditionalPanel(
                   "input.checkboxShape != 0",
@@ -201,11 +165,12 @@ ui <-
               column(
                 4,
                 
+                h3("Optical parameters"),
                 sliderInput("xLegend",
                             "x-coord legend",
                             min = -0.5,
-                            max = 1.5,
-                            value = 0, 
+                            max = 1.2,
+                            value = 1.05, 
                             step = 0.05),
                 
                 
@@ -213,8 +178,8 @@ ui <-
                 sliderInput("yLegend",
                             "y-coord legend",
                             min = -0.5,
-                            max = 1.5,
-                            value = 0,
+                            max = 1.2,
+                            value = 0.5,
                             step = 0.05),
                 # 
                 #                 sliderInput("res",
@@ -233,7 +198,7 @@ ui <-
                   sliderInput(
                     "plotwidth", 
                     "Plot width (px)",
-                    value = 1000,
+                    value = 1200,
                     min = 600,
                     max = 1500
                   ),
@@ -249,7 +214,7 @@ ui <-
                   sliderInput(
                     "linesize",
                     "Line and point size",
-                    value = 0.8,
+                    value = 0.5,
                     min = 0.1, 
                     max = 3, 
                     step = 0.1
@@ -337,11 +302,14 @@ ui <-
             ),
             
             fluidRow(
+              h3("Data Points displayed in plot:"),
               # verbatimTextOutput("df_plot")
               DT::dataTableOutput("df_plot")
             )
             
           )
+          
+          # , selected = "Choose default values"
         )
       )
       
@@ -359,109 +327,50 @@ ui <-
 server <- function(session, input, output){
   
   # read in Example data and convert some variables for correct display
-  exampleData <- read.csv("example_data.csv", 
+  
+  # exampleData<- read_excel("CombinedResultsNew2.xlsx")
+  exampleData <- read.csv("CombinedResultsNewNoSpace.csv", 
                           header = TRUE,
                           sep = ",",
                           stringsAsFactors = FALSE)
   
   
   
-  # widget for user data upload
-  upload <- reactive({
-    validate(need(
-      input$file, 
-      "no file")
-    ) # if no file is uploaded yet "no file" appears everywhere upload() is called
-    
-    inFile <-input$file 
-    
-    mydata <- read.csv(inFile$datapath,
-                       header = TRUE,
-                       sep = input$sep, 
-                       stringsAsFactors = FALSE)
-    # updateCheckboxGroupInput(session, "inputend", choices = colnames(mydata))
-    
-    
-    
-    # for(i in 1:length(input$session)){
-    #   mydata[,input$session[i]] <- as.numeric(mydata[,input$session[i]])
-    # }    
-    
-    return(mydata) 
-    
-  })
-  
-  
-  
   
   # Use example data if checkbox is checked, otherwise use uploaded dataset
-  data_full <- reactive({
-    if(input$exampleData){
-      updateSelectInput(session, 
-                        "inputend", 
-                        choices = colnames(exampleData),
-                        selected = "setting"
-      )
-      return(exampleData)
-      
-      # additional condition to be implemented if user changes variable classes
-      
-      # } else if(input$change){
-      #   upload_numerics <- upload()
-      #   #observeEvent(input$go, {
-      #   
-      #   for(i in input$numerics){
-      #     levels(upload_numerics[,i]) <- as.numeric(levels(upload_numerics[,i]))}
-      #   #})
-      #   return(upload_numerics)
-      
-    } else{
-      updateSelectInput(session, 
-                        "inputend", 
-                        choices = colnames(upload())
-      )
-      return(upload())
-    }
-  })
-  
-  
-  
+  data_full <- exampleData
   
   
   
   # display dataset as DT
   # Table in tab 'Pre-filter data'
   output$dataDT <- DT::renderDT(
-    data_full(),
+    data_full,
     filter = "top",
     options = list(lengthChange = FALSE, 
-                   autoWidth = TRUE
-                   #, scrollX = TRUE
+                   autoWidth = TRUE,
+                   scrollX = TRUE
     )
   )
   
   reacVals <- reactiveValues()
   
-  observe({
-    reacVals$ind_inputend <- which(colnames(data_full()) == input$inputend)
-    #reacVals$ind_outputstart <- which(colnames(data_full() == input$inputend) +1)
-  })
+  ind_inputend <- which(colnames(data_full) == "TreatmentEfficacySetting")
   
-  observe({
-    reacVals$ind_outputstart <- reacVals$ind_inputend + 1
-  })
+  ind_outputstart <- which(colnames(data_full) == "Avg_Pat")
   
+  names_inputs <- colnames(data_full)[1:ind_inputend]
   
+  names_outputs <- colnames(data_full)[ind_outputstart:ncol(data_full)]
   
   # Table with all chosen filters in 'Pre-filter data'
   data_prefiltered <- reactive({
-    req(input$dataDT_rows_all)
-    d <- data_full()
-    ind_outputstart <<- isolate(which(colnames(d) == input$inputend)+1) # which column is the last input column?
+    #req(input$dataDT_rows_all)
+    d <- data_full
     
     # Convert output parameters to numeric values
     for(i in ind_outputstart:ncol(d)){
-      d[,i] <- as.numeric(d[ ,i])
+      d[,i] <- as.numeric(d[[i]])
     }
     
     
@@ -479,18 +388,10 @@ server <- function(session, input, output){
     # execute filters to create new DT upon clicking action button
     
     
-    # which column is the last input column?
-    ind_inputend <- isolate(which(colnames(data_prefiltered()) == input$inputend)) 
-    
     # display only input columns
     data_filtered <<- data_prefiltered()[,1:ind_inputend]
     
     # inputvariables
-    names_inputs <- colnames(data_prefiltered()[,1:ind_inputend])
-    
-    #outputvariables
-    names_outputs <- colnames(data_prefiltered()[, (ind_inputend + 1):ncol(data_prefiltered())])
-    
     
     
     # --------------Some choice-updates for inputs---------
@@ -505,7 +406,8 @@ server <- function(session, input, output){
     
     updateCheckboxGroupInput(session,
                              "OC",
-                             choices = names_outputs)
+                             choices = names_outputs,
+                             selected = c("Disj_Power", "PTP"))
     
     
     # #----------------------------------------------------------
@@ -541,7 +443,7 @@ server <- function(session, input, output){
     
     for(i in colnames(data_filtered)){
       # transforms variables to factors to be able to choose 1 factor level as default value
-      data_filtered[,i] <<- factor(as.factor(data_filtered[,i]))  #factor(...) drops unused factor levels from prefiltering
+      data_filtered[,i] <<- factor(as.factor(data_filtered[[i]]))  #factor(...) drops unused factor levels from prefiltering
     }
     
     data_filtered
@@ -551,8 +453,17 @@ server <- function(session, input, output){
   filter = "top",
   options = list(lengthChange = FALSE, 
                  autoWidth = TRUE, 
-                 #scrollX = TRUE, 
-                 pageLength = 5)
+                 # scrollX = TRUE, 
+                 pageLength = 5,
+                 # searchCols defines starting values for filters
+                 searchCols = list(NULL,list(search = '["1"]'),
+                                   list(search = '["7"]'),
+                                   list(search = '["all"]'),
+                                   list(search = '["0.03"]'),
+                                   list(search = '["500"]'),
+                                   list(search = '["Yes"]'),
+                                   list(search = '["Setting 1"]'))
+  )
   )
   
   
@@ -639,13 +550,13 @@ server <- function(session, input, output){
   
   observe({
     
-    reacVals$nOC <- ncol(data_prefiltered()) - reacVals$ind_inputend
+    reacVals$nOC <- ncol(data_prefiltered()) - ind_inputend
     
   })
   
   observe({
     
-    reacVals$names_outputs <- colnames(data_prefiltered()[,reacVals$ind_outputstart:ncol(data_prefiltered())])
+    reacVals$names_outputs <- colnames(data_prefiltered()[,ind_outputstart:ncol(data_prefiltered())])
   })
   
   
@@ -687,24 +598,51 @@ server <- function(session, input, output){
   output$colors_ui <- renderUI({
     
     nWidgets <- as.integer(reacVals$nOC)
+    # nWidgets <- length(input$OC)
     
-    lapply(1:nWidgets, function(i) {
+    int_col <- sample(1:657, 657, replace = FALSE)
+    colPalette <- colors()[int_col[1:nWidgets]]
+    
+    #colPalette <- colors()[1:nWidgets]
+    names(colPalette) <- reacVals$names_outputs
+    
+    colPalette[
+      c("FWER",
+        "FWER_BA",
+        "Disj_Power",
+        "Disj_Power_BA",
+        "PTT1ER",
+        "PTP")] <-
+      
+      c("red3", 
+        "red1", 
+        "steelblue4", 
+        "steelblue1", 
+        "sienna1", 
+        "skyblue")
+    
+    colList <- lapply(1:nWidgets, function(i) {
       colourInput(inputId = paste0("col", i), 
                   label = reacVals$names_outputs[i],
-                  showColour = "background",
+                  showColour = "both",
                   # value = "black"
-                  value = colors()[sample(1:657,
-                                          size = 1,
-                                          replace = FALSE)]
-                  )
+                  # value = colors()[sample(1:657,
+                  #                         1,
+                  #                         replace = FALSE)]
+                  value = colPalette[i]
+      )
+      
     })
     
-    
+    colList
   })
   
+    
+
   lUiColors <- reactive({
     
     nWidgets <- as.integer(reacVals$nOC)
+    # nWidgets <- length(input$OC)
     #names_outputs <- colnames(data_prefiltered()[,reacVals$ind_outputstart:ncol(data_prefiltered())])
     
     df_colors <- data.frame(lapply(1:nWidgets, function(i) {
@@ -713,13 +651,18 @@ server <- function(session, input, output){
     
     names(df_colors) <- reacVals$names_outputs
     
+    
+    # Default colors ----------------------------------------------
+    
+    
+    #-------------------------------------------------------------
     df_colors
     
   })
   
-
+  
   output$colorText <- renderPrint({
-   lUiColors()
+    lUiColors()
   })
   
   
@@ -736,7 +679,8 @@ server <- function(session, input, output){
     
     updateSelectInput(session,
                       "x",
-                      choices = names(search_input())
+                      choices = names(search_input()),
+                      selected = "FinalCohortSampleSize"
     )
     
   })
@@ -745,7 +689,8 @@ server <- function(session, input, output){
     
     updateSelectInput(session,
                       "facet_rows",
-                      choices = names(search_input())
+                      choices = names(search_input()),
+                      selected = "Maximumnumberofcohorts"
     )
     
   })
@@ -754,7 +699,8 @@ server <- function(session, input, output){
     
     updateSelectInput(session,
                       "facet_cols",
-                      choices = names(search_input())
+                      choices = names(search_input()),
+                      selected = "CohortInclusionRate"
     )
     
   })
@@ -763,7 +709,8 @@ server <- function(session, input, output){
     
     updateSelectInput(session,
                       "shape",
-                      choices = names(search_input())
+                      choices = names(search_input()),
+                      selected = "TypeofDataSharing"
     )
   })
   
@@ -850,7 +797,7 @@ server <- function(session, input, output){
     default_filter <- gsub('\\["', "", default_filter)
     default_filter <- gsub('\\"]', "", default_filter)
     
-    bedingung <- paste0(names(default_filter),
+    bedingung <- paste0(paste0("`", names(default_filter), "`"),
                         " == ",
                         paste0("'", default_filter, "'"),
                         # default_filter,
@@ -868,7 +815,9 @@ server <- function(session, input, output){
   output$df_plot <- DT::renderDT({
     
     df_plot()
-  })
+  },
+  
+  options = list(scrollX = TRUE))
   
   
   
@@ -893,7 +842,7 @@ server <- function(session, input, output){
   
   # Plot based on which dimensions are chosen
   output$lineplot<- renderPlotly({
-    
+    # output$lineplot <- renderPlot({
     
     p1 <- ggplot(
       data_longer(), 
@@ -905,8 +854,7 @@ server <- function(session, input, output){
     p1 <- 
       p1 + 
       geom_line(aes(y = value, color = OC), size = input$linesize) +
-      geom_point(aes(y = value, color = OC), size = 3*input$linesize) +
-      colScale
+      geom_point(aes(y = value, color = OC), size = 3*input$linesize) + colScale
     
     
     
@@ -978,17 +926,18 @@ server <- function(session, input, output){
     p1 <- ggplotly(p1)
     
     p1 %>% layout(legend = list(x = input$xLegend, y = input$yLegend))
-    
+    p1
     
     
   })
-  
+
   output$lineplot_ui <- renderUI({
     plotlyOutput("lineplot",
+    # plotOutput("lineplot",
                  height = input$plotheight,
                  width = input$plotwidth)
   })
-  
+
   
 }  
 
@@ -998,44 +947,5 @@ shinyApp(ui = ui, server = server)
 
 
 
-
-
-
-
-# data_test <- read.csv("example_data.csv",
-#                       header = TRUE,
-#                       sep = ",",
-#                       stringsAsFactors = FALSE)
-# 
-# default_list <- as.list(data_test[1,1:which(names(data_test) == "setting")])
-# 
-# 
-# # default_df <- as.data.frame(do.call(cbind, default_list))
-# 
-# default_df <- as.data.frame(default_list)
-# 
-# 
-# 
-# sim_par <- c("n_int", "sharing_type", "cohorts_max", "sensitivity_biomarker")
-# default_filter <- default_df[!(names(default_df) %in% sim_par)]
-# 
-# bedingung <- paste0(names(default_filter),
-#                     " == ",
-#                     paste0("'", default_filter[1,], "'"),
-#                     collapse = " & ")
-# 
-# 
-# 
-# df_plot <- subset(data_test, eval(parse(text = bedingung)))
-# dim(df_plot)
-# 
-# remove.factors(df_plot)
-# 
-# p <- ggplot(df_plot, aes(x = n_int))
-# p <- p + geom_line(aes(y = FWER, color = factor(sensitivity_biomarker), linetype = factor(sensitivity_biomarker)))
-# p <- p + facet_grid(rows = vars(sharing_type), cols = vars(cohorts_max))
-# p
-# 
-# 
 
 

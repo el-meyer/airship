@@ -9,7 +9,7 @@ library(plotly)
 library(tidyverse)
 library(shinyBS)
 library(colourpicker)
-library(shinyWidgets)
+
 
 ui <- 
   fluidPage(
@@ -80,8 +80,8 @@ ui <-
                   "goDT", 
                   "Apply filters to dataset"
                 ),
-                # verbatimTextOutput("search"),
-                # verbatimTextOutput("defaultsInput"),
+                verbatimTextOutput("search"),
+                verbatimTextOutput("defaultsInput"),
                 DT::dataTableOutput("filteredDT")
               )
             ),
@@ -152,44 +152,44 @@ ui <-
                 # colourPicker(3),
                 
                 
-                selectizeInput(
+                checkboxGroupInput(
                   "OC", 
                   "Choose OC to plot", 
-                  choices = NULL,
-                  multiple = TRUE
+                  choices = NULL
                 )
               ),
               
               column(
                 3,
                 
-                radioButtons(
-                  "radioFacet",
-                  "Do you want to add a facet dimension?",
-                  choices = c("no", "grid", "wrap")
+                checkboxInput(
+                  "checkboxFacet",
+                  "Do you want to add a facet grid dimension?"
                 ),
                 
                 conditionalPanel(
-                  "input.radioFacet == 'grid'",
+                  "input.checkboxFacet != 0",
                   
                   selectInput(
                     "facet_rows", 
                     "Choose row variable", 
-                    choices = NULL,
-                    multiple = TRUE
+                    choices = NULL
                   ),
                   
                   selectInput(
                     "facet_cols", 
                     "Choose col variable", 
-                    choices = NULL,
-                    multiple = TRUE
+                    choices = NULL
                   )
                 ),
                 
+                checkboxInput(
+                  "checkboxFacetW",
+                  "Do you want to add a facet wrap dimension?"
+                ),
                 
                 conditionalPanel(
-                  "input.radioFacet == 'wrap'",
+                  "input.checkboxFacetW != 0",
                   
                   selectizeInput(
                     "facet_wrap", 
@@ -220,138 +220,109 @@ ui <-
               column(
                 3,
                 
-                switchInput("plottype",
-                            "Interactive Plot?",
-                            value = FALSE,
-                            size = "small"),
+                checkboxInput(
+                  "checkboxLegend",
+                  "Specify legend coordinates?"
+                ),
                 
-                actionButton("change_style", label = "Plot options"),
+                conditionalPanel(
+                  "input.checkboxLegend != 0",
+                  
+                  sliderInput("xLegend",
+                              "x-coord legend",
+                              min = -0.5,
+                              max = 1.2,
+                              value = 1.05, 
+                              step = 0.05),
+                  
+                  
+                  
+                  sliderInput("yLegend",
+                              "y-coord legend",
+                              min = -0.5,
+                              max = 1.2,
+                              value = 0,
+                              step = 0.05)
+                ),
+                # 
+                #                 sliderInput("res",
+                #                             "Change resolution",
+                #                             value = 72,
+                #                             min = 50, 
+                #                             max = 200),
                 
-                bsModal("modal_style", "Change style and size of plot", trigger = "change_style", size = "large",
-                        
-                       
-                        
-                        checkboxInput(
-                          "checkboxLine",
-                          "Add lines?",
-                          value = TRUE
-                        ),
-                        
-                        checkboxInput(
-                          "checkboxPoint",
-                          "Add points?",
-                          value = TRUE
-                        ),
-                        
-
-                        # checkboxInput(
-                        #   "checkboxLegend",
-                        #   "Specify legend coordinates?"
-                        # ),
-                        
-                        conditionalPanel(
-                          "input.plottype",
-                          
-                          sliderInput("xLegend",
-                                      "x-coord legend",
-                                      min = -0.5,
-                                      max = 1.2,
-                                      value = 1.05, 
-                                      step = 0.05),
-                          
-                          
-                          
-                          sliderInput("yLegend",
-                                      "y-coord legend",
-                                      min = -0.5,
-                                      max = 1.2,
-                                      value = 0.5,
-                                      step = 0.05)
-                        ),
-                        # 
-                        #                 sliderInput("res",
-                        #                             "Change resolution",
-                        #                             value = 72,
-                        #                             min = 50, 
-                        #                             max = 200),
-                        
-                        checkboxInput(
-                          "checkboxSize", 
-                          "Change plot size"
-                        ),
-                        conditionalPanel(
-                          "input.checkboxSize != 0",
-                          
-                          
-                          
-                          sliderInput(
-                            "resolution",
-                            "Resolution",
-                            value = 72,
-                            min = 36, 
-                            max = 288
-                          ),
-                          
-                          sliderInput(
-                            "plotwidth",
-                            "Plot width (px)",
-                            value = 1000,
-                            min = 600,
-                            max = 1500
-                          ),
-                          
-                          sliderInput(
-                            "plotheight",
-                            "Plot height (px)",
-                            value = 600,
-                            min = 300,
-                            max = 1000
-                          ),
-                          
-                          sliderInput(
-                            "linesize",
-                            "Line and point size",
-                            value = 0.5,
-                            min = 0.1,
-                            max = 3,
-                            step = 0.1
-                          ),
-                          
-                          numericInput(
-                            "plotfontsize",
-                            "Font size",
-                            value = 10,
-                            min = 1,
-                            max = 50,
-                            step = 0.5
-                          ),
-                          
-                          selectInput(
-                            "plotfont",
-                            "Font",
-                            choices = c("sans", "Times", "Courier")
-                          )
-                        ),
-                        
-                        
-                        checkboxInput(
-                          "checkboxTheme",
-                          "Change the theme?"
-                        ),
-                        
-                        conditionalPanel(
-                          "input.checkboxTheme !=0",
-                          
-                          radioButtons(
-                            "plottheme",
-                            "Select the theme",
-                            choices = c(
-                              "Grey", "White", "Linedraw",
-                              "Light", "Minimal", "Classic"
-                            )
-                          )
-                          
-                        )
+                checkboxInput(
+                  "checkboxSize", 
+                  "Change plot size"
+                ),
+                conditionalPanel(
+                  "input.checkboxSize != 0",
+                  
+                  numericInput(
+                    "resolution",
+                    "Resolution",
+                    value = 144
+                  ),
+                  
+                  sliderInput(
+                    "plotwidth", 
+                    "Plot width (px)",
+                    value = 1000,
+                    min = 600,
+                    max = 1500
+                  ),
+                  
+                  sliderInput(
+                    "plotheight", 
+                    "Plot height (px)",
+                    value = 600,
+                    min = 300,
+                    max = 1000
+                  ),
+                  
+                  sliderInput(
+                    "linesize",
+                    "Line and point size",
+                    value = 0.5,
+                    min = 0.1, 
+                    max = 3, 
+                    step = 0.1
+                  )
+                ),
+                
+                
+                checkboxInput(
+                  "checkboxTheme",
+                  "Change the theme?"
+                ),
+                
+                conditionalPanel(
+                  "input.checkboxTheme !=0",
+                  
+                  radioButtons(
+                    "plottheme",
+                    "Select the theme",
+                    choices = c(
+                      "Grey", "White", "Linedraw",
+                      "Light", "Minimal", "Classic"
+                    )
+                  ),
+                  
+                  numericInput(
+                    "plotfontsize",
+                    "Font size",
+                    value = 10,
+                    min = 1,
+                    max = 50,
+                    step = 0.5
+                  ),
+                  
+                  selectInput(
+                    "plotfont",
+                    "Font",
+                    choices = c("sans", "Times", "Courier")
+                  )
+                  
                 )
                 
               ),
@@ -407,17 +378,6 @@ ui <-
                     "Y-axis label:"
                   )
                   
-                ),
-                
-                actionButton("save_plot", label = "Download plot"),
-                
-                bsModal("modal", "Download plot", trigger = "save_plot", size = "medium",
-                        
-                        selectInput("download_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
-                        
-                        textInput("download_name", "Specify file name"),
-                        
-                        downloadButton("download_plot", "Download")
                 )
                 
                 
@@ -450,7 +410,7 @@ server <- function(session, input, output){
   exampleData <- read.csv("example_data.csv",
                           header = TRUE,
                           sep = ",",
-                          stringsAsFactors = TRUE)
+                          stringsAsFactors = FALSE)
   
   
   
@@ -466,12 +426,12 @@ server <- function(session, input, output){
     mydata <- read.csv(inFile$datapath,
                        header = TRUE,
                        sep = input$sep,
-                       stringsAsFactors = TRUE)
+                       stringsAsFactors = FALSE)
     # 
     # mydata <- read_csv(inFile$datapath,
     #                    col_names = TRUE)
     
-    # names(mydata) <- gsub("\\.", " ", names(mydata))
+    names(mydata) <- gsub("\\.", " ", names(mydata))
     
     
     # for(i in 1:length(input$session)){
@@ -602,9 +562,9 @@ server <- function(session, input, output){
     #                          selected = if(input$all_default) names_inputs
     # )
     
-    updateSelectizeInput(session,
-                         "OC",
-                         choices = names_outputsR())
+    updateCheckboxGroupInput(session,
+                             "OC",
+                             choices = names_outputsR())
     
     
     # #----------------------------------------------------------
@@ -648,13 +608,10 @@ server <- function(session, input, output){
   },
   
   filter = "top",
-  
   options = list(lengthChange = FALSE, 
                  autoWidth = TRUE, 
                  scrollX = TRUE, 
                  pageLength = 5)
-  #, columns = list(search = "applied")
-  
   )
   
   
@@ -857,13 +814,7 @@ server <- function(session, input, output){
   
   
   output$colorText <- renderPrint({
-    
-    list("value" = input$plottype,
-         "class" = class(input$plottype),
-         "str" = str(input$plottype),
-         "type" = mode(input$plottype),
-         "summary" = summary(input$plottype)
-    )
+    lUiColors()
   })
   
   
@@ -1002,11 +953,11 @@ server <- function(session, input, output){
       sim_par <- c(sim_par, input$shape)
     }
     
-    if(input$radioFacet == "grid"){
+    if(input$checkboxFacet){
       sim_par <- c(sim_par, input$facet_rows, input$facet_cols)
     }
     
-    if(input$radioFacet == "wrap"){
+    if(input$checkboxFacetW){
       sim_par <- c(sim_par, input$facet_wrap)
     }
     
@@ -1026,12 +977,7 @@ server <- function(session, input, output){
                         collapse = " & ")
     
     
-    if(length(default_filter) != 0){
-      df_plot <- subset(data_prefiltered(), eval(parse(text = bedingung)))
-    } else {
-      df_plot <- data_prefiltered()
-    }
-    
+    df_plot <- subset(data_prefiltered(), eval(parse(text = bedingung)))
     df_plot # return data frame
     
     
@@ -1049,7 +995,7 @@ server <- function(session, input, output){
   
   # Transform dataset to long format on chosen output variables for easy plotting
   data_longer <- reactive({
-    req(input$OC)
+    
     
     d <- df_plot()
     # d <- d[input$filteredDT_rows_all,]
@@ -1064,38 +1010,32 @@ server <- function(session, input, output){
   
   
   
-  
   # Plot ---------------------------------------
   
   # Plot based on which dimensions are chosen
-  lineplot_object <- reactive({
+  # output$lineplot<- renderPlotly({
+  output$lineplot <-renderPlot({
     
-    # output$lineplot <-renderPlot({
+    # x_sub <- paste0('"`',
+    #                 input$x,
+    #                 '`"')
+    
+    p1 <- ggplot(
+      data_longer(), 
+      aes_string(x = input$x) # does not work for column names with whitespace
+      # aes_string(x = "`n_int`") # works for n_int as x at the example data
+      # aes_string(x = gsub('\\"', "", x_sub)) #does not work
+    )
     
     
     
     colScale <- scale_colour_manual(values = lUiColors())
     
-    p1 <- ggplot(
-      data_longer(), 
-      aes_string(x = input$x) 
-    ) + colScale
-    
-    
-    
-    
-    if(input$checkboxLine){
-      p1 <- 
-        p1 + 
-        geom_line(aes(y = value, color = OC), size = input$linesize)
-    }
-    
-    if(input$checkboxPoint){
-      
-      p1 <- 
-        p1  +
-        geom_point(aes(y = value, color = OC), size = 3*input$linesize) 
-    }
+    p1 <- 
+      p1 + 
+      geom_line(aes(y = value, color = OC), size = input$linesize) +
+      geom_point(aes(y = value, color = OC), size = 3*input$linesize) +
+      colScale
     
     
     
@@ -1114,42 +1054,20 @@ server <- function(session, input, output){
         )
     }
     
-    facets <- input$facet_wrap %>% 
-      str_replace_all(",", "+") %>% 
-      rlang::parse_exprs()
     
-    frows <- input$facet_rows %>%
-      str_replace_all(",", "+") %>%
-      rlang::parse_exprs()
-    
-    fcols <- input$facet_cols %>%
-      str_replace_all(",", "+") %>%
-      rlang::parse_exprs()
-    
-    
-    # if(input$radioFacet == "grid"){
-    #   p1 <- 
-    #     p1 + 
-    #     facet_grid(vars(get(input$facet_rows)),
-    #                vars(get(input$facet_cols))
-    #     )
-    # }
-    
-    if(input$radioFacet == "grid"){
+    if(input$checkboxFacet){
       p1 <- 
         p1 + 
-        facet_grid(vars(!!!frows),
-                   vars(!!!fcols)
+        facet_grid(vars(get(input$facet_rows)),
+                   vars(get(input$facet_cols))
         )
     }
     
-    if(input$radioFacet == "wrap"){
+    if(input$checkboxFacetW){
       
-      p1 <-
+      p1 <- 
         p1 +
-        facet_wrap(vars(!!!facets)
-                   # facet_wrap(vars(get(!!!(input$facet_wrap)))
-                   , labeller = "label_both"
+        facet_wrap(vars(get(input$facet_wrap))
         )
     }
     
@@ -1204,105 +1122,32 @@ server <- function(session, input, output){
     
     p1 <- p1 + theme(legend.title = element_blank())
     
-    # if(input$plottype){
-    #   
-    # p2 <- ggplotly(p1)
-    # p2
-    # 
-    # } else {
-    
-    # p2 <- ggplotly(p1)
-    # p2 %>% layout(legend = list(x = input$xLegend, y = input$yLegend))
-    
-    # }
-    
-    if(input$plottype){
-      ggplotly(p1)
-    } else {
-      p1
-    }
     
     
-  },
-  
-  # res = exprToFunction(input$resolution)
-  # res = input$resolution
-  
-  
+    
+    # p1 <- ggplotly(p1)
+    
+    # p1 %>% layout(legend = list(x = input$xLegend, y = input$yLegend))
+    
+    
+    
+    
+    p1},
+    
+    res = 150
+    
+    
+    
   )
-  
-  
-  
-  
-  observe({
-    
-    if(input$plottype){
-      
-      output$lineplotly <- renderPlotly({
-        lineplot_object()
-      })
-      
-    } else {
-      
-      output$lineplot <- renderPlot({
-        lineplot_object()
-      })
-      
-    }
-    
-  })
-  
-  
-  
   
   output$lineplot_ui <- renderUI({
-    
-    # plotOutput("lineplot",
-    #            height = input$plotheight,
-    #            width = input$plotwidth
-    # )
-    
-    if(input$plottype){
-      plotlyOutput("lineplotly",
-                   height = input$plotheight,
-                   width = input$plotwidth
-      )
-    } 
-    if(!input$plottype){
-      plotOutput("lineplot",
-                 height = input$plotheight,
-                 width = input$plotwidth
-      )
-    }
-    
+    plotOutput("lineplot",
+               height = input$plotheight,
+               width = input$plotwidth)
   })
   
   
-  download_type <- reactive({input$download_type})
-  
-  output$download_plot <- downloadHandler(
-    
-    filename = function(){paste0(input$download_name,
-                                 ".", 
-                                 input$download_type)},
-    
-    content = function(file){
-      fun <- match.fun( download_type() )
-      fun(file,
-          height = input$plotheight, 
-          width = input$plotwidth,
-          res = input$resolution)
-      print(lineplot_object())
-      dev.off()
-    }
-    
-    
-    
-    
-  )
-  
-}
-
+}  
 
 shinyApp(ui = ui, server = server)
 

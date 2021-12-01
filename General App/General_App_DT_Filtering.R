@@ -84,48 +84,15 @@ ui <-
                 # verbatimTextOutput("defaultsInput"),
                 DT::dataTableOutput("filteredDT")
               )
-            ),
+            )
             
             
-            fluidRow(
-              column(
-                width = 6,
-                verbatimTextOutput("lDefault")
-              ),
-              
-              column(
-                width = 6,
-                actionButton(
-                  "updateDefaultList", 
-                  "Save default values"
-                ),
-                actionButton(
-                  "updateDefaultList2",
-                  "Start Color Picker"
-                )
-                # ,
-                # 
-                # checkboxInput("all_default", 
-                #               "All/None", 
-                #               value = TRUE
-                # ),
-                # 
-                # checkboxGroupInput(
-                #   "checkboxDefault",
-                #   "Which variables should have saved default values?",
-                #   choices = NULL
-                # )
-              )
-              
-              
-            ) 
           ),
           
           tabPanel(
             "Colors",
             
             uiOutput("colors_ui")
-            , verbatimTextOutput("colorText")
           ),
           
           tabPanel(
@@ -136,6 +103,8 @@ ui <-
               uiOutput("lineplot_ui")
               # plotOutput("lineplot")
             ),
+            
+            hr(),
             
             
             fluidRow(
@@ -225,11 +194,12 @@ ui <-
                             value = FALSE,
                             size = "small"),
                 
-                actionButton("change_style", label = "Plot options"),
+                actionButton("change_style", label = "style options"),
+                
                 
                 bsModal("modal_style", "Change style and size of plot", trigger = "change_style", size = "large",
                         
-                       
+                        
                         
                         checkboxInput(
                           "checkboxLine",
@@ -243,7 +213,7 @@ ui <-
                           value = TRUE
                         ),
                         
-
+                        
                         # checkboxInput(
                         #   "checkboxLegend",
                         #   "Specify legend coordinates?"
@@ -311,7 +281,7 @@ ui <-
                           sliderInput(
                             "linesize",
                             "Line and point size",
-                            value = 0.5,
+                            value = 0.6,
                             min = 0.1,
                             max = 3,
                             step = 0.1
@@ -320,9 +290,9 @@ ui <-
                           numericInput(
                             "plotfontsize",
                             "Font size",
-                            value = 10,
+                            value = 11,
                             min = 1,
-                            max = 50,
+                            max = 30,
                             step = 0.5
                           ),
                           
@@ -352,7 +322,10 @@ ui <-
                           )
                           
                         )
-                )
+                ),
+                
+                actionButton("save_plot", label = "Download plot"),
+                
                 
               ),
               
@@ -372,6 +345,12 @@ ui <-
                     "Enter the plot title"
                   ),
                   
+                  radioButtons(
+                    "plot_title_place",
+                    "Title alignment",
+                    choices = c("left" = 0, "center" = 0.5, "right" = 1)
+                  ),
+                  
                   numericInput(
                     "plot_title_size",
                     "Size",
@@ -388,6 +367,8 @@ ui <-
                     allowTransparent = FALSE)
                   
                 ),
+                
+                hr(),
                 
                 checkboxInput(
                   "checkboxAxis",
@@ -409,7 +390,8 @@ ui <-
                   
                 ),
                 
-                actionButton("save_plot", label = "Download plot"),
+                hr(),
+                
                 
                 bsModal("modal", "Download plot", trigger = "save_plot", size = "medium",
                         
@@ -428,6 +410,38 @@ ui <-
               # verbatimTextOutput("df_plot")
               DT::dataTableOutput("df_plot")
             )
+            
+          ),
+          
+          tabPanel(
+            "qplot test",
+            uiOutput("pQplot"),
+            
+            sliderInput("qplot_size",
+                        "Choose size of qplot",
+                        min = 0.1, max = 10, value = 0.5),
+            
+            sliderInput("qplot_base",
+                        "Choose base size of qplot",
+                        min = 5, max = 30, value = 10),
+            
+            sliderInput("qplotheight",
+                        "qplot height",
+                        min = 200, max = 1500, value = 1000),
+            
+            sliderInput("qplotwidth",
+                        "qplot width",
+                        min = 100, max = 1000, value = 600),
+            
+            sliderInput("qresolution",
+                        "qplot resolution",
+                        min = 36, max = 288, value = 72),
+            
+            selectInput("qplot_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
+            
+            textInput("qplot_name", "Specify file name"),
+            
+            downloadButton("download_qplot", "Download")
             
           )
         )
@@ -604,7 +618,8 @@ server <- function(session, input, output){
     
     updateSelectizeInput(session,
                          "OC",
-                         choices = names_outputsR())
+                         choices = names_outputsR(),
+                         selected = names_outputsR()[1])
     
     
     # #----------------------------------------------------------
@@ -636,15 +651,26 @@ server <- function(session, input, output){
     # display only columns with more than 1 unique entry
     uniques <- lapply(data_filteredR(), unique)
     bUniques <- sapply(uniques, function(x) {length(x) == 1})
-    data_filteredR <<- data_filteredR()[,which(!bUniques)]
+    data_filtered <<- data_filteredR()[,which(!bUniques)]
     
-    for(i in colnames(data_filteredR)){
+    for(i in colnames(data_filtered)){
       # transforms variables to factors to be able to choose 1 factor level as default value
-      data_filteredR[,i] <<- factor(as.factor(data_filteredR[,i]))  #factor(...) drops unused factor levels from prefiltering
+      data_filtered[,i] <<- factor(as.factor(data_filtered[,i]))  #factor(...) drops unused factor levels from prefiltering
     }
     
-    data_filteredR
     
+    # Let first row be standard default value combination
+    
+    data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactor = FALSE)
+    
+    first_row_filters <<- paste0("'[\"", data_filtered_helper[1,], "\"]'")
+    first_row_filters_string <<- paste0(
+      "list(NULL, ",
+      paste0("list(search = ", first_row_filters, ")", collapse = ", "),
+      ")"
+    )
+    
+    data_filtered
   },
   
   filter = "top",
@@ -652,7 +678,9 @@ server <- function(session, input, output){
   options = list(lengthChange = FALSE, 
                  autoWidth = TRUE, 
                  scrollX = TRUE, 
-                 pageLength = 5)
+                 pageLength = 5,
+                 searchCols = eval(parse(text = first_row_filters_string))
+  )
   #, columns = list(search = "applied")
   
   )
@@ -686,7 +714,7 @@ server <- function(session, input, output){
     
     
     vNamedSearch <- input$filteredDT_search_columns
-    names(vNamedSearch) <- colnames(data_filteredR)
+    names(vNamedSearch) <- colnames(data_filtered)
     vNamedSearch
     
   })
@@ -827,7 +855,7 @@ server <- function(session, input, output){
                   label = names_outputsR()[i],
                   showColour = "both",
                   # value = "black"
-                  value = colors()[sample(1:657,
+                  value = colors()[sample(1:length(colors()),
                                           size = 1,
                                           replace = FALSE)]
       )
@@ -856,15 +884,6 @@ server <- function(session, input, output){
   })
   
   
-  output$colorText <- renderPrint({
-    
-    list("value" = input$plottype,
-         "class" = class(input$plottype),
-         "str" = str(input$plottype),
-         "type" = mode(input$plottype),
-         "summary" = summary(input$plottype)
-    )
-  })
   
   
   
@@ -1062,7 +1081,45 @@ server <- function(session, input, output){
     d
   })
   
+  # qplot -------------------------------------------------
+  qplot_object <- reactive({
+    
+    pQplot <- qplot(1:10, 1:10)
+    
+    pQplot <- pQplot + geom_line(size = input$qplot_size) + theme_minimal(base_size = input$qplot_base)
+    
+    pQplot
+  })
   
+  output$Qplot <- renderPlot({
+    qplot_object()
+  })
+  
+  output$pQplot <- renderUI({
+    
+    plotOutput("Qplot",
+               height = input$qplotheight,
+               width = input$qplotwidth)
+  })
+  
+  qplot_type <- reactive({input$qplot_type})
+  
+  output$download_qplot <- downloadHandler(
+    
+    filename = function(){paste0(input$qplot_name,
+                                 ".", 
+                                 input$qplot_type)},
+    
+    content = function(file){
+      fun <- match.fun( qplot_type() )
+      fun(file,
+          height = input$qplotheight, 
+          width = input$qplotwidth,
+          res = input$qresolution)
+      print(qplot_object())
+      dev.off()
+    }
+  )
   
   
   # Plot ---------------------------------------
@@ -1139,7 +1196,8 @@ server <- function(session, input, output){
       p1 <- 
         p1 + 
         facet_grid(vars(!!!frows),
-                   vars(!!!fcols)
+                   vars(!!!fcols),
+                   labeller = "label_both"
         )
     }
     
@@ -1189,7 +1247,11 @@ server <- function(session, input, output){
       p1 <- p1 + 
         labs(title = input$plot_title)  + 
         theme(plot.title = element_text(colour = input$plot_title_colour,
-                                        size = input$plot_title_size, vjust = 1.5))
+                                        size = input$plot_title_size, 
+                                        vjust = 1.5,
+                                        hjust = input$plot_title_place))
+      
+      
       
     }
     
@@ -1267,8 +1329,8 @@ server <- function(session, input, output){
                    height = input$plotheight,
                    width = input$plotwidth
       )
-    } 
-    if(!input$plottype){
+    } else{
+      # if(!input$plottype){
       plotOutput("lineplot",
                  height = input$plotheight,
                  width = input$plotwidth
@@ -1304,7 +1366,7 @@ server <- function(session, input, output){
 }
 
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(launch.browser = TRUE))
 
 #shinyBS::bsModal()
 

@@ -11,579 +11,568 @@ library(shinyBS)
 library(colourpicker)
 library(shinyWidgets)
 library(bslib)
+library(shinydashboard)
 
 ui <- 
-  fluidPage(
-    theme = bs_theme(bootswatch = "minty"),
-    title = "Simulation Results", # title in browser window tab
+  dashboardPage(
+    
+    dashboardHeader(
+      title = "Simulation Results"
+    ), # title in browser window tab
     
     
-    # App title 
-    titlePanel("Simulation Shiny App"), 
     
-    add_busy_spinner(spin = "fading-circle"),
-    sidebarLayout(
-      
-      sidebarPanel(
+    
+    dashboardSidebar(
+      sidebarMenu(
         
-        checkboxInput(
-          "checkboxExampleData", 
-          "Use example dataset"
-        ),
-        
-        
-        conditionalPanel(
-          "input.checkboxExampleData == 0",
-          
-          radioButtons(
-            "sep", 
-            "Csv-Separator", 
-            choiceValues = c(",", ";", ""),
-            choiceNames = c(",", ";", "whitespace")
-          ),
-          
-          fileInput(
-            "file", 
-            "Choose file to upload"
-          ),
-          
-          selectInput(
-            "inputend", 
-            "State last input variable", 
-            choices = NULL
-          ),
-          
+        menuItem(
+          "Data Settings", 
+          tabName = "data_settings", 
+          icon = icon("gear"),
           checkboxInput(
-            "checkboxRepvar",
-            "Does your dataset contain a variable indicating the replication run?"
+            "checkboxExampleData", 
+            "Use example dataset"
           ),
+          
           
           conditionalPanel(
-            "input.checkboxRepvar != 0",
+            "input.checkboxExampleData == 0",
+            
+            radioButtons(
+              "sep", 
+              "Csv-Separator", 
+              choiceValues = c(",", ";", ""),
+              choiceNames = c(",", ";", "whitespace")
+            ),
+            
+            fileInput(
+              "file", 
+              "Choose file to upload"
+            ),
             
             selectInput(
-              "repvar",
-              "Select the replication run variable",
+              "inputend", 
+              "State last input variable", 
               choices = NULL
             ),
             
-            selectInput(
-              "repvarMethod",
-              "Select the summary method you want to apply to your data",
-              choices = c("mean", "median")
+            checkboxInput(
+              "checkboxRepvar",
+              "Does your dataset contain a variable indicating the replication run?"
+            ),
+            
+            conditionalPanel(
+              "input.checkboxRepvar != 0",
+              
+              selectInput(
+                "repvar",
+                "Select the replication run variable",
+                choices = NULL
+              ),
+              
+              selectInput(
+                "repvarMethod",
+                "Select the summary method you want to apply to your data",
+                choices = c("mean", "median")
+              )
             )
           )
-          
-          
-          
         ),
+        
+        menuItem(
+          "Data",
+          tabName = "data",
+          icon = icon("file")
+        ),
+        
+        menuItem(
+          "Default values", 
+          tabName = "default", 
+          icon = icon("motorcycle")
+        ),
+        
+        menuItem(
+          "Distribution", 
+          tabName = "distribution", 
+          icon = icon("area-chart")
+        ),
+        
+        menuItem(
+          "Plot", 
+          tabName = "plot", 
+          icon = icon("line-chart")
+        ),
+        
         br(),
         h3("Default value overview"),
         tableOutput("defaults_df")
-        
-      ),
-      
-      
-      mainPanel(
-        
-        tabsetPanel(
-          id = "tabs", 
+      )
+    ),
+    
+    dashboardBody(
+      add_busy_spinner(spin = "fading-circle"),
+      tabItems(
+        tabItem(
+          tabName = "data",
+          verbatimTextOutput("test"),
+          DT::dataTableOutput("dataDT"),
+          # conditionalPanel("input.checkboxRepvar != 0",
+          #                  h3("Summarized Data"),
+          #                  DT::dataTableOutput("repDataDT")
+          # )
+          uiOutput("dataDT_summarized")
+        ),
+        tabItem(
+          tabName = "default",
+          DT::dataTableOutput("chooseDT"),
+          br(),
+          # conditionalPanel(
+          # "input.checkboxExampleData",
+          actionButton("buttonDefault", "Take first row as default values")
+          # )
           
-          tabPanel(
-            "Pre-filter data",
-            verbatimTextOutput("test"),
-            DT::dataTableOutput("dataDT"),
-            # conditionalPanel("input.checkboxRepvar != 0",
-            #                  h3("Summarized Data"),
-            #                  DT::dataTableOutput("repDataDT")
-            # )
-            uiOutput("dataDT_summarized")
-          ), 
+        ),
+        tabItem(
+          tabName = "distribution",
           
-          
-          
-          
-          tabPanel(
-            "Choose default values",
-            
-            
-            DT::dataTableOutput("chooseDT"),
-            br(),
-            # conditionalPanel(
-            # "input.checkboxExampleData",
-            actionButton("buttonDefault", "Take first row as default values")
-            # )
-            
-            
-          ),
-          
-          
-          
-          tabPanel(
-            "Distribution",
-            
-            fluidRow(
-              column(
-                4,
-                
-                
-                selectInput(
-                  "boxplotGroupVar",
-                  "Select grouping variable for distribution plot",
-                  choices = NULL
-                ),
-                
-                selectInput(
-                  "boxplotColorVar",
-                  "Select variable for (additional) color differentiation",
-                  choices = NULL
-                ),
-                
-                sliderInput(
-                  "alpha",
-                  "Select transparency (alpha)",
-                  min = 0,
-                  max = 1,
-                  value = 0.1,
-                  step = 0.1
-                ),
-                
-                selectInput(
-                  "boxplotOutputVar",
-                  "Select distribution variable",
-                  choices = NULL
-                )
+          fluidRow(
+            column(
+              4,
+              
+              selectInput(
+                "boxplotGroupVar",
+                "Select grouping variable for distribution plot",
+                choices = NULL
               ),
               
-              column(4,
-                     radioButtons(
-                       "radioFacetDistribution",
-                       "Do you want to add a facet dimension?",
-                       choices = c("no", "grid", "wrap")
-                     ),
-                     
-                     conditionalPanel(
-                       "input.radioFacetDistribution == 'grid'",
-                       
-                       selectInput(
-                         "facet_distribution_rows", 
-                         "Choose row variable", 
-                         choices = NULL,
-                         multiple = TRUE
-                       ),
-                       
-                       selectInput(
-                         "facet_distribution_cols", 
-                         "Choose col variable", 
-                         choices = NULL,
-                         multiple = TRUE
-                       )
-                     ),
-                     
-                     
-                     conditionalPanel(
-                       "input.radioFacetDistribution == 'wrap'",
-                       
-                       selectizeInput(
-                         "facet_distribution_wrap", 
-                         "Choose variables to facet wrap",
-                         choices = NULL,
-                         multiple = TRUE
-                       )
-                     )),
+              selectInput(
+                "boxplotColorVar",
+                "Select variable for (additional) color differentiation",
+                choices = NULL
+              ),
               
-              column(
-                4,
-                
-                HTML("<b>Choose plottype</b>"),
-                
-                radioButtons(
-                  "boxplottype",
-                  "Box-/Violin- or Density-plot",
-                  choices =c("Boxplot", "Violinplot", "Densityplot"),
-                  selected = "Boxplot",
-                )
+              sliderInput(
+                "alpha",
+                "Select transparency (alpha)",
+                min = 0,
+                max = 1,
+                value = 0.1,
+                step = 0.1
+              ),
+              
+              selectInput(
+                "boxplotOutputVar",
+                "Select distribution variable",
+                choices = NULL
               )
             ),
             
-            plotOutput("pBoxplot")
-          ),
-          
-          
-          tabPanel(
-            "Plot",
-            
-            fluidRow(
-              # plotlyOutput("lineplot")
-              uiOutput("lineplot_ui")
-              # plotOutput("lineplot")
-            ),
-            
-            hr(),
-            
-            
-            fluidRow(
-              column(
-                3,
-                #verbatimTextOutput("test"),
+            column(
+              4,
+              radioButtons(
+                "radioFacetDistribution",
+                "Do you want to add a facet dimension?",
+                choices = c("no", "grid", "wrap")
+              ),
+              
+              conditionalPanel(
+                "input.radioFacetDistribution == 'grid'",
                 
                 selectInput(
-                  "x", 
-                  "Choose x-Variable", 
-                  choices = NULL
+                  "facet_distribution_rows", 
+                  "Choose row variable", 
+                  choices = NULL,
+                  multiple = TRUE
                 ),
                 
-                # colourPicker(3),
-                
-                
-                selectizeInput(
-                  "OC", 
-                  "Choose OC to plot", 
+                selectInput(
+                  "facet_distribution_cols", 
+                  "Choose col variable", 
                   choices = NULL,
                   multiple = TRUE
                 )
               ),
               
-              column(
-                3,
+              
+              conditionalPanel(
+                "input.radioFacetDistribution == 'wrap'",
                 
-                radioButtons(
-                  "radioFacet",
-                  "Do you want to add a facet dimension?",
-                  choices = c("no", "grid", "wrap")
-                ),
-                
-                conditionalPanel(
-                  "input.radioFacet == 'grid'",
-                  
-                  selectInput(
-                    "facet_rows", 
-                    "Choose row variable", 
-                    choices = NULL,
-                    multiple = TRUE
-                  ),
-                  
-                  selectInput(
-                    "facet_cols", 
-                    "Choose col variable", 
-                    choices = NULL,
-                    multiple = TRUE
-                  )
-                ),
-                
-                
-                conditionalPanel(
-                  "input.radioFacet == 'wrap'",
-                  
-                  selectizeInput(
-                    "facet_wrap", 
-                    "Choose variables to facet wrap",
-                    choices = NULL,
-                    multiple = TRUE
-                  )
-                ),
-                
-                
-                
-                
-                checkboxInput(
-                  "checkboxShape", 
-                  "Do you want to add a shape dimension?"
-                ),
-                conditionalPanel(
-                  "input.checkboxShape != 0",
-                  
-                  selectInput(
-                    "shape", 
-                    "Choose shape variable",
-                    choices = NULL
-                  )
+                selectizeInput(
+                  "facet_distribution_wrap", 
+                  "Choose variables to facet wrap",
+                  choices = NULL,
+                  multiple = TRUE
                 )
+              )),
+            
+            column(
+              4,
+              
+              HTML("<b>Choose plottype</b>"),
+              
+              radioButtons(
+                "boxplottype",
+                "Box-/Violin- or Density-plot",
+                choices =c("Boxplot", "Violinplot", "Densityplot"),
+                selected = "Boxplot",
+              )
+            )
+          ),
+          
+          plotOutput("pBoxplot")
+        ),
+        
+        tabItem(
+          tabName = "plot",
+          
+          fluidRow(
+            # plotlyOutput("lineplot")
+            uiOutput("lineplot_ui")
+            # plotOutput("lineplot")
+          ),
+          
+          hr(),
+          
+          
+          fluidRow(
+            column(
+              3,
+              #verbatimTextOutput("test"),
+              
+              selectInput(
+                "x", 
+                "Choose x-Variable", 
+                choices = NULL
               ),
               
-              column(
-                3,
-                
-                switchInput("plottype",
-                            "Interactive Plot?",
-                            value = FALSE,
-                            size = "small"),
-                
-                actionButton("change_colors", label = "color choices for OC"),
-                
-                bsModal("modal_colors",
-                        "Change colors of plot",
-                        trigger = "change_colors",
-                        size = "large",
-                        uiOutput("colors_ui")
-                )
-                ,
-                
-                actionButton("change_style", label = "style options"),
-                
-                
-                
-                bsModal("modal_style", 
-                        "Change style and size of plot", 
-                        trigger = "change_style", 
-                        size = "large",
-                        
-                        
-                        
-                        checkboxInput(
-                          "checkboxLine",
-                          "Add lines?",
-                          value = TRUE
-                        ),
-                        
-                        checkboxInput(
-                          "checkboxPoint",
-                          "Add points?",
-                          value = TRUE
-                        ),
-                        
-                        
-                        # checkboxInput(
-                        #   "checkboxLegend",
-                        #   "Specify legend coordinates?"
-                        # ),
-                        
-                        conditionalPanel(
-                          "input.plottype",
-                          
-                          sliderInput("xLegend",
-                                      "x-coord legend",
-                                      min = -0.5,
-                                      max = 1.2,
-                                      value = 1.05, 
-                                      step = 0.05),
-                          
-                          
-                          
-                          sliderInput("yLegend",
-                                      "y-coord legend",
-                                      min = -0.5,
-                                      max = 1.2,
-                                      value = 0.5,
-                                      step = 0.05)
-                        ),
-                        # 
-                        #                 sliderInput("res",
-                        #                             "Change resolution",
-                        #                             value = 72,
-                        #                             min = 50, 
-                        #                             max = 200),
-                        
-                        checkboxInput(
-                          "checkboxSize", 
-                          "Change plot size"
-                        ),
-                        conditionalPanel(
-                          "input.checkboxSize != 0",
-                          
-                          
-                          
-                          sliderInput(
-                            "plotwidth",
-                            "Plot width (px)",
-                            value = 1000,
-                            min = 600,
-                            max = 1500
-                          ),
-                          
-                          sliderInput(
-                            "plotheight",
-                            "Plot height (px)",
-                            value = 600,
-                            min = 300,
-                            max = 1000
-                          ),
-                          
-                          sliderInput(
-                            "linesize",
-                            "Line and point size",
-                            value = 0.6,
-                            min = 0.1,
-                            max = 3,
-                            step = 0.1
-                          ),
-                          
-                          numericInput(
-                            "plotfontsize",
-                            "Font size",
-                            value = 11,
-                            min = 1,
-                            max = 30,
-                            step = 0.5
-                          ),
-                          
-                          selectInput(
-                            "plotfont",
-                            "Font",
-                            choices = c("sans", "Times", "Courier")
-                          )
-                        ),
-                        
-                        
-                        checkboxInput(
-                          "checkboxTheme",
-                          "Change the theme?"
-                        ),
-                        
-                        conditionalPanel(
-                          "input.checkboxTheme !=0",
-                          
-                          radioButtons(
-                            "plottheme",
-                            "Select the theme",
-                            choices = c(
-                              "Grey", "White", "Linedraw",
-                              "Light", "Minimal", "Classic"
-                            )
-                          )
-                          
-                        )
-                ),
-                
-                actionButton("save_plot", label = "Download plot"),
-                
-                
-              ),
+              # colourPicker(3),
               
-              column(
-                3,
-                
-                checkboxInput(
-                  "checkboxTitle",
-                  "Add title"
-                ),
-                
-                conditionalPanel(
-                  "input.checkboxTitle != 0",
-                  
-                  textInput(
-                    "plot_title",
-                    "Enter the plot title"
-                  ),
-                  
-                  radioButtons(
-                    "plot_title_place",
-                    "Title alignment",
-                    choices = c("left" = 0, "center" = 0.5, "right" = 1)
-                  ),
-                  
-                  numericInput(
-                    "plot_title_size",
-                    "Size",
-                    value = 30,
-                    min = 1,
-                    max = 50,
-                    step = 1
-                  ),
-                  
-                  colourInput(
-                    inputId = "plot_title_colour", label = "Title colour:",
-                    showColour = "both",
-                    value = "black",
-                    allowTransparent = FALSE)
-                  
-                ),
-                
-                hr(),
-                
-                checkboxInput(
-                  "checkboxAxis",
-                  "Change axis labels"
-                ),
-                
-                conditionalPanel(
-                  "input.checkboxAxis != 0",
-                  
-                  textInput(
-                    "xLab",
-                    "X-axis label:"
-                  ),
-                  
-                  textInput(
-                    "yLab",
-                    "Y-axis label:"
-                  )
-                  
-                ),
-                
-                hr(),
-                
-                
-                bsModal("modal", "Download plot", trigger = "save_plot", size = "medium",
-                        
-                        selectInput("download_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
-                        
-                        
-                        sliderInput(
-                          "resolution",
-                          "Resolution",
-                          value = 72,
-                          min = 36, 
-                          max = 288
-                        ),
-                        
-                        
-                        textInput("download_name", "Specify file name"),
-                        
-                        downloadButton("download_plot", "Download")
-                )
-                
-                
+              
+              selectizeInput(
+                "OC", 
+                "Choose OC to plot", 
+                choices = NULL,
+                multiple = TRUE
               )
             ),
             
-            fluidRow(
-              # verbatimTextOutput("df_plot")
-              DT::dataTableOutput("df_plot")
-            )
+            column(
+              3,
+              
+              radioButtons(
+                "radioFacet",
+                "Do you want to add a facet dimension?",
+                choices = c("no", "grid", "wrap")
+              ),
+              
+              conditionalPanel(
+                "input.radioFacet == 'grid'",
+                
+                selectInput(
+                  "facet_rows", 
+                  "Choose row variable", 
+                  choices = NULL,
+                  multiple = TRUE
+                ),
+                
+                selectInput(
+                  "facet_cols", 
+                  "Choose col variable", 
+                  choices = NULL,
+                  multiple = TRUE
+                )
+              ),
+              
+              
+              conditionalPanel(
+                "input.radioFacet == 'wrap'",
+                
+                selectizeInput(
+                  "facet_wrap", 
+                  "Choose variables to facet wrap",
+                  choices = NULL,
+                  multiple = TRUE
+                )
+              ),
+              
+              
+              
+              
+              checkboxInput(
+                "checkboxShape", 
+                "Do you want to add a shape dimension?"
+              ),
+              conditionalPanel(
+                "input.checkboxShape != 0",
+                
+                selectInput(
+                  "shape", 
+                  "Choose shape variable",
+                  choices = NULL
+                )
+              )
+            ),
             
+            column(
+              3,
+              
+              switchInput("plottype",
+                          "Interactive Plot?",
+                          value = FALSE,
+                          size = "small"),
+              
+              actionButton("change_colors", label = "color choices for OC"),
+              
+              bsModal("modal_colors",
+                      "Change colors of plot",
+                      trigger = "change_colors",
+                      size = "large",
+                      uiOutput("colors_ui")
+              )
+              ,
+              
+              actionButton("change_style", label = "style options"),
+              
+              
+              
+              bsModal("modal_style", 
+                      "Change style and size of plot", 
+                      trigger = "change_style", 
+                      size = "large",
+                      
+                      
+                      
+                      checkboxInput(
+                        "checkboxLine",
+                        "Add lines?",
+                        value = TRUE
+                      ),
+                      
+                      checkboxInput(
+                        "checkboxPoint",
+                        "Add points?",
+                        value = TRUE
+                      ),
+                      
+                      
+                      # checkboxInput(
+                      #   "checkboxLegend",
+                      #   "Specify legend coordinates?"
+                      # ),
+                      
+                      conditionalPanel(
+                        "input.plottype",
+                        
+                        sliderInput("xLegend",
+                                    "x-coord legend",
+                                    min = -0.5,
+                                    max = 1.2,
+                                    value = 1.05, 
+                                    step = 0.05),
+                        
+                        
+                        
+                        sliderInput("yLegend",
+                                    "y-coord legend",
+                                    min = -0.5,
+                                    max = 1.2,
+                                    value = 0.5,
+                                    step = 0.05)
+                      ),
+                      # 
+                      #                 sliderInput("res",
+                      #                             "Change resolution",
+                      #                             value = 72,
+                      #                             min = 50, 
+                      #                             max = 200),
+                      
+                      checkboxInput(
+                        "checkboxSize", 
+                        "Change plot size"
+                      ),
+                      conditionalPanel(
+                        "input.checkboxSize != 0",
+                        
+                        
+                        
+                        sliderInput(
+                          "plotwidth",
+                          "Plot width (px)",
+                          value = 1000,
+                          min = 600,
+                          max = 1500
+                        ),
+                        
+                        sliderInput(
+                          "plotheight",
+                          "Plot height (px)",
+                          value = 600,
+                          min = 300,
+                          max = 1000
+                        ),
+                        
+                        sliderInput(
+                          "linesize",
+                          "Line and point size",
+                          value = 0.6,
+                          min = 0.1,
+                          max = 3,
+                          step = 0.1
+                        ),
+                        
+                        numericInput(
+                          "plotfontsize",
+                          "Font size",
+                          value = 11,
+                          min = 1,
+                          max = 30,
+                          step = 0.5
+                        ),
+                        
+                        selectInput(
+                          "plotfont",
+                          "Font",
+                          choices = c("sans", "Times", "Courier")
+                        )
+                      ),
+                      
+                      
+                      checkboxInput(
+                        "checkboxTheme",
+                        "Change the theme?"
+                      ),
+                      
+                      conditionalPanel(
+                        "input.checkboxTheme !=0",
+                        
+                        radioButtons(
+                          "plottheme",
+                          "Select the theme",
+                          choices = c(
+                            "Grey", "White", "Linedraw",
+                            "Light", "Minimal", "Classic"
+                          )
+                        )
+                        
+                      )
+              ),
+              
+              actionButton("save_plot", label = "Download plot"),
+              
+              
+            ),
+            
+            column(
+              3,
+              
+              checkboxInput(
+                "checkboxTitle",
+                "Add title"
+              ),
+              
+              conditionalPanel(
+                "input.checkboxTitle != 0",
+                
+                textInput(
+                  "plot_title",
+                  "Enter the plot title"
+                ),
+                
+                radioButtons(
+                  "plot_title_place",
+                  "Title alignment",
+                  choices = c("left" = 0, "center" = 0.5, "right" = 1)
+                ),
+                
+                numericInput(
+                  "plot_title_size",
+                  "Size",
+                  value = 30,
+                  min = 1,
+                  max = 50,
+                  step = 1
+                ),
+                
+                colourInput(
+                  inputId = "plot_title_colour", label = "Title colour:",
+                  showColour = "both",
+                  value = "black",
+                  allowTransparent = FALSE)
+                
+              ),
+              
+              hr(),
+              
+              checkboxInput(
+                "checkboxAxis",
+                "Change axis labels"
+              ),
+              
+              conditionalPanel(
+                "input.checkboxAxis != 0",
+                
+                textInput(
+                  "xLab",
+                  "X-axis label:"
+                ),
+                
+                textInput(
+                  "yLab",
+                  "Y-axis label:"
+                )
+                
+              ),
+              
+              hr(),
+              
+              
+              bsModal("modal", "Download plot", trigger = "save_plot", size = "medium",
+                      
+                      selectInput("download_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
+                      
+                      
+                      sliderInput(
+                        "resolution",
+                        "Resolution",
+                        value = 72,
+                        min = 36, 
+                        max = 288
+                      ),
+                      
+                      
+                      textInput("download_name", "Specify file name"),
+                      
+                      downloadButton("download_plot", "Download")
+              )
+              
+              
+            )
           ),
           
-          
-          tabPanel(
-            "qplot test",
-            uiOutput("pQplot"),
-            
-            sliderInput("qplot_size",
-                        "Choose size of qplot",
-                        min = 0.1, max = 10, value = 0.5),
-            
-            sliderInput("qplot_base",
-                        "Choose base size of qplot",
-                        min = 5, max = 30, value = 10),
-            
-            sliderInput("qplotheight",
-                        "qplot height",
-                        min = 200, max = 1500, value = 1000),
-            
-            sliderInput("qplotwidth",
-                        "qplot width",
-                        min = 100, max = 1000, value = 600),
-            
-            sliderInput("qresolution",
-                        "qplot resolution",
-                        min = 36, max = 288, value = 72),
-            
-            selectInput("qplot_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
-            
-            textInput("qplot_name", "Specify file name"),
-            
-            downloadButton("download_qplot", "Download")
-            
-            
+          fluidRow(
+            # verbatimTextOutput("df_plot")
+            DT::dataTableOutput("df_plot")
           )
           
-          
         )
+        
+        
       )
-      
     )
+    
+    
   )
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1181,8 +1170,8 @@ server <- function(session, input, output){
     vColors
     
   })
-
-
+  
+  
   
   
   
@@ -1340,7 +1329,7 @@ server <- function(session, input, output){
   output$pBoxplot <- renderPlot({
     validate(
       need(input$repvar != input$inputend, "replication variable can't be an input variable")
-          )
+    )
     # validate(
     #   need(length(defaults_input()) != 0, "Please choose default values first")
     # )

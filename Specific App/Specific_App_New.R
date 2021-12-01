@@ -446,6 +446,16 @@ server <- function(session, input, output){
       data_filtered[,i] <<- factor(as.factor(data_filtered[[i]]))  #factor(...) drops unused factor levels from prefiltering
     }
     
+   data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactors = FALSE)
+
+      
+    fil <<- paste0("'[\"", data_filtered_helper[1,], "\"]'")
+    fil_string <<- paste0(
+      "list(NULL, ",
+      paste0("list(search = ", fil, ")", collapse = ", "),
+      ")"
+      )
+    
     data_filtered
     
   },
@@ -455,14 +465,16 @@ server <- function(session, input, output){
                  autoWidth = TRUE, 
                  # scrollX = TRUE, 
                  pageLength = 5,
-                 # searchCols defines starting values for filters
-                 searchCols = list(NULL,list(search = '["1"]'),
-                                   list(search = '["7"]'),
-                                   list(search = '["all"]'),
-                                   list(search = '["0.03"]'),
-                                   list(search = '["500"]'),
-                                   list(search = '["Yes"]'),
-                                   list(search = '["Setting 1"]'))
+                 searchCols defines starting values for filters
+                 # searchCols = list(NULL,list(search = '["1"]'),
+                 #                   list(search = '["7"]'),
+                 #                   list(search = '["all"]'),
+                 #                   list(search = '["0.03"]'),
+                 #                   list(search = '["500"]'),
+                 #                   list(search = '["Yes"]'),
+                 #                   list(search = '["Setting 1"]'))
+                 
+                 searchCols = eval(parse(text = fil_string))
   )
   )
   

@@ -23,98 +23,113 @@ ui <-
     
     
     
-    dashboardSidebar(
-      sidebarMenu(
-        
-        menuItem(
-          "Data Settings", 
-          tabName = "data_settings", 
-          icon = icon("gear"),
-          checkboxInput(
-            "checkboxExampleData", 
-            "Use example dataset"
-          ),
-          
-          
-          conditionalPanel(
-            "input.checkboxExampleData == 0",
-            
-            radioButtons(
-              "sep", 
-              "Csv-Separator", 
-              choiceValues = c(",", ";", ""),
-              choiceNames = c(",", ";", "whitespace")
-            ),
-            
-            fileInput(
-              "file", 
-              "Choose file to upload"
-            ),
-            
-            selectInput(
-              "inputend", 
-              "State last input variable", 
-              choices = NULL
-            ),
-            
-            checkboxInput(
-              "checkboxRepvar",
-              "Does your dataset contain a variable indicating the replication run?"
-            ),
-            
-            conditionalPanel(
-              "input.checkboxRepvar != 0",
-              
-              selectInput(
-                "repvar",
-                "Select the replication run variable",
-                choices = NULL
-              ),
-              
-              selectInput(
-                "repvarMethod",
-                "Select the summary method you want to apply to your data",
-                choices = c("mean", "median")
-              )
-            )
-          )
-        ),
-        
-        menuItem(
-          "Data",
-          tabName = "data",
-          icon = icon("file")
-        ),
-        
-        menuItem(
-          "Default values", 
-          tabName = "default", 
-          icon = icon("motorcycle")
-        ),
-        
-        menuItem(
-          "Distribution", 
-          tabName = "distribution", 
-          icon = icon("area-chart")
-        ),
-        
-        menuItem(
-          "Plot", 
-          tabName = "plot", 
-          icon = icon("line-chart")
-        ),
-        
-        br(),
-        h3("Default value overview"),
-        tableOutput("defaults_df")
-      )
+    dashboardSidebar(width = 300,
+                     sidebarMenu(
+                       menuItem(
+                         text = "Data Settings",
+                         
+                         
+                         checkboxInput(
+                           "checkboxExampleData", 
+                           "Use example dataset"
+                         ),
+                         
+                         
+                         conditionalPanel(
+                           "input.checkboxExampleData == 0",
+                           
+                           radioButtons(
+                             "sep", 
+                             "Csv-Separator", 
+                             choiceValues = c(",", ";", ""),
+                             choiceNames = c(",", ";", "whitespace")
+                           ),
+                           
+                           fileInput(
+                             "file", 
+                             "Choose file to upload"
+                           ),
+                           
+                           selectInput(
+                             "inputend", 
+                             "State last input variable", 
+                             choices = NULL
+                           ),
+                           
+                           checkboxInput(
+                             "checkboxRepvar",
+                             "Does your dataset contain a variable indicating the replication run?"
+                           ),
+                           
+                           conditionalPanel(
+                             "input.checkboxRepvar != 0",
+                             
+                             selectInput(
+                               "repvar",
+                               "Select the replication run variable",
+                               choices = NULL
+                             ),
+                             
+                             selectInput(
+                               "repvarMethod",
+                               "Select the summary method you want to apply to your data",
+                               choices = c("mean", "median")
+                             )
+                           )
+                         ),
+                         tabName = "data_settings",icon = icon("gear")
+                       ),
+                       
+                       menuItem(
+                         "Data",
+                         tabName = "data",
+                         icon = icon("database")
+                       ),
+
+                       menuItem(
+                         "Default values", 
+                         tabName = "default", 
+                         icon = icon("pen")
+                       ),
+                       
+                       menuItem(
+                         "Distribution", 
+                         tabName = "distribution", 
+                         icon = icon("area-chart")
+                       ),
+                       
+                       menuItem(
+                         "Plot", 
+                         tabName = "plot", 
+                         icon = icon("line-chart")
+                       ),
+                       
+                       menuItem("Test Plot & Download",
+                                tabName = "qplot",
+                                icon = icon("toilet")
+                       ),
+                       
+                       menuItem("Help",
+                                tabName = "help",
+                                icon = icon("question")
+                       ),
+                       
+                       br(),
+                       h3("Default value overview"),
+                       tableOutput("defaults_df")
+                       
+                     )
     ),
     
     dashboardBody(
       add_busy_spinner(spin = "fading-circle"),
       tabItems(
         tabItem(
-          tabName = "data",
+          tabName = "data_settings",
+        ),
+
+        tabItem(
+        tabName = "data",
           verbatimTextOutput("test"),
           DT::dataTableOutput("dataDT"),
           # conditionalPanel("input.checkboxRepvar != 0",
@@ -123,16 +138,19 @@ ui <-
           # )
           uiOutput("dataDT_summarized")
         ),
+        
         tabItem(
           tabName = "default",
           DT::dataTableOutput("chooseDT"),
           br(),
           # conditionalPanel(
           # "input.checkboxExampleData",
-          actionButton("buttonDefault", "Take first row as default values")
+          actionButton("buttonDefault", "Take first row as default values"),
+          actionButton("buttonResetDefault", "Reset all Filters")
           # )
           
         ),
+        
         tabItem(
           tabName = "distribution",
           
@@ -143,12 +161,6 @@ ui <-
               selectInput(
                 "boxplotGroupVar",
                 "Select grouping variable for distribution plot",
-                choices = NULL
-              ),
-              
-              selectInput(
-                "boxplotColorVar",
-                "Select variable for (additional) color differentiation",
                 choices = NULL
               ),
               
@@ -221,6 +233,18 @@ ui <-
           ),
           
           plotOutput("pBoxplot")
+        ),
+        
+        tabItem(
+          tabName = "qplot",
+          #plotOutput("Qplot"),
+          uiOutput("pQplot"),
+          textInput("qplot_name", "Name"),
+          numericInput("qplotwidth", "Width", 500),
+          numericInput("qplotres", "Res", 300),
+          numericInput("qplotheight", "Height", 500),
+          selectInput("qplot_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
+          downloadButton("download_qplot", "DL qplot")
         ),
         
         tabItem(
@@ -535,9 +559,9 @@ ui <-
                       sliderInput(
                         "resolution",
                         "Resolution",
-                        value = 72,
-                        min = 36, 
-                        max = 288
+                        value = 300,
+                        min = 50, 
+                        max = 1000
                       ),
                       
                       
@@ -555,14 +579,19 @@ ui <-
             DT::dataTableOutput("df_plot")
           )
           
+        ),
+        
+        tabItem("help",
+                h3("User Manual and Help will be displayed")
+          
         )
         
         
       )
     )
-    
-    
-  )
+  )   
+
+
 
 
 
@@ -709,7 +738,7 @@ server <- function(session, input, output){
   # display dataset as DT
   # Table in tab 'Pre-filter data'
   output$dataDT <- DT::renderDT(
-    as.tibble(data_full()),
+    as_tibble(data_full()),
     filter = "top",
     options = list(lengthChange = FALSE, 
                    autoWidth = TRUE,
@@ -988,11 +1017,12 @@ server <- function(session, input, output){
       data_filtered[,i] <<- factor(as.factor(data_filtered[,i]))  #factor(...) drops unused factor levels from prefiltering
     }
     
-    if(input$buttonDefault){
+    
+    if(input$buttonDefault > input$buttonResetDefault) {
       # Let first row be standard default value combination
       data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactor = FALSE)
       
-      first_row_filters <<- paste0("'[\"", data_filtered_helper[1,], "\"]'")
+      first_row_filters <- paste0("'[\"", data_filtered_helper[1,], "\"]'")
       first_row_filters_string <<- paste0(
         "list(NULL, ",
         paste0("list(search = ", first_row_filters, ")", collapse = ", "),
@@ -1001,6 +1031,10 @@ server <- function(session, input, output){
     } else {
       first_row_filters_string <<- "NULL"
     }
+    
+    
+    
+    
     
     data_filtered
     
@@ -1194,13 +1228,6 @@ server <- function(session, input, output){
     
   })
   
-  observe({
-    
-    updateSelectInput(session,
-                      "boxplotColorVar",
-                      choices = names_inputsR()
-    )
-  })
   
   observe({
     
@@ -1387,7 +1414,7 @@ server <- function(session, input, output){
     if(input$boxplottype == "Densityplot"){
       
       boxplot + geom_density(aes_string(fill = input$boxplotGroupVar, 
-                                        col = input$boxplotColorVar, 
+                                        col = input$boxplotGroupVar, 
                                         x = input$boxplotOutputVar), 
                              alpha = input$alpha)
       
@@ -1397,14 +1424,14 @@ server <- function(session, input, output){
       if(input$boxplottype == "Violinplot"){
         boxplot + geom_violin(aes_string(x = input$boxplotGroupVar,
                                          y = input$boxplotOutputVar,
-                                         color = input$boxplotColorVar,
-                                         fill = input$boxplotColorVar),
+                                         color = input$boxplotGroupVar,
+                                         fill = input$boxplotGroupVar),
                               alpha = input$alpha)
       } else {
         boxplot + geom_boxplot(aes_string(x = input$boxplotGroupVar,
                                           y = input$boxplotOutputVar,
-                                          color = input$boxplotColorVar,
-                                          fill = input$boxplotColorVar),
+                                          color = input$boxplotGroupVar,
+                                          fill = input$boxplotGroupVar),
                                alpha = input$alpha)
       }
       
@@ -1505,12 +1532,13 @@ server <- function(session, input, output){
     
     pQplot <- qplot(1:10, 1:10)
     
-    pQplot <- pQplot + geom_line(size = input$qplot_size) + theme_minimal(base_size = input$qplot_base)
+    # pQplot <- pQplot + geom_line(size = input$qplot_size) + theme_minimal(base_size = input$qplot_base)
     
     pQplot
   })
   
   output$Qplot <- renderPlot({
+    #qplot_object()
     qplot_object()
   })
   
@@ -1529,16 +1557,16 @@ server <- function(session, input, output){
                                  ".", 
                                  input$qplot_type)},
     
-    content = function(file){
-      fun <- match.fun( qplot_type() )
-      fun(file,
-          height = input$qplotheight, 
-          width = input$qplotwidth,
-          res = input$qresolution)
-      print(qplot_object())
-      dev.off()
+    content = function(file) {
+      device <- function(..., width, height) {
+        grDevices::png(..., width = width, height = height,
+                       res = input$qplotres, units = "in")
+      }
+      ggsave(file, plot = qplot_object(), device = device)
     }
   )
+  
+  
   
   
   # Plot ---------------------------------------
@@ -1787,18 +1815,51 @@ server <- function(session, input, output){
   
   output$download_plot <- downloadHandler(
     
+    
     filename = function(){paste0(input$download_name,
                                  ".", 
                                  input$download_type)},
     
     content = function(file){
       fun <- match.fun(download_type() )
-      fun(file,
-          height = input$plotheight, 
-          width = input$plotwidth,
-          res = input$resolution)
-      print(lineplot_object())
-      dev.off()
+      # fun(file,
+      #     height = input$plotheight, 
+      #     width = input$plotwidth,
+      #     res = input$resolution)
+      # print(lineplot_object())
+      # dev.off()
+      
+      # -----IFELSE for gr_Devices----------------------
+      
+      if(download_type() == "png"){
+        device <- function(..., width, height) {
+          grDevices::png(..., width = input$plotwidth, height = input$plotheight,
+                         res = input$resolution, units = "px")
+        }
+        ggsave(file, plot = lineplot_object(), device = device)
+      } else {
+        if(download_type() == "jpeg"){
+          device <- function(..., width, height) {
+            grDevices::jpeg(..., width = width, height = height,
+                            res = input$resolution, units = "px")
+          }
+          ggsave(file, plot = lineplot_object(), device = device)
+        } else {
+          device <- function(..., width, height) {
+            grDevices::tiff(..., width = width, height = height,
+                            res = input$resolution, units = "px")
+          }
+          ggsave(file, plot = lineplot_object(), device = device)
+        }
+      }
+      
+      # device <- function(..., width, height) {
+      #   fun(..., width = width, height = height,
+      #                  res = input$resolution, units = "icm")
+      # }
+      # ggsave(file, plot = lineplot_object(), device = device)
+      #  
+      
     }
     
     
@@ -1810,7 +1871,7 @@ server <- function(session, input, output){
 
 
 shinyApp(ui = ui, server = server
-         # , options = list(launch.browser = TRUE)
+         , options = list(launch.browser = TRUE)
 )
 
 #shinyBS::bsModal()
@@ -1856,4 +1917,5 @@ shinyApp(ui = ui, server = server
 # p
 # 
 # 
+
 

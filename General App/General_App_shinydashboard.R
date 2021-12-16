@@ -13,6 +13,34 @@ library(shinyWidgets)
 library(bslib)
 library(shinydashboard)
 
+# css needed for scrollbar placement in DataTables to appear on top
+css <- HTML(
+  "#dataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
+  transform:rotateX(180deg);
+  }
+  #dataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
+  transform:rotateX(180deg);
+   }
+   #repDataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
+  transform:rotateX(180deg);
+  }
+  #repDataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
+  transform:rotateX(180deg);
+   }
+   #chooseDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
+  transform:rotateX(180deg);
+  }
+  #chooseDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
+  transform:rotateX(180deg);
+   }
+   #df_plot > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
+  transform:rotateX(180deg);
+  }
+  #df_plot > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
+  transform:rotateX(180deg);
+   }"
+)
+
 ui <- 
   dashboardPage(
     
@@ -85,17 +113,22 @@ ui <-
                          tabName = "data",
                          icon = icon("database")
                        ),
-
+                       
                        menuItem(
                          "Default values", 
                          tabName = "default", 
                          icon = icon("pen")
                        ),
                        
-                       menuItem(
-                         "Distribution", 
-                         tabName = "distribution", 
-                         icon = icon("area-chart")
+                       conditionalPanel(
+                         "input.checkboxRepvar != 0",
+                         sidebarMenu(
+                           menuItem(
+                             "Distribution", 
+                             tabName = "distribution", 
+                             icon = icon("area-chart")
+                           )
+                         )
                        ),
                        
                        menuItem(
@@ -116,20 +149,21 @@ ui <-
                        
                        br(),
                        h3("Default value overview"),
-                       tableOutput("defaults_df")
+                       uiOutput("defaults_df_ui")
                        
                      )
     ),
     
     dashboardBody(
+      tags$head(tags$style(css)),
       add_busy_spinner(spin = "fading-circle"),
       tabItems(
         tabItem(
           tabName = "data_settings",
         ),
-
+        
         tabItem(
-        tabName = "data",
+          tabName = "data",
           verbatimTextOutput("test"),
           DT::dataTableOutput("dataDT"),
           # conditionalPanel("input.checkboxRepvar != 0",
@@ -228,7 +262,31 @@ ui <-
                 "Box-/Violin- or Density-plot",
                 choices =c("Boxplot", "Violinplot", "Densityplot"),
                 selected = "Boxplot",
+              ),
+              
+              conditionalPanel(
+                "input.boxplottype == 'Densityplot'",
+                checkboxGroupInput(
+                  "densitytype",
+                  "Densityplot or Histogram",
+                  choices = c("Density", "Histogram")
+                )
+              ),
+              
+              conditionalPanel(
+                "input.densitytype.includes('Histogram')",
+                numericInput(
+                  "bins",
+                  "How many bins?",
+                  value = 10, min = 1, max = 100, step = 1
+                ),
+                radioButtons(
+                  "hist_position",
+                  "Histogram position style",
+                  choices = c("stack", "dodge", "fill")
+                )
               )
+              
             )
           ),
           
@@ -251,9 +309,29 @@ ui <-
           tabName = "plot",
           
           fluidRow(
-            # plotlyOutput("lineplot")
-            uiOutput("lineplot_ui")
-            # plotOutput("lineplot")
+            column(
+              10,
+              # plotlyOutput("lineplot")
+              uiOutput("lineplot_ui")
+              # plotOutput("lineplot")
+            ),
+            
+            column(
+              2,
+              absolutePanel(
+                dropdownButton(
+                  label = "Color Choices",
+                  status = "primary",
+                  circle = TRUE,
+                  right = TRUE,
+                  icon = icon("paint-brush"),
+                  uiOutput("colors_ui"),
+                  inputId = "dropdown_colors"
+                ),
+                draggable = TRUE
+                
+              )
+            )
           ),
           
           hr(),
@@ -263,6 +341,15 @@ ui <-
             column(
               3,
               #verbatimTextOutput("test"),
+              shinyWidgets::dropdown(
+                tags$h3("Default value overview"),
+                HTML("I bin a off"),
+                selectInput("testdropdown",
+                            "test",
+                            c("a", "b", "c"))
+                
+                #uiOutput("defaults_df_ui")
+              ),
               
               selectInput(
                 "x", 
@@ -348,13 +435,14 @@ ui <-
               
               actionButton("change_colors", label = "color choices for OC"),
               
-              bsModal("modal_colors",
-                      "Change colors of plot",
-                      trigger = "change_colors",
-                      size = "large",
-                      uiOutput("colors_ui")
-              )
-              ,
+              # bsModal("modal_colors",
+              #         "Change colors of plot",
+              #         trigger = "change_colors",
+              #         size = "large",
+              #         uiOutput("colors_ui")
+              # )
+              
+              
               
               actionButton("change_style", label = "style options"),
               
@@ -583,7 +671,7 @@ ui <-
         
         tabItem("help",
                 h3("User Manual and Help will be displayed")
-          
+                
         )
         
         
@@ -724,7 +812,7 @@ server <- function(session, input, output){
   # if there is replication variable 'data_full_norep' has one column less than 'data_full', otherwise they are identical
   data_full_norep <- reactive({
     validate(
-      need(input$repvar != input$inputend, "replication variable can't be input variable")
+      need(input$repvar != input$inputend, "replication variable can't be input variable (Please alter last input variable or replication variable)")
     )
     if(input$checkboxRepvar){
       data_full() %>% select(-input$repvar)
@@ -737,13 +825,14 @@ server <- function(session, input, output){
   
   # display dataset as DT
   # Table in tab 'Pre-filter data'
-  output$dataDT <- DT::renderDT(
-    as_tibble(data_full()),
+  output$dataDT <- DT::renderDataTable(
+    data_full(),
     filter = "top",
     options = list(lengthChange = FALSE, 
                    autoWidth = TRUE,
                    scrollX = TRUE
     )
+    
   )
   
   
@@ -766,7 +855,7 @@ server <- function(session, input, output){
   # Table with all chosen filters in 'Pre-filter data' (for no-repvar scenario)
   data_prefiltered <- reactive({
     validate(
-      need(input$repvar != input$inputend, "replication variable can't be input variable")
+      need(input$repvar != input$inputend, "replication variable can't be input variable (Please alter last input variable or replication variable)")
     )
     req(input$dataDT_rows_all)
     d <- data_full()
@@ -817,7 +906,7 @@ server <- function(session, input, output){
   
   data_full_mean <- reactive({
     validate(
-      need(input$repvar != input$inputend, "Sbeve")
+      need(input$repvar != input$inputend, "Replication variable can't be input variable (Please alter last input variable or replication run variable)")
     )
     
     # summarize DT with replication runs by averaging outputs for every setting
@@ -858,7 +947,7 @@ server <- function(session, input, output){
   
   
   # overview of
-  output$repDataDT <- DT::renderDT({
+  output$repDataDT <- DT::renderDataTable({
     
     d <- data_full_mean()
     
@@ -944,7 +1033,7 @@ server <- function(session, input, output){
   
   
   # Choose default values Tab ------------------------------------------
-  output$chooseDT <- DT::renderDT({
+  output$chooseDT <- DT::renderDataTable({
     
     
     #input$goDT
@@ -952,9 +1041,9 @@ server <- function(session, input, output){
       need(data_full(), "no file")
     )
     
-    validate(
-      need(input$inputend != input$repvar, "Replication run variable can't be an input variable")
-    )
+    # validate(
+    #   need(input$inputend != input$repvar, "Replication run variable can't be an input variable")
+    # )
     
     
     # Table displayed at start in tab 'Choose default values'
@@ -1045,6 +1134,7 @@ server <- function(session, input, output){
   options = list(lengthChange = FALSE, 
                  autoWidth = TRUE, 
                  scrollX = TRUE, 
+                 scrollY = TRUE,
                  pageLength = 5,
                  searchCols = eval(parse(text = first_row_filters_string))
   )
@@ -1124,6 +1214,19 @@ server <- function(session, input, output){
     Values
   })
   
+  output$testdropdownt <- renderText({
+    
+    Values <- data.frame("Variable" = names(defaults_input()),
+                         "Default value" = defaults_input(),
+                         check.names = FALSE) # makes whitespace in header names possible
+    Values    
+  })
+  
+  output$defaults_df_ui <- renderUI({
+    
+    tableOutput("defaults_df")
+  })
+  
   
   
   
@@ -1185,6 +1288,7 @@ server <- function(session, input, output){
     
     
   })
+  
   
   lUiColors <- reactive({
     
@@ -1355,7 +1459,7 @@ server <- function(session, input, output){
   
   output$pBoxplot <- renderPlot({
     validate(
-      need(input$repvar != input$inputend, "replication variable can't be an input variable")
+      need(input$repvar != input$inputend, "replication variable can't be an input variable (Please alter last input variable or replication variable")
     )
     # validate(
     #   need(length(defaults_input()) != 0, "Please choose default values first")
@@ -1366,7 +1470,10 @@ server <- function(session, input, output){
       d[,i] <- as.factor(d[,i])
     }
     
-    boxplot <- ggplot(d)
+    boxplot <- ggplot(d, aes_string(fill = input$boxplotGroupVar,
+                                    col = input$boxplotGroupVar,
+                                    x = input$boxplotOutputVar)
+    )
     
     
     
@@ -1413,11 +1520,26 @@ server <- function(session, input, output){
     
     if(input$boxplottype == "Densityplot"){
       
-      boxplot + geom_density(aes_string(fill = input$boxplotGroupVar, 
-                                        col = input$boxplotGroupVar, 
-                                        x = input$boxplotOutputVar), 
-                             alpha = input$alpha)
       
+      if("Density" %in% input$densitytype){
+        boxplot <-
+          boxplot + 
+          geom_density(aes(y = ..density..), 
+                       alpha = input$alpha)
+      }
+      
+      if("Histogram" %in% input$densitytype){
+        boxplot <-
+          boxplot + 
+          geom_histogram(aes(y = ..density..),
+                         bins = input$bins,
+                         alpha = input$alpha,
+                         position = input$hist_position
+          )
+        
+      }
+      
+      boxplot
       
     } else {
       
@@ -1505,10 +1627,12 @@ server <- function(session, input, output){
   
   
   
-  output$df_plot <- DT::renderDT({
+  output$df_plot <- DT::renderDataTable({
     
     df_plot()
-  })
+  },
+  options = list(scrollX = TRUE)
+  )
   
   
   

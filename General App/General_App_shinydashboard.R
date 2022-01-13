@@ -86,7 +86,7 @@ ui <-
                            
                            checkboxInput(
                              "checkboxRepvar",
-                             "Does your dataset contain a variable indicating the replication run?"
+                             "Do you want to aggregate over a replication run variable?"
                            ),
                            
                            conditionalPanel(
@@ -312,14 +312,15 @@ ui <-
             column(
               10,
               # plotlyOutput("lineplot")
-              uiOutput("lineplot_ui")
+              uiOutput("lineplot_ui"),
+              #plotOutput("scatterplot")
               # plotOutput("lineplot")
             ),
             
             column(
               2,
               absolutePanel(
-                dropdownButton(
+                shinyWidgets::dropdownButton(
                   label = "Color Choices",
                   status = "primary",
                   circle = TRUE,
@@ -343,12 +344,13 @@ ui <-
               #verbatimTextOutput("test"),
               shinyWidgets::dropdown(
                 tags$h3("Default value overview"),
-                HTML("I bin a off"),
-                selectInput("testdropdown",
-                            "test",
-                            c("a", "b", "c"))
+                HTML("these are default values")
+                # ,
+                # selectInput("testdropdown",
+                #             "test",
+                #             c("a", "b", "c"))
                 
-                #uiOutput("defaults_df_ui")
+                # uiOutput("defaults_df_ui")
               ),
               
               selectInput(
@@ -433,15 +435,10 @@ ui <-
                           value = FALSE,
                           size = "small"),
               
-              actionButton("change_colors", label = "color choices for OC"),
-              
-              # bsModal("modal_colors",
-              #         "Change colors of plot",
-              #         trigger = "change_colors",
-              #         size = "large",
-              #         uiOutput("colors_ui")
-              # )
-              
+              switchInput("scatterplot",
+                          "Scatterplot",
+                          value = FALSE,
+                          size = "small"),
               
               
               actionButton("change_style", label = "style options"),
@@ -506,7 +503,11 @@ ui <-
                       conditionalPanel(
                         "input.checkboxSize != 0",
                         
-                        
+                        numericInput(
+                          "resolution",
+                          "Resolution",
+                          value = 300
+                        ),
                         
                         sliderInput(
                           "plotwidth",
@@ -641,14 +642,37 @@ ui <-
               
               bsModal("modal", "Download plot", trigger = "save_plot", size = "medium",
                       
-                      selectInput("download_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
+                      selectInput("download_type", 
+                                  "Choose file type",
+                                  choices = c("png", "jpeg", "tiff")
+                      ),
                       
+                      selectInput("download_unit", 
+                                  "Choose unit",
+                                  choices = c("px", "in", "cm", "mm")
+                      ),
                       
-                      sliderInput(
-                        "resolution",
+                      numericInput(
+                        "download_plotwidth",
+                        "Plot width (px)",
+                        value = 1000,
+                        min = 1,
+                        max = 2000
+                      ),
+                      
+                      numericInput(
+                        "download_plotheight",
+                        "Plot height (px)",
+                        value = 600,
+                        min = 1,
+                        max = 2000
+                      ),
+                      
+                      numericInput(
+                        "download_resolution",
                         "Resolution",
-                        value = 300,
-                        min = 50, 
+                        value = 50,
+                        min = 1, 
                         max = 1000
                       ),
                       
@@ -854,6 +878,8 @@ server <- function(session, input, output){
   
   # Table with all chosen filters in 'Pre-filter data' (for no-repvar scenario)
   data_prefiltered <- reactive({
+    req(ind_outputstartR())
+    req(data_full())
     validate(
       need(input$repvar != input$inputend, "replication variable can't be input variable (Please alter last input variable or replication variable)")
     )
@@ -977,6 +1003,7 @@ server <- function(session, input, output){
   
   
   data_filteredR <- reactive({
+    req(data_prefiltered())
     if(input$checkboxRepvar){
       #req(data_full_mean)
       data_full_mean()
@@ -1094,11 +1121,11 @@ server <- function(session, input, output){
     # display only columns with more than 1 unique entry
     uniques <- lapply(data_choose_defaultR(), unique)
     bUniques <- sapply(uniques, function(x) {length(x) == 1})
-    data_filtered <<- data_choose_defaultR()[,which(!bUniques)]
+    data_filtered <<- data_choose_defaultR()[,which(!bUniques), drop = FALSE]
     
-    validate(
-      need(ncol(data_filtered) > 1, "Data has to have more than 1 input variables with non-unique characteristics.")
-    )
+    # validate(
+    #   need(ncol(data_filtered) > 1, "Data has to have more than 1 input variables with non-unique characteristics.")
+    # )
     
     
     for(i in colnames(data_filtered)){
@@ -1228,6 +1255,7 @@ server <- function(session, input, output){
   })
   
   
+  # outputOptions(output, "defaults_df_ui", suspendWhenHidden=FALSE)
   
   
   
@@ -1259,6 +1287,7 @@ server <- function(session, input, output){
   
   
   nOCR <- reactive({
+    req(data_filteredR())
     ncol(data_filteredR()) - ind_inputendR()
   })
   
@@ -1266,11 +1295,12 @@ server <- function(session, input, output){
   
   output$colors_ui <- renderUI({
     
+    # req(nOCR())
     # nWidgets <- as.integer(reacVals$nOC)
-    
-    nWidgetsR <- reactive({
-      nOCR()
-    })
+    # 
+    # nWidgetsR <- reactive({
+    #   nOCR()
+    # })
     
     lapply(1:nOCR(), function(i) {
       colourInput(inputId = paste0("col", i), 
@@ -1288,6 +1318,8 @@ server <- function(session, input, output){
     
     
   })
+  
+  outputOptions(output, "colors_ui", suspendWhenHidden=FALSE)
   
   
   lUiColors <- reactive({
@@ -1698,16 +1730,21 @@ server <- function(session, input, output){
   # Plot based on which dimensions are chosen
   lineplot_object <- reactive({
     
-    # output$lineplot <-renderPlot({
+    # validate(need(length(lUiColors) != 0, message = "Choose colors first"))
     
+    # output$lineplot <-renderPlot({
     
     
     colScale <- scale_colour_manual(values = lUiColors())
     
     p1 <- ggplot(
       data_longer(), 
-      aes_string(x = input$x) 
+      aes_string(x = input$x)
     ) + colScale
+    # if(input$checkboxShape){
+    #   colScale <- scale_colour_manual(values = lUiColors())
+    #   p1 <- p1 + colScale
+    #   }
     
     
     
@@ -1881,6 +1918,17 @@ server <- function(session, input, output){
   )
   
   
+  scatterplot_object <- reactive({
+    
+    p1 <- ggplot(
+      df_plot(), 
+      aes_string(x = input$OC[1], y = input$OC[2])
+    ) + geom_point()
+    
+    p1
+    
+  })
+  
   
   
   observe({
@@ -1901,7 +1949,9 @@ server <- function(session, input, output){
     
   })
   
-  
+  output$scatterplot <- renderPlot({
+    scatterplot_object()
+  })
   
   
   output$lineplot_ui <- renderUI({
@@ -1917,19 +1967,24 @@ server <- function(session, input, output){
     #            height = input$plotheight,
     #            width = input$plotwidth
     # )
-    
-    if(input$plottype){
-      plotlyOutput("lineplotly",
+    if(input$scatterplot){
+      plotOutput("scatterplot",
+                 height = input$plotheight,
+                 width = input$plotwidth)
+    } else {
+      if(input$plottype){
+        plotlyOutput("lineplotly",
+                     height = input$plotheight,
+                     width = input$plotwidth
+        )
+      } 
+      #if(!input$plottype){
+      else{
+        plotOutput("lineplot",
                    height = input$plotheight,
                    width = input$plotwidth
-      )
-    } 
-    #if(!input$plottype){
-    else{
-      plotOutput("lineplot",
-                 height = input$plotheight,
-                 width = input$plotwidth
-      )
+        )
+      }
     }
     
   })
@@ -1957,21 +2012,30 @@ server <- function(session, input, output){
       
       if(download_type() == "png"){
         device <- function(..., width, height) {
-          grDevices::png(..., width = input$plotwidth, height = input$plotheight,
-                         res = input$resolution, units = "px")
+          grDevices::png(..., 
+                         width = input$download_plotwidth, 
+                         height = input$download_plotheight,
+                         res = input$download_resolution,
+                         units = input$download_unit)
         }
         ggsave(file, plot = lineplot_object(), device = device)
       } else {
         if(download_type() == "jpeg"){
           device <- function(..., width, height) {
-            grDevices::jpeg(..., width = width, height = height,
-                            res = input$resolution, units = "px")
+            grDevices::jpeg(..., 
+                            width = input$download_plotwidth, 
+                            height = input$download_plotheight,
+                            res = input$download_resolution,
+                            units = input$download_unit)
           }
           ggsave(file, plot = lineplot_object(), device = device)
         } else {
           device <- function(..., width, height) {
-            grDevices::tiff(..., width = width, height = height,
-                            res = input$resolution, units = "px")
+            grDevices::tiff(..., 
+                            width = input$download_plotwidth, 
+                            height = input$download_plotheight,
+                            res = input$download_resolution, 
+                            units = input$download_unit)
           }
           ggsave(file, plot = lineplot_object(), device = device)
         }

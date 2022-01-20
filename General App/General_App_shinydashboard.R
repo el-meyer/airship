@@ -10,6 +10,7 @@ library(tidyverse)
 library(shinyBS)
 library(colourpicker)
 library(shinyWidgets)
+
 library(bslib)
 library(shinydashboard)
 
@@ -137,19 +138,28 @@ ui <-
                          icon = icon("line-chart")
                        ),
                        
-                       menuItem("Test Plot & Download",
-                                tabName = "qplot",
-                                icon = icon("toilet")
-                       ),
+                       # conditionalPanel(
+                       #   "input.checkboxRepvar != 0",
+                       #   sidebarMenu(
+                       menuItem(
+                         "Scatterplot", 
+                         tabName = "scatterplot", 
+                         icon = icon("braille")
+                       )
+                       #   )
+                       # )
+                       ,
+                       
+                       
                        
                        menuItem("Help",
                                 tabName = "help",
                                 icon = icon("question")
                        ),
                        
-                       br(),
-                       h3("Default value overview"),
-                       uiOutput("defaults_df_ui")
+                       hr()
+                       # h3("Default value overview"),
+                       # uiOutput("defaults_df_ui")
                        
                      )
     ),
@@ -293,17 +303,17 @@ ui <-
           plotOutput("pBoxplot")
         ),
         
-        tabItem(
-          tabName = "qplot",
-          #plotOutput("Qplot"),
-          uiOutput("pQplot"),
-          textInput("qplot_name", "Name"),
-          numericInput("qplotwidth", "Width", 500),
-          numericInput("qplotres", "Res", 300),
-          numericInput("qplotheight", "Height", 500),
-          selectInput("qplot_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
-          downloadButton("download_qplot", "DL qplot")
-        ),
+        # tabItem(
+        #   tabName = "qplot",
+        #   #plotOutput("Qplot"),
+        #   uiOutput("pQplot"),
+        #   textInput("qplot_name", "Name"),
+        #   numericInput("qplotwidth", "Width", 500),
+        #   numericInput("qplotres", "Res", 300),
+        #   numericInput("qplotheight", "Height", 500),
+        #   selectInput("qplot_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
+        #   downloadButton("download_qplot", "DL qplot")
+        # ),
         
         tabItem(
           tabName = "plot",
@@ -343,14 +353,14 @@ ui <-
               3,
               #verbatimTextOutput("test"),
               shinyWidgets::dropdown(
-                tags$h3("Default value overview"),
-                HTML("these are default values")
+                label = "Default value overview",
+                HTML("Current default value settings"),
                 # ,
                 # selectInput("testdropdown",
                 #             "test",
                 #             c("a", "b", "c"))
                 
-                # uiOutput("defaults_df_ui")
+                uiOutput("defaults_df_ui")
               ),
               
               selectInput(
@@ -654,7 +664,7 @@ ui <-
                       
                       numericInput(
                         "download_plotwidth",
-                        "Plot width (px)",
+                        "Plot width",
                         value = 1000,
                         min = 1,
                         max = 2000
@@ -662,7 +672,7 @@ ui <-
                       
                       numericInput(
                         "download_plotheight",
-                        "Plot height (px)",
+                        "Plot height",
                         value = 600,
                         min = 1,
                         max = 2000
@@ -693,8 +703,106 @@ ui <-
           
         ),
         
+        tabItem("scatterplot",
+                
+                uiOutput("scatter_ui"),
+                HTML(
+                  "In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters."),
+                selectInput(
+                  "repvar_scatter",
+                  "Choose variability parameter",
+                  choices = NULL
+                ),
+                
+                selectInput(
+                  "colvar_scatter",
+                  "Choose color parameter",
+                  choices = NULL
+                ),
+                
+                selectizeInput(
+                  "OC_scatter", 
+                  "Choose OC to plot", 
+                  choices = NULL,
+                  multiple = TRUE
+                ),
+                
+                radioButtons(
+                  "radioFacet_scatter",
+                  "Do you want to add a facet dimension?",
+                  choices = c("no", "grid", "wrap")
+                ),
+                
+                conditionalPanel(
+                  "input.radioFacet_scatter == 'grid'",
+                  
+                  selectInput(
+                    "facet_rows_scatter", 
+                    "Choose row variable", 
+                    choices = NULL,
+                    multiple = TRUE
+                  ),
+                  
+                  selectInput(
+                    "facet_cols_scatter", 
+                    "Choose col variable", 
+                    choices = NULL,
+                    multiple = TRUE
+                  )
+                ),
+                
+                
+                conditionalPanel(
+                  "input.radioFacet_scatter == 'wrap'",
+                  
+                  selectizeInput(
+                    "facet_wrap_scatter", 
+                    "Choose variables to facet wrap",
+                    choices = NULL,
+                    multiple = TRUE
+                  )
+                ),
+                
+                
+                
+                
+                checkboxInput(
+                  "checkboxShape_scatter", 
+                  "Do you want to add a shape dimension?"
+                ),
+                conditionalPanel(
+                  "input.checkboxShape_scatter != 0",
+                  
+                  selectInput(
+                    "shape_scatter", 
+                    "Choose shape variable",
+                    choices = NULL
+                  )
+                )
+                
+        ),
+        
         tabItem("help",
-                h3("User Manual and Help will be displayed")
+                h2("User Manual"),
+                HTML("This app is designed to plot simulation results of clinical trials. There are a few requirements to the data in order for the app to work."),
+                h4("Data Settings"),
+                HTML("So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the design parameters precede the output values/operating characteristics. Each row represents one  simulation run with a different combination of input/design parameters. "),
+                HTML("If your data is not aggregated yet (i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index' you can click the checkbox and choose which of your variables is the 'replication run index' The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
+                
+                h3("Data"),
+                HTML("In the Data tab you find an overview of your data. Already here you can set filters for your input parameters, if you are not interested in some observations."),
+                h3("Default values"),
+                HTML("The default value is a key tab in this App. Please choose one default value for every variable that has an impact on your simulation. Later in the plot tab the dataset is filtered for these values, unless the respective variable is chosen to be one of the dimensions in the graph (See 'plot' tab)."),
+                h3("Distribution"),
+                HTML("This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots."),
+                
+                h3("Plot"),
+                HTML("After uploading the data and establishing the settings, you can visualize your simulation results on up to 4 dimensions. An x-axis variable as well as at least one OC have to be specified in order for the plot to show up: You can opt to add further design parameters on the 'facet' dimensions (row and column), which splits the plot into a grid as well as the 'shape' dimension, which adds lines/points in different shapes according to the value of the respective input parameter."),
+                HTML("Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clickinc the 'Download plot' button"),
+                
+                h3("Scatterplot"),
+                HTML("If you are interested in the variability of ceratin operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.")
+                
                 
         )
         
@@ -790,6 +898,16 @@ server <- function(session, input, output){
       
       updateSelectInput(session,
                         "repvar",
+                        choices = colnames(upload())
+      )
+      
+      updateSelectInput(session,
+                        "repvar_scatter",
+                        choices = colnames(upload())
+      )
+      
+      updateSelectInput(session,
+                        "colvar_scatter",
                         choices = colnames(upload())
       )
       
@@ -1104,6 +1222,11 @@ server <- function(session, input, output){
                          selected = names_outputsR()[1]
     )
     
+    updateSelectizeInput(session,
+                         "OC_scatter",
+                         choices = names_outputsR(),
+                         selected = names_outputsR()[1])
+    
     
     
     updateSelectInput(session,
@@ -1241,7 +1364,7 @@ server <- function(session, input, output){
     Values
   })
   
-  output$testdropdownt <- renderText({
+  output$testdropdown <- renderText({
     
     Values <- data.frame("Variable" = names(defaults_input()),
                          "Default value" = defaults_input(),
@@ -1255,7 +1378,7 @@ server <- function(session, input, output){
   })
   
   
-  # outputOptions(output, "defaults_df_ui", suspendWhenHidden=FALSE)
+  outputOptions(output, "defaults_df_ui", suspendWhenHidden=FALSE)
   
   
   
@@ -1436,6 +1559,35 @@ server <- function(session, input, output){
   })
   
   
+  observe({
+    
+    updateSelectInput(session,
+                      "facet_rows_scatter",
+                      choices = names(defaults_input()))
+  })
+  
+  observe({
+    
+    updateSelectInput(session,
+                      "facet_cols_scatter",
+                      choices = names(defaults_input()))
+  })
+  
+  observe({
+    
+    updateSelectInput(session,
+                      "facet_wrap_scatter",
+                      choices = names(defaults_input()))
+  })
+  
+  observe({
+    
+    updateSelectInput(session,
+                      "shape_scatter",
+                      choices = names(defaults_input()))
+  })
+  
+  
   
   
   # 
@@ -1597,6 +1749,165 @@ server <- function(session, input, output){
   # PLOT -------------------------------------------------------------------
   #-----------------------------------------------------------------------------------
   
+  df_scatterplot <- reactive({
+    
+    # 1 line df with default values for variables that are checked
+    
+    
+    # default_df <- defaults_input()
+    # default_df <- as.data.frame(defaults_input())
+    default_df <- defaults_input()
+    
+    
+    
+    
+    # vector of names of simulation parameters
+    sim_par <- input$repvar_scatter
+    
+    sim_par <- c(sim_par, input$colvar_scatter)
+    if(input$checkboxShape_scatter){
+      sim_par <- c(sim_par, input$shape_scatter)
+    }
+    
+    if(input$radioFacet_scatter == "grid"){
+      sim_par <- c(sim_par, input$facet_rows_scatter, input$facet_cols_scatter)
+    }
+    
+    if(input$radioFacet_scatter == "wrap"){
+      sim_par <- c(sim_par, input$facet_wrap_scatter)
+    }
+    
+    # exclude simulation parameters from df with default values
+    default_filter <- default_df[!(names(default_df) %in% sim_par)]
+    
+    # default_filter <- gsub('\\[', "", default_filter)
+    # default_filter <- gsub('\\]', "", default_filter)
+    
+    default_filter <- gsub('\\[\\"', "", default_filter)
+    default_filter <- gsub('\\"\\]', "", default_filter)
+    
+    bedingung <- paste0(paste0("`", names(default_filter), "`"),
+                        " == ",
+                        paste0("'", default_filter, "'"),
+                        # default_filter,
+                        collapse = " & ")
+    
+    
+    if(length(default_filter) != 0){
+      df_scatterplot <- subset(data_filteredR(), eval(parse(text = bedingung)))
+    } else {
+      df_scatterplot <- data_filteredR()
+    }
+    
+    df_scatterplot # return data frame
+    
+    
+    
+  })
+  
+  output$df_scatterplot <- DT::renderDataTable({
+    
+    df_scatterplot()
+  },
+  options = list(scrollX = TRUE)
+  )
+  
+  data_longer_scatter <- reactive({
+    req(input$OC_scatter)
+    
+    d <- df_scatterplot()
+    d <- d[input$chooseDT_rows_all,]
+    
+    # d <-
+    #   d %>%
+    #   pivot_longer(cols = input$OC_scatter,
+    #                names_to = "OC",
+    #                values_to = "value")
+    d
+  })
+  
+  plot_object_scatter <- reactive({
+    
+    p1 <- ggplot(
+      df_scatterplot(), 
+      #aes_string(x = value, color = OC)
+      aes_string(x = input$OC_scatter[1], y = input$OC_scatter[2])
+    ) + geom_point(aes_string(colour = input$colvar_scatter))
+    
+    # if(input$checkboxShape_scatter){
+    #   p1 <-
+    #     p1 +
+    #     aes(
+    #       
+    #       shape =
+    #         factor(get(
+    #           input$shape_scatter
+    #         ))
+    #       ,
+    #       group =
+    #         interaction(
+    #           factor(get(
+    #             input$shape_scatter
+    #           )),
+    #           OC
+    #         )
+    #     )
+    #   
+    # } else {
+    #   p1 <-  p1 + aes(group = OC)
+    # }
+    
+    facets <- input$facet_wrap_scatter %>%
+      str_replace_all(",", "+") %>%
+      rlang::parse_exprs()
+    
+    frows <- input$facet_rows_scatter %>%
+      str_replace_all(",", "+") %>%
+      rlang::parse_exprs()
+    
+    fcols <- input$facet_cols_scatter %>%
+      str_replace_all(",", "+") %>%
+      rlang::parse_exprs()
+    
+    
+    # if(input$radioFacet == "grid"){
+    #   p1 <-
+    #     p1 +
+    #     facet_grid(vars(get(input$facet_rows)),
+    #                vars(get(input$facet_cols))
+    #     )
+    # }
+    
+    if(input$radioFacet_scatter == "grid"){
+      p1 <-
+        p1 +
+        facet_grid(vars(!!!frows),
+                   vars(!!!fcols),
+                   labeller = "label_both"
+        )
+    }
+    
+    if(input$radioFacet_scatter == "wrap"){
+      
+      p1 <-
+        p1 +
+        facet_wrap(vars(!!!facets)
+                   # facet_wrap(vars(get(!!!(input$facet_wrap)))
+                   , labeller = "label_both"
+        )
+    }
+    
+    p1
+  })
+  
+  output$plot_scatter <- renderPlot({
+    
+    plot_object_scatter()
+  })
+  
+  output$scatter_ui <- renderUI({
+    plotOutput("plot_scatter")
+  })
   
   # Plot Df ------------------------------------------
   
@@ -1683,47 +1994,7 @@ server <- function(session, input, output){
     d
   })
   
-  # qplot -------------------------------------------------
-  qplot_object <- reactive({
-    
-    pQplot <- qplot(1:10, 1:10)
-    
-    # pQplot <- pQplot + geom_line(size = input$qplot_size) + theme_minimal(base_size = input$qplot_base)
-    
-    pQplot
-  })
-  
-  output$Qplot <- renderPlot({
-    #qplot_object()
-    qplot_object()
-  })
-  
-  output$pQplot <- renderUI({
-    
-    plotOutput("Qplot",
-               height = input$qplotheight,
-               width = input$qplotwidth)
-  })
-  
-  qplot_type <- reactive({input$qplot_type})
-  
-  output$download_qplot <- downloadHandler(
-    
-    filename = function(){paste0(input$qplot_name,
-                                 ".", 
-                                 input$qplot_type)},
-    
-    content = function(file) {
-      device <- function(..., width, height) {
-        grDevices::png(..., width = width, height = height,
-                       res = input$qplotres, units = "in")
-      }
-      ggsave(file, plot = qplot_object(), device = device)
-    }
-  )
-  
-  
-  
+ 
   
   # Plot ---------------------------------------
   
@@ -1835,7 +2106,60 @@ server <- function(session, input, output){
     }
     
     
-    # THEME ---------------------------------------------
+    
+    
+    # if(input$plottype){
+    #   
+    # p2 <- ggplotly(p1)
+    # p2
+    # 
+    # } else {
+    
+    # p2 <- ggplotly(p1)
+    # p2 %>% layout(legend = list(x = input$xLegend, y = input$yLegend))
+    
+    # }
+    
+    # if(input$plottype){
+    #   ggplotly(p1)
+    # } else {
+    #   p1
+    # }
+    
+    p1
+    
+  },
+  
+  # res = exprToFunction(input$resolution)
+  # res = input$resolution
+  
+  
+  )
+  
+  
+  scatterplot_object <- reactive({
+    
+    p1 <- ggplot(
+      df_plot(), 
+      aes_string(x = input$OC[1], y = input$OC[2])
+    ) + geom_point()
+    
+    p1
+    
+  })
+  
+  
+  # create plot_object with final settings
+  plot_object <- reactive({
+    
+    # scatterplot or lineplot?
+    if(input$scatterplot)
+      p1 <- scatterplot_object()
+    else
+      p1 <- lineplot_object()
+    
+    
+    # THEME & other general plot options ---------------------------------------------
     
     plot_theme <- input$plottheme
     plot_fontsize <- input$plotfontsize
@@ -1889,45 +2213,11 @@ server <- function(session, input, output){
     
     p1 <- p1 + theme(legend.title = element_blank())
     
-    # if(input$plottype){
-    #   
-    # p2 <- ggplotly(p1)
-    # p2
-    # 
-    # } else {
-    
-    # p2 <- ggplotly(p1)
-    # p2 %>% layout(legend = list(x = input$xLegend, y = input$yLegend))
-    
-    # }
-    
-    # if(input$plottype){
-    #   ggplotly(p1)
-    # } else {
-    #   p1
-    # }
     
     p1
-    
-  },
-  
-  # res = exprToFunction(input$resolution)
-  # res = input$resolution
-  
-  
-  )
-  
-  
-  scatterplot_object <- reactive({
-    
-    p1 <- ggplot(
-      df_plot(), 
-      aes_string(x = input$OC[1], y = input$OC[2])
-    ) + geom_point()
-    
-    p1
-    
   })
+  
+  
   
   
   
@@ -1936,13 +2226,15 @@ server <- function(session, input, output){
     if(input$plottype){
       
       output$lineplotly <- renderPlotly({
-        ggplotly(lineplot_object())
+        ggplotly(plot_object())
+        #ggplotly(lineplot_object())
       })
       
     } else {
       
       output$lineplot <- renderPlot({
-        lineplot_object()
+        plot_object()
+        #lineplot_object()
       })
       
     }
@@ -1952,6 +2244,7 @@ server <- function(session, input, output){
   output$scatterplot <- renderPlot({
     scatterplot_object()
   })
+  
   
   
   output$lineplot_ui <- renderUI({
@@ -1967,28 +2260,54 @@ server <- function(session, input, output){
     #            height = input$plotheight,
     #            width = input$plotwidth
     # )
-    if(input$scatterplot){
-      plotOutput("scatterplot",
-                 height = input$plotheight,
-                 width = input$plotwidth)
-    } else {
-      if(input$plottype){
-        plotlyOutput("lineplotly",
-                     height = input$plotheight,
-                     width = input$plotwidth
-        )
-      } 
-      #if(!input$plottype){
-      else{
-        plotOutput("lineplot",
+    # if(input$scatterplot){
+    #   plotOutput("scatterplot",
+    #              height = input$plotheight,
+    #              width = input$plotwidth)
+    # } else {
+    if(input$plottype){
+      plotlyOutput("lineplotly",
                    height = input$plotheight,
                    width = input$plotwidth
-        )
-      }
+      )
+    } 
+    #if(!input$plottype){
+    else{
+      plotOutput("lineplot",
+                 height = input$plotheight,
+                 width = input$plotwidth
+      )
     }
+    #}
     
   })
   
+  observe({
+    
+    updateNumericInput(session,
+                       "download_plotwidth",
+                       value = input$plotwidth
+    )
+    
+  })
+  
+  observe({
+    
+    updateNumericInput(session,
+                       "download_plotheight",
+                       value = input$plotheight
+    )
+    
+  })
+  
+  observe({
+    
+    updateNumericInput(session,
+                       "download_resolution",
+                       value = input$resolution
+    )
+    
+  })
   
   download_type <- reactive({input$download_type})
   
@@ -2018,7 +2337,7 @@ server <- function(session, input, output){
                          res = input$download_resolution,
                          units = input$download_unit)
         }
-        ggsave(file, plot = lineplot_object(), device = device)
+        ggsave(file, plot = plot_object(), device = device)
       } else {
         if(download_type() == "jpeg"){
           device <- function(..., width, height) {
@@ -2028,7 +2347,7 @@ server <- function(session, input, output){
                             res = input$download_resolution,
                             units = input$download_unit)
           }
-          ggsave(file, plot = lineplot_object(), device = device)
+          ggsave(file, plot = plot_object(), device = device)
         } else {
           device <- function(..., width, height) {
             grDevices::tiff(..., 
@@ -2037,7 +2356,7 @@ server <- function(session, input, output){
                             res = input$download_resolution, 
                             units = input$download_unit)
           }
-          ggsave(file, plot = lineplot_object(), device = device)
+          ggsave(file, plot = plot_object(), device = device)
         }
       }
       

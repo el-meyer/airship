@@ -13,6 +13,7 @@ library(shinyWidgets)
 
 library(bslib)
 library(shinydashboard)
+library(scales)
 
 # css needed for scrollbar placement in DataTables to appear on top
 css <- HTML(
@@ -85,26 +86,30 @@ ui <-
                              choices = NULL
                            ),
                            
-                           checkboxInput(
-                             "checkboxRepvar",
-                             "Do you want to aggregate over a replication run variable?"
+                           
+                         ),
+                         
+                         checkboxInput(
+                           "checkboxRepvar",
+                           "Do you want to aggregate over a replication run variable?"
+                         ),
+                         
+                         conditionalPanel(
+                           "input.checkboxRepvar != 0",
+                           
+                           selectInput(
+                             "repvar",
+                             "Select the replication run variable",
+                             choices = NULL
                            ),
                            
-                           conditionalPanel(
-                             "input.checkboxRepvar != 0",
-                             
-                             selectInput(
-                               "repvar",
-                               "Select the replication run variable",
-                               choices = NULL
-                             ),
-                             
-                             selectInput(
-                               "repvarMethod",
-                               "Select the summary method you want to apply to your data",
-                               choices = c("mean", "median")
-                             )
+                           selectInput(
+                             "repvarMethod",
+                             "Select the summary method you want to apply to your data",
+                             choices = c("mean", "median")
                            )
+                           
+                           
                          ),
                          tabName = "data_settings",icon = icon("gear")
                        ),
@@ -127,7 +132,7 @@ ui <-
                            menuItem(
                              "Distribution", 
                              tabName = "distribution", 
-                             icon = icon("area-chart")
+                             icon = icon("chart-area")
                            )
                          )
                        ),
@@ -135,7 +140,7 @@ ui <-
                        menuItem(
                          "Plot", 
                          tabName = "plot", 
-                         icon = icon("line-chart")
+                         icon = icon("chart-line")
                        ),
                        
                        # conditionalPanel(
@@ -329,6 +334,10 @@ ui <-
             
             column(
               2,
+              checkboxInput(
+                "checkboxPalette", 
+                "Do you want to specify your own colors?"
+              ),
               absolutePanel(
                 shinyWidgets::dropdownButton(
                   label = "Color Choices",
@@ -378,6 +387,9 @@ ui <-
                 choices = NULL,
                 multiple = TRUE
               )
+              # ,
+              # 
+              # verbatimTextOutput("OClength")
             ),
             
             column(
@@ -432,6 +444,20 @@ ui <-
                 selectInput(
                   "shape", 
                   "Choose shape variable",
+                  choices = NULL
+                )
+              ),
+              
+              checkboxInput(
+                "checkboxLinetype",
+                "Do you want to add a Linetype dimension?"
+              ),
+              conditionalPanel(
+                "input.checkboxLinetype != 0",
+                
+                selectInput(
+                  "linetype",
+                  "Choose linetype variable",
                   choices = NULL
                 )
               )
@@ -654,7 +680,7 @@ ui <-
                       
                       selectInput("download_type", 
                                   "Choose file type",
-                                  choices = c("png", "jpeg", "tiff")
+                                  choices = c("png", "jpeg", "tiff", "pdf")
                       ),
                       
                       selectInput("download_unit", 
@@ -783,10 +809,12 @@ ui <-
         ),
         
         tabItem("help",
+                h4("Info"),
+                HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Meyer (both Medical University Vienna) and Michal Majka"),
                 h2("User Manual"),
-                HTML("This app is designed to plot simulation results of clinical trials. There are a few requirements to the data in order for the app to work."),
+                HTML("Following you will find details on every part of the app and how they are to be used"),
                 h4("Data Settings"),
-                HTML("So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the design parameters precede the output values/operating characteristics. Each row represents one  simulation run with a different combination of input/design parameters. "),
+                HTML("There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the design parameters precede the output values/operating characteristics. Each row represents one  simulation run with a different combination of input/design parameters. "),
                 HTML("If your data is not aggregated yet (i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index' you can click the checkbox and choose which of your variables is the 'replication run index' The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
                 
                 h3("Data"),
@@ -798,7 +826,7 @@ ui <-
                 
                 h3("Plot"),
                 HTML("After uploading the data and establishing the settings, you can visualize your simulation results on up to 4 dimensions. An x-axis variable as well as at least one OC have to be specified in order for the plot to show up: You can opt to add further design parameters on the 'facet' dimensions (row and column), which splits the plot into a grid as well as the 'shape' dimension, which adds lines/points in different shapes according to the value of the respective input parameter."),
-                HTML("Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clickinc the 'Download plot' button"),
+                HTML("Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clicking the 'Download plot' button"),
                 
                 h3("Scatterplot"),
                 HTML("If you are interested in the variability of ceratin operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.")
@@ -834,10 +862,12 @@ ui <-
 server <- function(session, input, output){
   
   # read in Example data and convert some variables for correct display
-  exampleData <- read.csv("example_data.csv",
-                          header = TRUE,
-                          sep = ",",
-                          stringsAsFactors = TRUE)
+  exampleData <- read.csv(
+    #"example_data.csv",
+    "ExampleDataNew.csv",
+    header = TRUE,
+    sep = ",",
+    stringsAsFactors = TRUE)
   
   
   
@@ -883,8 +913,25 @@ server <- function(session, input, output){
       updateSelectInput(session, 
                         "inputend", 
                         choices = colnames(exampleData),
-                        selected = "setting"
+                        #selected = "setting",
+                        selected = "input4",
       )
+      
+      updateSelectInput(session,
+                        "repvar",
+                        choices = colnames(exampleData)
+      )
+      
+      updateSelectInput(session,
+                        "repvar_scatter",
+                        choices = colnames(exampleData)
+      )
+      
+      updateSelectInput(session,
+                        "colvar_scatter",
+                        choices = colnames(exampleData)
+      )
+      
       
       return(exampleData)
       
@@ -967,8 +1014,9 @@ server <- function(session, input, output){
   
   # display dataset as DT
   # Table in tab 'Pre-filter data'
-  output$dataDT <- DT::renderDataTable(
-    data_full(),
+  output$dataDT <- DT::renderDataTable({
+    req(data_full())
+    data_full()},
     filter = "top",
     options = list(lengthChange = FALSE, 
                    autoWidth = TRUE,
@@ -1364,13 +1412,7 @@ server <- function(session, input, output){
     Values
   })
   
-  output$testdropdown <- renderText({
-    
-    Values <- data.frame("Variable" = names(defaults_input()),
-                         "Default value" = defaults_input(),
-                         check.names = FALSE) # makes whitespace in header names possible
-    Values    
-  })
+  
   
   output$defaults_df_ui <- renderUI({
     
@@ -1414,6 +1456,10 @@ server <- function(session, input, output){
     ncol(data_filteredR()) - ind_inputendR()
   })
   
+  # nOCR <- reactive({
+  #   length(input$OC)
+  # })
+  
   
   
   output$colors_ui <- renderUI({
@@ -1426,14 +1472,18 @@ server <- function(session, input, output){
     # })
     
     lapply(1:nOCR(), function(i) {
-      colourInput(inputId = paste0("col", i), 
-                  # label = reacVals$names_outputs[i],
-                  label = names_outputsR()[i],
-                  showColour = "both",
-                  # value = "black"
-                  value = colors()[sample(1:length(colors()),
-                                          size = 1,
-                                          replace = FALSE)]
+      colourInput(#inputId = paste0("col", i), 
+        inputId = paste0("col_", names_outputsR()[i]),
+        # label = reacVals$names_outputs[i],
+        label = names_outputsR()[i],
+        # label = input$OC[i],
+        showColour = "both",
+        # value = "black"
+        # value = colors()[sample(1:length(colors()),
+        #                         size = 1,
+        #                         replace = FALSE)]
+        
+        value = scales::hue_pal()(nOCR())[i]
       )
     })
     
@@ -1450,14 +1500,18 @@ server <- function(session, input, output){
     #nWidgets <- as.integer(reacVals$nOC)
     #names_outputs <- colnames(data_prefiltered()[,reacVals$ind_outputstart:ncol(data_prefiltered())])
     
-    df_colors <- data.frame(lapply(1:nOCR(), function(i) {
-      input[[paste0("col", i)]]
+    # df_colors <- data.frame(lapply(1:nOCR(), function(i) {
+    #   input[[paste0("col", i)]]
+    # }))
+    
+    df_colors <- data.frame(lapply(input$OC, function(i) {
+      input[[paste0("col_", i)]]
     }))
     
     vColors <- as.vector(t(df_colors))
     
-    # names(df_colors) <- names_outputsR()
-    names(vColors) <- names_outputsR()
+    # names(vColors) <- names_outputsR()
+    names(vColors) <- input$OC
     
     # df_colors
     vColors
@@ -1554,6 +1608,14 @@ server <- function(session, input, output){
     
     updateSelectInput(session,
                       "shape",
+                      choices = names(defaults_input())
+    )
+  })
+  
+  observe({
+    
+    updateSelectInput(session,
+                      "linetype",
                       choices = names(defaults_input())
     )
   })
@@ -1932,6 +1994,10 @@ server <- function(session, input, output){
       sim_par <- c(sim_par, input$shape)
     }
     
+    if(input$checkboxLinetype){
+      sim_par <- c(sim_par, input$linetype)
+    }
+    
     if(input$radioFacet == "grid"){
       sim_par <- c(sim_par, input$facet_rows, input$facet_cols)
     }
@@ -1981,7 +2047,7 @@ server <- function(session, input, output){
   
   # Transform dataset to long format on chosen output variables for easy plotting
   data_longer <- reactive({
-    req(input$OC)
+    #req(input$OC)
     
     d <- df_plot()
     # d <- d[input$chooseDT_rows_all,]
@@ -1994,7 +2060,8 @@ server <- function(session, input, output){
     d
   })
   
- 
+  #output$OClength <- renderPrint({c(input$OC, length(input$OC))})
+  
   
   # Plot ---------------------------------------
   
@@ -2009,9 +2076,14 @@ server <- function(session, input, output){
     colScale <- scale_colour_manual(values = lUiColors())
     
     p1 <- ggplot(
+      #req(data_longer()),
       data_longer(), 
       aes_string(x = input$x)
-    ) + colScale
+    ) 
+    
+    if(input$checkboxPalette){
+      p1 <- p1 + colScale
+    }
     # if(input$checkboxShape){
     #   colScale <- scale_colour_manual(values = lUiColors())
     #   p1 <- p1 + colScale
@@ -2041,29 +2113,60 @@ server <- function(session, input, output){
       p1 <-
         p1 +
         aes(
-          linetype =
-            factor(get(
-              input$shape
-            ))
-          
-          ,
+          # linetype =
+          #   factor(get(
+          #     input$shape
+          #   ))
+          # 
+          # ,
           shape =
             factor(get(
               input$shape
             ))
-          ,
-          group =
-            interaction(
-              factor(get(
-                input$shape
-              )),
-              OC
-            )
-        )
+          # ,
+          # group =
+          #   interaction(
+          #     factor(get(
+          #       input$shape
+          #     )),
+          #   OC
+          # )
+        ) + labs(shape = input$shape)
+     
       
-    } else {
-      p1 <-  p1 + aes(group = OC)
+      #, linetype = paste(input$shape)
+      # )
+      
+    } 
+    
+    
+    if(input$checkboxLinetype){
+      
+      p1 <-
+        p1 +
+        aes(
+          
+          linetype =
+            factor(get(
+              input$linetype
+            ))
+          # ,
+          # group =
+          #   interaction(
+          #     factor(get(
+          #       input$linetype
+          #     )),
+          #   OC
+          # )
+        ) + labs(linetype = input$linetype)
+      
+      
     }
+    # 
+    # else {
+    #  p1 <-  p1 
+    #   + aes(group = OC)
+    # }
     
     facets <- input$facet_wrap %>% 
       str_replace_all(",", "+") %>% 
@@ -2349,16 +2452,36 @@ server <- function(session, input, output){
           }
           ggsave(file, plot = plot_object(), device = device)
         } else {
-          device <- function(..., width, height) {
-            grDevices::tiff(..., 
-                            width = input$download_plotwidth, 
-                            height = input$download_plotheight,
-                            res = input$download_resolution, 
-                            units = input$download_unit)
+          if(download_type() == "tiff"){
+            device <- function(..., width, height) {
+              grDevices::tiff(..., 
+                              width = input$download_plotwidth, 
+                              height = input$download_plotheight,
+                              res = input$download_resolution, 
+                              units = input$download_unit)
+            }
+            ggsave(file, plot = plot_object(), device = device)
+          } else {
+            if(download_type() == "pdf"){
+              device <- function(..., width, height) {
+                grDevices::pdf(...,
+                               width = input$download_plotwidth,
+                               height = input$download_plotheight,
+                               res = input$download_resolution)
+              }
+              # ggsave(file, plot = plot_object(), device = device, width = 11, height = 4, dpi = 300, units = "in")
+              ggsave(file, plot = plot_object()
+                     ,width = input$download_plotwidth
+                     ,height = input$download_plotheight
+                     #,units = input$download_unit
+                     #,device = device
+              )
+            }
           }
-          ggsave(file, plot = plot_object(), device = device)
+          
         }
       }
+      
       
       # device <- function(..., width, height) {
       #   fun(..., width = width, height = height,

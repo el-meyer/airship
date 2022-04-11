@@ -14,6 +14,9 @@ library(shinyWidgets)
 library(bslib)
 library(shinydashboard)
 library(scales)
+library(Cairo)
+library(shinyAce)
+options(shiny.usecairo=T)
 
 # css needed for scrollbar placement in DataTables to appear on top
 css <- HTML(
@@ -190,12 +193,13 @@ ui <-
         
         tabItem(
           tabName = "default",
-          DT::dataTableOutput("chooseDT"),
           br(),
+          actionButton("buttonDefault", "Take first row as default values"),
+          actionButton("buttonResetDefault", "Reset all Filters"),
+          DT::dataTableOutput("chooseDT")
           # conditionalPanel(
           # "input.checkboxExampleData",
-          actionButton("buttonDefault", "Take first row as default values"),
-          actionButton("buttonResetDefault", "Reset all Filters")
+          
           # )
           
         ),
@@ -334,24 +338,51 @@ ui <-
             
             column(
               2,
-              checkboxInput(
-                "checkboxPalette", 
-                "Do you want to specify your own colors?"
-              ),
-              absolutePanel(
-                shinyWidgets::dropdownButton(
-                  label = "Color Choices",
-                  status = "primary",
-                  circle = TRUE,
-                  right = TRUE,
-                  icon = icon("paint-brush"),
-                  uiOutput("colors_ui"),
-                  inputId = "dropdown_colors"
+              conditionalPanel(
+                "input.checkboxColor == 0",
+                checkboxInput(
+                  "checkboxPalette_OC", 
+                  "Do you want to specify your own colors for every OC?"
                 ),
-                draggable = TRUE
-                
+                absolutePanel(
+                  shinyWidgets::dropdownButton(
+                    label = "Color Choices",
+                    status = "primary",
+                    circle = TRUE,
+                    right = TRUE,
+                    icon = icon("paint-brush"),
+                    tooltip = TRUE,
+                    uiOutput("colors_ui"),
+                    inputId = "dropdown_colors"
+                  ),
+                  draggable = TRUE
+                  
+                )
+              ),
+              
+              conditionalPanel(
+                "input.checkboxColor != 0",
+                checkboxInput(
+                  "checkboxPalette_dim",
+                  "Do you want to specify your own colors for color dimension?"
+                ),
+                absolutePanel(
+                  shinyWidgets::dropdownButton(
+                    label = "Color choices",
+                    status = "primary",
+                    circle = TRUE,
+                    right = TRUE,
+                    icon = icon("paint-brush"),
+                    uiOutput("colordim_ui"),
+                    inputId = "dropdown_colordim"
+                  ),
+                  draggable = TRUE
+                )
               )
+              
+              
             )
+            
           ),
           
           hr(),
@@ -435,20 +466,6 @@ ui <-
               
               
               checkboxInput(
-                "checkboxShape", 
-                "Do you want to add a shape dimension?"
-              ),
-              conditionalPanel(
-                "input.checkboxShape != 0",
-                
-                selectInput(
-                  "shape", 
-                  "Choose shape variable",
-                  choices = NULL
-                )
-              ),
-              
-              checkboxInput(
                 "checkboxLinetype",
                 "Do you want to add a Linetype dimension?"
               ),
@@ -459,6 +476,24 @@ ui <-
                   "linetype",
                   "Choose linetype variable",
                   choices = NULL
+                )
+              ),
+              
+              conditionalPanel(
+                "input.OC.length == 1",
+                
+                checkboxInput(
+                  "checkboxColor",
+                  "Do you want to add a Color dimension?"
+                ),
+                conditionalPanel(
+                  "input.checkboxColor != 0",
+                  
+                  selectInput(
+                    "color",
+                    "Choose color variable",
+                    choices = NULL
+                  )
                 )
               )
             ),
@@ -542,7 +577,7 @@ ui <-
                         numericInput(
                           "resolution",
                           "Resolution",
-                          value = 300
+                          value = 72
                         ),
                         
                         sliderInput(
@@ -593,7 +628,7 @@ ui <-
                       ),
                       
                       conditionalPanel(
-                        "input.checkboxTheme !=0",
+                        "input.checkboxTheme != 0",
                         
                         radioButtons(
                           "plottheme",
@@ -707,7 +742,7 @@ ui <-
                       numericInput(
                         "download_resolution",
                         "Resolution",
-                        value = 50,
+                        value = 72,
                         min = 1, 
                         max = 1000
                       ),
@@ -721,90 +756,123 @@ ui <-
               
             )
           ),
-          
+          hr(),
+          h2("Plotted Data"),
+          br(),
           fluidRow(
             # verbatimTextOutput("df_plot")
             DT::dataTableOutput("df_plot")
-          )
+          ),
           
+          hr(),
+          h2("Code for reproduction"),
+          br(),
+          aceEditor(outputId = "print_code", value = "", mode = "r", theme = "texmate", readOnly = FALSE),
+          br(),
+          br()
         ),
         
         tabItem("scatterplot",
                 
-                uiOutput("scatter_ui"),
-                HTML(
-                  "In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters."),
-                selectInput(
-                  "repvar_scatter",
-                  "Choose variability parameter",
-                  choices = NULL
+                column(10,
+                       
+                       uiOutput("scatter_ui"),
+                       HTML(
+                         "In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters."),
+                       selectInput(
+                         "repvar_scatter",
+                         "Choose variability parameter",
+                         choices = NULL
+                       ),
+                       
+                       selectInput(
+                         "colvar_scatter",
+                         "Choose color parameter",
+                         choices = NULL
+                       ),
+                       
+                       selectizeInput(
+                         "OC_scatter", 
+                         "Choose OC to plot", 
+                         choices = NULL,
+                         multiple = TRUE
+                       ),
+                       
+                       radioButtons(
+                         "radioFacet_scatter",
+                         "Do you want to add a facet dimension?",
+                         choices = c("no", "grid", "wrap")
+                       ),
+                       
+                       conditionalPanel(
+                         "input.radioFacet_scatter == 'grid'",
+                         
+                         selectInput(
+                           "facet_rows_scatter", 
+                           "Choose row variable", 
+                           choices = NULL,
+                           multiple = TRUE
+                         ),
+                         
+                         selectInput(
+                           "facet_cols_scatter", 
+                           "Choose col variable", 
+                           choices = NULL,
+                           multiple = TRUE
+                         )
+                       ),
+                       
+                       
+                       conditionalPanel(
+                         "input.radioFacet_scatter == 'wrap'",
+                         
+                         selectizeInput(
+                           "facet_wrap_scatter", 
+                           "Choose variables to facet wrap",
+                           choices = NULL,
+                           multiple = TRUE
+                         )
+                       ),
+                       
+                       
+                       
+                       
+                       # checkboxInput(
+                       #   "checkboxShape_scatter", 
+                       #   "Do you want to add a shape dimension?"
+                       # ),
+                       # conditionalPanel(
+                       #   "input.checkboxShape_scatter != 0",
+                       #   
+                       #   selectInput(
+                       #     "shape_scatter", 
+                       #     "Choose shape variable",
+                       #     choices = NULL
+                       #   )
+                       # )
                 ),
                 
-                selectInput(
-                  "colvar_scatter",
-                  "Choose color parameter",
-                  choices = NULL
-                ),
                 
-                selectizeInput(
-                  "OC_scatter", 
-                  "Choose OC to plot", 
-                  choices = NULL,
-                  multiple = TRUE
-                ),
-                
-                radioButtons(
-                  "radioFacet_scatter",
-                  "Do you want to add a facet dimension?",
-                  choices = c("no", "grid", "wrap")
-                ),
-                
-                conditionalPanel(
-                  "input.radioFacet_scatter == 'grid'",
-                  
-                  selectInput(
-                    "facet_rows_scatter", 
-                    "Choose row variable", 
-                    choices = NULL,
-                    multiple = TRUE
-                  ),
-                  
-                  selectInput(
-                    "facet_cols_scatter", 
-                    "Choose col variable", 
-                    choices = NULL,
-                    multiple = TRUE
-                  )
-                ),
-                
-                
-                conditionalPanel(
-                  "input.radioFacet_scatter == 'wrap'",
-                  
-                  selectizeInput(
-                    "facet_wrap_scatter", 
-                    "Choose variables to facet wrap",
-                    choices = NULL,
-                    multiple = TRUE
-                  )
-                ),
-                
-                
-                
-                
-                checkboxInput(
-                  "checkboxShape_scatter", 
-                  "Do you want to add a shape dimension?"
-                ),
-                conditionalPanel(
-                  "input.checkboxShape_scatter != 0",
-                  
-                  selectInput(
-                    "shape_scatter", 
-                    "Choose shape variable",
-                    choices = NULL
-                  )
+                column(2,
+                       checkboxInput(
+                         "checkboxPalette_scatter",
+                         "Do you want to specify your own colors"
+                       ),
+                       absolutePanel(
+                         shinyWidgets::dropdownButton(
+                           label = "Color choices",
+                           status = "primary",
+                           circle = TRUE,
+                           right = TRUE,
+                           icon = icon("paint-brush"),
+                           uiOutput("colors_scatter_ui"),
+                           inputId = "dropdown_colors_scatter"
+                         ),
+                         draggable = TRUE
+                       )
+                       
                 )
+                
                 
         ),
         
@@ -909,17 +977,18 @@ server <- function(session, input, output){
   
   # Use example data if checkbox is checked, otherwise use uploaded dataset
   data_full <- reactive({
+    
     if(input$checkboxExampleData){
       updateSelectInput(session, 
                         "inputend", 
                         choices = colnames(exampleData),
-                        #selected = "setting",
-                        selected = "input4",
+                        selected = "input4"
       )
       
       updateSelectInput(session,
                         "repvar",
-                        choices = colnames(exampleData)
+                        choices = colnames(exampleData),
+                        selected = "replications"
       )
       
       updateSelectInput(session,
@@ -945,7 +1014,8 @@ server <- function(session, input, output){
       
       updateSelectInput(session,
                         "repvar",
-                        choices = colnames(upload())
+                        choices = colnames(upload()),
+                        selected = colnames(upload())[1]
       )
       
       updateSelectInput(session,
@@ -965,23 +1035,23 @@ server <- function(session, input, output){
   
   
   # update choices for replication variable
-  observe({
-    # if(input$checkboxRepvar){
-    # updateSelectInput(
-    #   session,
-    #   "repvar",
-    #   choices = colnames(upload())
-    # )
-    # } else {
-    #   updateSelectInput(
-    #     session, 
-    #     "repvar",
-    #     choices = NULL,
-    #     selected = NULL
-    #   )
-    # }
-  })
-  
+  # observe({
+  #   if(input$checkboxRepvar){
+  #     updateSelectInput(
+  #       session,
+  #       "repvar",
+  #       choices = colnames(upload())
+  #     )
+  #   } else {
+  #     updateSelectInput(
+  #       session,
+  #       "repvar",
+  #       choices = NULL,
+  #       selected = NULL
+  #     )
+  #   }
+  # })
+  # 
   
   
   
@@ -1003,6 +1073,7 @@ server <- function(session, input, output){
     validate(
       need(input$repvar != input$inputend, "replication variable can't be input variable (Please alter last input variable or replication variable)")
     )
+    
     if(input$checkboxRepvar){
       data_full() %>% select(-input$repvar)
     } else {
@@ -1026,7 +1097,7 @@ server <- function(session, input, output){
   )
   
   
-  reacVals <- reactiveValues()
+  reacVals <- reactiveValues(first_row_filters_string = "NULL")
   
   # observe({
   #   reacVals$ind_inputend <- which(colnames(data_full_norep()) == input$inputend)
@@ -1038,6 +1109,10 @@ server <- function(session, input, output){
   })
   
   ind_outputstartR <- reactive({
+    validate(
+      need(ncol(data_full_norep()) != ind_inputendR(),
+           "last input variable cannot be last variable in data frame")
+    )
     ind_inputendR() + 1
   })
   
@@ -1273,7 +1348,7 @@ server <- function(session, input, output){
     updateSelectizeInput(session,
                          "OC_scatter",
                          choices = names_outputsR(),
-                         selected = names_outputsR()[1])
+                         selected = names_outputsR()[c(1,2)])
     
     
     
@@ -1305,19 +1380,30 @@ server <- function(session, input, output){
     }
     
     
-    if(input$buttonDefault > input$buttonResetDefault) {
-      # Let first row be standard default value combination
-      data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactor = FALSE)
-      
-      first_row_filters <- paste0("'[\"", data_filtered_helper[1,], "\"]'")
-      first_row_filters_string <<- paste0(
-        "list(NULL, ",
-        paste0("list(search = ", first_row_filters, ")", collapse = ", "),
-        ")"
-      )
-    } else {
-      first_row_filters_string <<- "NULL"
-    }
+    
+    # if(input$buttonDefault > input$buttonResetDefault) {
+    
+    # observeEvent(input$buttonDefault,{
+    # 
+    #   # Let first row be standard default value combination
+    #   data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactor = FALSE)
+    # 
+    #   first_row_filters <- paste0("'[\"", data_filtered_helper[1,], "\"]'")
+    #   first_row_filters_string <<- paste0(
+    #     "list(NULL, ",
+    #     paste0("list(search = ", first_row_filters, ")", collapse = ", "),
+    #     ")"
+    #   )
+    # }
+    # )
+    # 
+    # observeEvent(input$buttonResetDefault ,{
+    #   # } else {
+    #   first_row_filters_string <<- "NULL"
+    # }
+    # )
+    
+    
     
     
     
@@ -1334,10 +1420,34 @@ server <- function(session, input, output){
                  scrollX = TRUE, 
                  scrollY = TRUE,
                  pageLength = 5,
-                 searchCols = eval(parse(text = first_row_filters_string))
+                 searchCols = eval(parse(text = reacVals$first_row_filters_string))
   )
   #, columns = list(search = "applied")
   
+  )
+  
+  # Update Default value filters in Tab based on pre-defined buttons
+  
+  # Filter for first row
+  observeEvent(input$buttonDefault,{
+    
+    # Let first row be standard default value combination
+    data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactor = FALSE)
+    
+    first_row_filters <- paste0("'[\"", data_filtered_helper[1,], "\"]'")
+    reacVals$first_row_filters_string <- paste0(
+      "list(NULL, ",
+      paste0("list(search = ", first_row_filters, ")", collapse = ", "),
+      ")"
+    )
+    
+  }
+  )
+  
+  # Reset filters
+  observeEvent(input$buttonResetDefault ,{
+    reacVals$first_row_filters_string <- "NULL"
+  }
   )
   
   #-----------------------------------------------------------------
@@ -1492,8 +1602,55 @@ server <- function(session, input, output){
     
   })
   
-  outputOptions(output, "colors_ui", suspendWhenHidden=FALSE)
+  valColvarR <- reactive({
+    req(data_filteredR())
+    unique(data_filteredR()[[input$color]])
+  })
   
+  nValColvarR <- reactive({
+    req(valColvarR())
+    length(valColvarR())
+  })
+  
+  output$colordim_ui <- renderUI({
+    
+    lapply(1:nValColvarR(), function(i) {
+      colourInput(
+        inputId = paste0("col_", valColvarR()[i]),
+        label = valColvarR()[i],
+        showColour = "both",
+        
+        value = scales::hue_pal()(nValColvarR())[i]
+      )
+    })
+  })
+  
+  valColvar_scatterR <- reactive({
+    req(data_filteredR())
+    unique(data_filteredR()[[input$colvar_scatter]])
+    
+  })
+  nValColvar_scatterR <- reactive({
+    req(valColvar_scatterR())
+    length(valColvar_scatterR())
+  })
+  
+  output$colors_scatter_ui <- renderUI({
+    
+    lapply(1:nValColvar_scatterR(), function(i) {
+      colourInput(
+        inputId = paste0("col_", valColvar_scatterR()[i], "_sc"),
+        label = valColvar_scatterR()[i],
+        showColour = "both",
+        
+        value = scales::hue_pal()(nValColvar_scatterR())[i]
+      )
+    })
+  })
+  
+  outputOptions(output, "colors_ui", suspendWhenHidden =FALSE)
+  outputOptions(output, "colordim_ui", suspendWhenHidden = FALSE)
+  outputOptions(output, "colors_scatter_ui", suspendWhenHidden = FALSE)
   
   lUiColors <- reactive({
     
@@ -1518,9 +1675,31 @@ server <- function(session, input, output){
     
   })
   
+  lUiColordim <- reactive({
+    
+    df_colors <- data.frame(lapply(valColvarR(), function(i) {
+      input[[paste0("col_", i)]]
+    }))
+    
+    vColors <- as.vector(t(df_colors))
+    
+    names(vColors) <- valColvarR()
+    
+    vColors
+  })
   
-  
-  
+  lUiColors_scatter <- reactive({
+    
+    df_colors <- data.frame(lapply(valColvar_scatterR(), function(i) {
+      input[[paste0("col_", i, "_sc")]]
+    }))
+    
+    vColors <- as.vector(t(df_colors))
+    
+    names(vColors) <- valColvar_scatterR()
+    
+    vColors
+  })
   
   
   
@@ -1618,6 +1797,40 @@ server <- function(session, input, output){
                       "linetype",
                       choices = names(defaults_input())
     )
+  })
+  
+  observe({
+    
+    updateSelectInput(session,
+                      "color",
+                      choices = names(defaults_input())
+    )
+  })
+  
+  observe({
+    if(length(input$OC) != 1){
+      updateCheckboxInput(session,
+                          "checkboxColor",
+                          value = FALSE
+      )
+    }
+    
+  })
+  
+  observe({
+    if(input$checkboxExampleData == FALSE){
+      updateCheckboxInput(session,
+                          "checkboxRepvar",
+                          value = FALSE)
+    }
+  })
+  
+  observe({
+    if(input$checkboxColor == TRUE){
+      updateCheckboxInput(session,
+                          "checkboxPalette_OC",
+                          value = FALSE)
+    }
   })
   
   
@@ -1827,9 +2040,9 @@ server <- function(session, input, output){
     sim_par <- input$repvar_scatter
     
     sim_par <- c(sim_par, input$colvar_scatter)
-    if(input$checkboxShape_scatter){
-      sim_par <- c(sim_par, input$shape_scatter)
-    }
+    # if(input$checkboxShape_scatter){
+    #   sim_par <- c(sim_par, input$shape_scatter)
+    # }
     
     if(input$radioFacet_scatter == "grid"){
       sim_par <- c(sim_par, input$facet_rows_scatter, input$facet_cols_scatter)
@@ -1890,11 +2103,23 @@ server <- function(session, input, output){
   
   plot_object_scatter <- reactive({
     
+    
+    colScale_scatter <- scale_colour_manual(values = lUiColors_scatter())
+    
     p1 <- ggplot(
       df_scatterplot(), 
       #aes_string(x = value, color = OC)
       aes_string(x = input$OC_scatter[1], y = input$OC_scatter[2])
-    ) + geom_point(aes_string(colour = input$colvar_scatter))
+    ) + geom_point(aes(colour = factor(get(input$colvar_scatter)))) + labs(colour = input$colvar_scatter)
+    
+    
+    
+    if(input$checkboxPalette_scatter){
+      p1 <- p1 + colScale_scatter
+    }
+    
+    
+    
     
     # if(input$checkboxShape_scatter){
     #   p1 <-
@@ -1990,9 +2215,10 @@ server <- function(session, input, output){
     
     # vector of names of simulation parameters
     sim_par <- input$x
-    if(input$checkboxShape){
-      sim_par <- c(sim_par, input$shape)
-    }
+    
+    # if(input$checkboxShape){
+    #   sim_par <- c(sim_par, input$shape)
+    # }
     
     if(input$checkboxLinetype){
       sim_par <- c(sim_par, input$linetype)
@@ -2004,6 +2230,10 @@ server <- function(session, input, output){
     
     if(input$radioFacet == "wrap"){
       sim_par <- c(sim_par, input$facet_wrap)
+    }
+    
+    if(input$checkboxColor){
+      sim_par <- c(sim_par, input$color)
     }
     
     # exclude simulation parameters from df with default values
@@ -2058,6 +2288,8 @@ server <- function(session, input, output){
                    names_to = "OC",
                    values_to = "value")
     d
+    
+    
   })
   
   #output$OClength <- renderPrint({c(input$OC, length(input$OC))})
@@ -2073,16 +2305,26 @@ server <- function(session, input, output){
     # output$lineplot <-renderPlot({
     
     
-    colScale <- scale_colour_manual(values = lUiColors())
-    
+    colScale <- reactive({
+      if(input$checkboxColor){
+        scale_colour_manual(values = lUiColordim())
+      } else {
+        scale_colour_manual(values = lUiColors())
+      }
+      
+    })
     p1 <- ggplot(
       #req(data_longer()),
       data_longer(), 
-      aes_string(x = input$x)
+      aes_string(x = input$x, y = "value")
     ) 
     
-    if(input$checkboxPalette){
-      p1 <- p1 + colScale
+    if(input$checkboxPalette_OC){
+      p1 <- p1 + colScale()
+    }
+    
+    if(input$checkboxPalette_dim){
+      p1 <- p1 + colScale()
     }
     # if(input$checkboxShape){
     #   colScale <- scale_colour_manual(values = lUiColors())
@@ -2093,51 +2335,75 @@ server <- function(session, input, output){
     
     
     if(input$checkboxLine){
-      p1 <- 
-        p1 + 
-        geom_line(aes(y = value, color  = OC),
-                  size = input$linesize)
+      if(input$checkboxColor){
+        p1 <-
+          p1 +
+          geom_line(aes(
+            y = value,
+            colour  = factor(get(input$color))),
+            size = input$linesize)
+      } else {
+        p1 <- 
+          p1 + 
+          geom_line(aes(
+            y = value,
+            colour  = OC),
+            size = input$linesize)
+      }
     }
     
     if(input$checkboxPoint){
-      
-      p1 <-
-        p1  +
-        geom_point(aes(y = value, color  = OC),
-                   size = 3*input$linesize)
+      if(input$checkboxColor){
+        p1 <-
+          p1  +
+          geom_point(aes(
+            y = value,
+            colour  = factor(get(input$color))),
+            size = 3*input$linesize)
+      } else {
+        p1 <-
+          p1  +
+          geom_point(aes(
+            y = value,
+            colour  = OC),
+            size = 3*input$linesize)
+        
+      }
     }
     
     
     
-    if(input$checkboxShape){
-      p1 <-
-        p1 +
-        aes(
-          # linetype =
-          #   factor(get(
-          #     input$shape
-          #   ))
-          # 
-          # ,
-          shape =
-            factor(get(
-              input$shape
-            ))
-          # ,
-          # group =
-          #   interaction(
-          #     factor(get(
-          #       input$shape
-          #     )),
-          #   OC
-          # )
-        ) + labs(shape = input$shape)
-     
-      
-      #, linetype = paste(input$shape)
-      # )
-      
-    } 
+    
+    # 
+    # if(input$checkboxShape){
+    #   p1 <-
+    #     p1 +
+    #     aes(
+    #       # linetype =
+    #       #   factor(get(
+    #       #     input$shape
+    #       #   ))
+    #       # 
+    #       # ,
+    #       shape =
+    #         factor(get(
+    #           input$shape
+    #         ))
+    #       # ,
+    #       # group =
+    #       #   interaction(
+    #       #     factor(get(
+    #       #       input$shape
+    #       #     )),
+    #       #   OC
+    #       # )
+    #     ) + labs(shape = input$shape)
+    #   
+    #   
+    #   #, linetype = paste(input$shape)
+    #   # )
+    #   
+    # } 
     
     
     if(input$checkboxLinetype){
@@ -2150,15 +2416,20 @@ server <- function(session, input, output){
             factor(get(
               input$linetype
             ))
-          # ,
-          # group =
-          #   interaction(
-          #     factor(get(
-          #       input$linetype
-          #     )),
-          #   OC
-          # )
-        ) + labs(linetype = input$linetype)
+          ,
+          shape = factor(get(
+            input$linetype
+          ))
+          ,
+          group =
+            interaction(
+              factor(get(
+                input$linetype
+              )),
+              OC
+            )
+        )
+      # ) + labs(linetype = input$linetype, group = input$linetype, shape = input$linetype)
       
       
     }
@@ -2209,8 +2480,6 @@ server <- function(session, input, output){
     }
     
     
-    
-    
     # if(input$plottype){
     #   
     # p2 <- ggplotly(p1)
@@ -2231,7 +2500,7 @@ server <- function(session, input, output){
     
     p1
     
-  },
+  }
   
   # res = exprToFunction(input$resolution)
   # res = input$resolution
@@ -2316,6 +2585,8 @@ server <- function(session, input, output){
     
     p1 <- p1 + theme(legend.title = element_blank())
     
+    
+    updateAceEditor(session, editorId = "print_code", value = plot_code() )
     
     p1
   })
@@ -2423,64 +2694,105 @@ server <- function(session, input, output){
     
     content = function(file){
       fun <- match.fun(download_type() )
+      
+      fun(file, 
+          height = input$download_plotheight, 
+          width = input$download_plotwidth,
+          units = input$download_unit,
+          res = input$download_resolution)
+      
       # fun(file,
-      #     height = input$plotheight, 
+      #     height = input$plotheight,
       #     width = input$plotwidth,
       #     res = input$resolution)
-      # print(lineplot_object())
-      # dev.off()
+      print(plot_object())
+      dev.off()
       
       # -----IFELSE for gr_Devices----------------------
       
-      if(download_type() == "png"){
-        device <- function(..., width, height) {
-          grDevices::png(..., 
-                         width = input$download_plotwidth, 
-                         height = input$download_plotheight,
-                         res = input$download_resolution,
-                         units = input$download_unit)
-        }
-        ggsave(file, plot = plot_object(), device = device)
-      } else {
-        if(download_type() == "jpeg"){
-          device <- function(..., width, height) {
-            grDevices::jpeg(..., 
-                            width = input$download_plotwidth, 
-                            height = input$download_plotheight,
-                            res = input$download_resolution,
-                            units = input$download_unit)
-          }
-          ggsave(file, plot = plot_object(), device = device)
-        } else {
-          if(download_type() == "tiff"){
-            device <- function(..., width, height) {
-              grDevices::tiff(..., 
-                              width = input$download_plotwidth, 
-                              height = input$download_plotheight,
-                              res = input$download_resolution, 
-                              units = input$download_unit)
-            }
-            ggsave(file, plot = plot_object(), device = device)
-          } else {
-            if(download_type() == "pdf"){
-              device <- function(..., width, height) {
-                grDevices::pdf(...,
-                               width = input$download_plotwidth,
-                               height = input$download_plotheight,
-                               res = input$download_resolution)
-              }
-              # ggsave(file, plot = plot_object(), device = device, width = 11, height = 4, dpi = 300, units = "in")
-              ggsave(file, plot = plot_object()
-                     ,width = input$download_plotwidth
-                     ,height = input$download_plotheight
-                     #,units = input$download_unit
-                     #,device = device
-              )
-            }
-          }
-          
-        }
-      }
+      # if(download_type() == "png"){
+      #   device <- function(..., width, height) {
+      #     grDevices::png(...,
+      #                    width = input$download_plotwidth,
+      #                    height = input$download_plotheight,
+      #                    res = input$download_resolution,
+      #                    units = input$download_unit)
+      #   }
+      #   ggsave(file, plot = plot_object(), device = device)
+      #   
+      
+      #-----
+      # ggsave(file,
+      #        plot = plot_object(),
+      #        device = png(res = input$download_resolution),
+      #        width = input$download_plotwidth,
+      #        height = input$download_plotheight,
+      #        units = input$download_unit
+      # )
+      
+      
+      # plot_object()
+      # png(file,
+      #        width = input$download_plotwidth,
+      #        height = input$download_plotheight,
+      #        units = input$download_unit,
+      #        res = input$resolution
+      # )
+      # 
+      # dev.off()
+      
+      #-----  
+      
+      #-----
+      
+      # } else {
+      #   if(download_type() == "jpeg"){
+      #     device <- function(..., width, height) {
+      #       grDevices::jpeg(..., 
+      #                       width = input$download_plotwidth, 
+      #                       height = input$download_plotheight,
+      #                       res = input$download_resolution,
+      #                       units = input$download_unit)
+      #     }
+      #     ggsave(file, plot = plot_object(), device = device)
+      #   } else {
+      #     if(download_type() == "tiff"){
+      #       device <- function(..., width, height) {
+      #         grDevices::tiff(..., 
+      #                         width = input$download_plotwidth, 
+      #                         height = input$download_plotheight,
+      #                         res = input$download_resolution, 
+      #                         units = input$download_unit)
+      #       }
+      #       ggsave(file, plot = plot_object(), device = device)
+      #     } else {
+      #       if(download_type() == "pdf"){
+      #         ggsave(file,
+      #                plot = plot_object(),
+      #                device = pdf(),
+      #                width = input$download_plotwidth,
+      #                height = input$download_plotheight,
+      #                units = input$download_unit
+      #         )
+      #         
+      #       }
+      #       
+      #-----
+      
+      
+      # ggsave(file, plot = plot_object(), device = device, width = 11, height = 4, dpi = 300, units = "in")
+      # ggsave(file, plot = plot_object()
+      #        ,width = input$download_plotwidth
+      #        ,height = input$download_plotheight
+      #        #,units = input$download_unit
+      #        ,device = device
+      # )
+      
+      #----- 
+      #}
+      
+      # }
+      # }
       
       
       # device <- function(..., width, height) {
@@ -2496,6 +2808,18 @@ server <- function(session, input, output){
     
     
   )
+  
+  Code <- reactiveValues()
+  
+  plot_code <- reactive({
+    
+    return(
+      
+      paste0("library(ggplot)", "\n\n", 
+             "ggplot(data = data, aes(x = ", input$x, ", y = ", input$OC,"))")
+    )
+    
+  })
   
 }
 

@@ -178,11 +178,12 @@ ui <-
       tabItems(
         tabItem(
           tabName = "data_settings",
+          
+          
         ),
         
         tabItem(
           tabName = "data",
-          verbatimTextOutput("test"),
           DT::dataTableOutput("dataDT"),
           # conditionalPanel("input.checkboxRepvar != 0",
           #                  h3("Summarized Data"),
@@ -195,7 +196,7 @@ ui <-
           tabName = "default",
           br(),
           actionButton("buttonDefault", "Take first row as default values"),
-          actionButton("buttonResetDefault", "Reset all Filters"),
+          actionButton("buttonResetDefault", "Reset selections"),
           DT::dataTableOutput("chooseDT")
           # conditionalPanel(
           # "input.checkboxExampleData",
@@ -312,17 +313,7 @@ ui <-
           plotOutput("pBoxplot")
         ),
         
-        # tabItem(
-        #   tabName = "qplot",
-        #   #plotOutput("Qplot"),
-        #   uiOutput("pQplot"),
-        #   textInput("qplot_name", "Name"),
-        #   numericInput("qplotwidth", "Width", 500),
-        #   numericInput("qplotres", "Res", 300),
-        #   numericInput("qplotheight", "Height", 500),
-        #   selectInput("qplot_type", "Choose file type",choices = c("png", "jpeg", "tiff")),
-        #   downloadButton("download_qplot", "DL qplot")
-        # ),
+        
         
         tabItem(
           tabName = "plot",
@@ -391,14 +382,9 @@ ui <-
           fluidRow(
             column(
               3,
-              #verbatimTextOutput("test"),
               shinyWidgets::dropdown(
                 label = "Default value overview",
                 HTML("Current default value settings"),
-                # ,
-                # selectInput("testdropdown",
-                #             "test",
-                #             c("a", "b", "c"))
                 
                 uiOutput("defaults_df_ui")
               ),
@@ -409,7 +395,6 @@ ui <-
                 choices = NULL
               ),
               
-              # colourPicker(3),
               
               
               selectizeInput(
@@ -417,10 +402,33 @@ ui <-
                 "Choose OC to plot", 
                 choices = NULL,
                 multiple = TRUE
+              ),
+              
+              checkboxInput("checkboxErrorbar",
+                            "Do you want to add Errorbars?"),
+              
+              conditionalPanel(
+                "input.checkboxErrorbar != 0",
+                
+                radioButtons(
+                  "radioErrorsymmetry",
+                  "Are the errors symmetrical (1 error variable) or asymmetrical (2 error variables)",
+                  choices = c("symmetrical", "asymmetrical")
+                ),
+                
+                conditionalPanel(
+                  "input.radioErrorsymmetry == 'asymmetrical'",
+                  
+                  radioButtons(
+                    "radioErrorstructure",
+                    "Do the variables represent the upper and lower deviation from the estimate or the upper and lower bounds?",
+                    choices = c("deviation", "bounds")
+                  )
+                ),
+                HTML("Select the corresponding error variable (Sd) for every OC chosen."),
+                HTML("For a correct display, the error variables have to be in the same order as the OCs chosen above"),
+                uiOutput("errorbar_var")
               )
-              # ,
-              # 
-              # verbatimTextOutput("OClength")
             ),
             
             column(
@@ -506,10 +514,10 @@ ui <-
                           value = FALSE,
                           size = "small"),
               
-              switchInput("scatterplot",
-                          "Scatterplot",
-                          value = FALSE,
-                          size = "small"),
+              # switchInput("scatterplot",
+              #             "Scatterplot",
+              #             value = FALSE,
+              #             size = "small"),
               
               
               actionButton("change_style", label = "style options"),
@@ -767,7 +775,7 @@ ui <-
           hr(),
           h2("Code for reproduction"),
           br(),
-          aceEditor(outputId = "print_code", value = "", mode = "r", theme = "texmate", readOnly = FALSE),
+          # aceEditor(outputId = "print_code", value = "", mode = "r", theme = "texmate", readOnly = FALSE),
           br(),
           br()
         ),
@@ -777,8 +785,9 @@ ui <-
                 column(10,
                        
                        uiOutput("scatter_ui"),
-                       HTML(
-                         "In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters."),
+                       
+                       HTML("In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters."),
+                       
                        selectInput(
                          "repvar_scatter",
                          "Choose variability parameter",
@@ -877,27 +886,31 @@ ui <-
         ),
         
         tabItem("help",
+                
                 h4("Info"),
                 HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Meyer (both Medical University Vienna) and Michal Majka"),
+                
                 h2("User Manual"),
                 HTML("Following you will find details on every part of the app and how they are to be used"),
+                
                 h4("Data Settings"),
-                HTML("There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the design parameters precede the output values/operating characteristics. Each row represents one  simulation run with a different combination of input/design parameters. "),
-                HTML("If your data is not aggregated yet (i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index' you can click the checkbox and choose which of your variables is the 'replication run index' The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
+                HTML("There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the input variables/design parameters precede the output variables/operating characteristics. Each row represents one simulation run with a different combination of input/design parameters. "),
+                HTML("If your data is not aggregated yet i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index variable' you can click the checkbox and choose which of your variables is the 'replication run index' The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
                 
                 h3("Data"),
                 HTML("In the Data tab you find an overview of your data. Already here you can set filters for your input parameters, if you are not interested in some observations."),
+                
                 h3("Default values"),
-                HTML("The default value is a key tab in this App. Please choose one default value for every variable that has an impact on your simulation. Later in the plot tab the dataset is filtered for these values, unless the respective variable is chosen to be one of the dimensions in the graph (See 'plot' tab)."),
+                HTML("The default value tab is a key tab in this App. Please choose one default value for every input variable that can take on more than one unique value. Later in the plot tab the dataset is filtered for these values, unless the respective variable is chosen to be one of the dimensions in the graph (See 'plot' tab)."),
                 h3("Distribution"),
-                HTML("This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots."),
+                HTML("This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots for your output variables to get an overview of the distribution behaviour."),
                 
                 h3("Plot"),
                 HTML("After uploading the data and establishing the settings, you can visualize your simulation results on up to 4 dimensions. An x-axis variable as well as at least one OC have to be specified in order for the plot to show up: You can opt to add further design parameters on the 'facet' dimensions (row and column), which splits the plot into a grid as well as the 'shape' dimension, which adds lines/points in different shapes according to the value of the respective input parameter."),
                 HTML("Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clicking the 'Download plot' button"),
                 
                 h3("Scatterplot"),
-                HTML("If you are interested in the variability of ceratin operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.")
+                HTML("If you are interested in the variability of certain operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.")
                 
                 
         )
@@ -964,10 +977,6 @@ server <- function(session, input, output){
     
     
     
-    
-    
-    
-    
     return(mydata) 
     
   })
@@ -976,6 +985,7 @@ server <- function(session, input, output){
   
   
   # Use example data if checkbox is checked, otherwise use uploaded dataset
+  # Update Input choices
   data_full <- reactive({
     
     if(input$checkboxExampleData){
@@ -998,7 +1008,8 @@ server <- function(session, input, output){
       
       updateSelectInput(session,
                         "colvar_scatter",
-                        choices = colnames(exampleData)
+                        choices = colnames(exampleData),
+                        selected = colnames(exampleData)[2]
       )
       
       
@@ -1034,26 +1045,7 @@ server <- function(session, input, output){
   
   
   
-  # update choices for replication variable
-  # observe({
-  #   if(input$checkboxRepvar){
-  #     updateSelectInput(
-  #       session,
-  #       "repvar",
-  #       choices = colnames(upload())
-  #     )
-  #   } else {
-  #     updateSelectInput(
-  #       session,
-  #       "repvar",
-  #       choices = NULL,
-  #       selected = NULL
-  #     )
-  #   }
-  # })
-  # 
-  
-  
+  # Show aggregated datatable and distribution tab only if replication is chosen above
   
   observe({
     
@@ -1081,7 +1073,10 @@ server <- function(session, input, output){
     }
   })
   
-  # Pre-filter data Tab ---------------------------------------------------
+  
+  
+  
+  # Pre-filter data Tab ----------------------------------------------
   
   # display dataset as DT
   # Table in tab 'Pre-filter data'
@@ -1104,10 +1099,12 @@ server <- function(session, input, output){
   #   # reacVals$ind_outputstart <- which(colnames(data_full_norep()== input$inputend) +1)
   # })
   
+  # index of lase input variable
   ind_inputendR <- reactive({
     which(colnames(data_full_norep()) == input$inputend)
   })
   
+  # index of first output variable
   ind_outputstartR <- reactive({
     validate(
       need(ncol(data_full_norep()) != ind_inputendR(),
@@ -1169,7 +1166,7 @@ server <- function(session, input, output){
   
   
   
-  # -------------------------------------
+  # aggregate data (if not aggregated yet) -------------------------------------
   
   data_full_mean <- reactive({
     validate(
@@ -1228,11 +1225,12 @@ server <- function(session, input, output){
                  scrollX = TRUE
   ))
   
+  # Aggregated Datatable in 'Data' Tab
   output$dataDT_summarized <- 
     renderUI({
       if(input$checkboxRepvar){
         tagList(
-          h3("Summarized Data"),
+          h3("Aggregated Data"),
           DT::dataTableOutput("repDataDT")
         )
       }
@@ -1260,9 +1258,7 @@ server <- function(session, input, output){
   names_inputsR <- reactive({
     #req(data_filteredR, ind_inputendR)
     nm <- names(data_filteredR())[1:ind_inputendR()]
-    # if(input$checkboxRepvar){
-    #   nm <- nm[!(nm %in% input$repvar)]
-    # }
+    
     nm
   })
   
@@ -1272,6 +1268,7 @@ server <- function(session, input, output){
     colnames(data_filteredR())[ind_outputstartR():ncol(data_filteredR())]
   })
   
+  # initialize default value object with all input variables
   data_choose_defaultR <- reactive({
     data_filteredR()[names_inputsR()]
   })
@@ -1476,6 +1473,7 @@ server <- function(session, input, output){
   
   
   # subsetting above vector only with variables that have been assigned default value
+  
   defaults_input <- reactive({
     # req(input$chooseDT_search_columns)
     
@@ -1513,7 +1511,7 @@ server <- function(session, input, output){
     
   })
   
-  # table output in sidebar displaying chosen default values
+  # table output in dropdown within plot tab displaying chosen default values
   output$defaults_df <- renderTable({
     
     Values <- data.frame("Variable" = names(defaults_input()),
@@ -1560,17 +1558,15 @@ server <- function(session, input, output){
   # --------------------------------------------------------------------------
   # dynamic number of color selectors (one for every OC) ---------------------
   
-  
+  # number of Operating Characteristics
   nOCR <- reactive({
     req(data_filteredR())
     ncol(data_filteredR()) - ind_inputendR()
   })
   
-  # nOCR <- reactive({
-  #   length(input$OC)
-  # })
   
   
+  # Create colorInput field for every OC
   
   output$colors_ui <- renderUI({
     
@@ -1602,6 +1598,7 @@ server <- function(session, input, output){
     
   })
   
+  # 
   valColvarR <- reactive({
     req(data_filteredR())
     unique(data_filteredR()[[input$color]])
@@ -1625,6 +1622,8 @@ server <- function(session, input, output){
     })
   })
   
+  
+  
   valColvar_scatterR <- reactive({
     req(data_filteredR())
     unique(data_filteredR()[[input$colvar_scatter]])
@@ -1647,6 +1646,8 @@ server <- function(session, input, output){
       )
     })
   })
+  
+  
   
   outputOptions(output, "colors_ui", suspendWhenHidden =FALSE)
   outputOptions(output, "colordim_ui", suspendWhenHidden = FALSE)
@@ -1702,6 +1703,52 @@ server <- function(session, input, output){
   })
   
   
+  
+  #-----------------------------------------------------------------------------
+  # Errorbar Selection ----
+  
+  output$errorbar_var <- renderUI({
+    
+    
+    # lapply(1:length(input$OC), function(i) {
+    #   
+    #   selectInput(
+    #     inputId = paste0("errorvar_", input$OC[i]),
+    #     label = input$OC[i],
+    #     choices = names_outputsR(),
+    #     selected = names_outputsR()[which(names_outputsR() == input$OC[i]) + 1]
+    #   )
+    # }) 
+    
+    if(input$radioErrorsymmetry == "symmetrical"){
+      
+      selectizeInput(
+        inputId = "errorvars",
+        label = "Choose all the error variables (sd)",
+        choices = names_outputsR(),
+        multiple = TRUE
+      )
+      
+    } else{
+      tagList(
+        selectizeInput(
+          inputId = "errorvars_upper",
+          label = "Choose error variables for the upper KI",
+          choices = names_outputsR(),
+          multiple = TRUE
+        ),
+        
+        selectizeInput(
+          inputId = "errorvars_lower",
+          label = "Choose error variables for the lower KI",
+          choices = names_outputsR(),
+          multiple = TRUE
+        )
+      )
+    }
+    
+    
+  })
   
   
   
@@ -2215,6 +2262,8 @@ server <- function(session, input, output){
     
     # vector of names of simulation parameters
     sim_par <- input$x
+    # Code$sim_par <- paste(input$x, input$facet_rows, input$facet_cols, input$linetype, sep = ", ")
+    Code$x <- input$x
     
     # if(input$checkboxShape){
     #   sim_par <- c(sim_par, input$shape)
@@ -2222,18 +2271,22 @@ server <- function(session, input, output){
     
     if(input$checkboxLinetype){
       sim_par <- c(sim_par, input$linetype)
+      # Code$sim_par <- paste0(Code$sim_par,", ", input$linetype)
     }
     
     if(input$radioFacet == "grid"){
       sim_par <- c(sim_par, input$facet_rows, input$facet_cols)
+      # Code$sim_par <- paste0(Code$sim_par,", ", input$facet_rows,", ", input$facet_cols)
     }
     
     if(input$radioFacet == "wrap"){
       sim_par <- c(sim_par, input$facet_wrap)
+      # Code$sim_par <- paste0(Code$sim_par,", ", input$facet_wrap)
     }
     
     if(input$checkboxColor){
       sim_par <- c(sim_par, input$color)
+      # Code$sim_par <- c(Code$sim_par,", ", input$color)
     }
     
     # exclude simulation parameters from df with default values
@@ -2284,10 +2337,90 @@ server <- function(session, input, output){
     
     d <- 
       d %>%
-      pivot_longer(cols = input$OC,
-                   names_to = "OC",
-                   values_to = "value")
+      pivot_longer(
+        cols = input$OC,
+        names_to = "OC",
+        values_to = "value"
+      )
+    
+    if(input$checkboxErrorbar){
+      
+      # errorbar_vars <- c()
+      # for(i in 1:input$OC){
+      #   errorbar_vars <- c(errorbar_vars, input[[paste0("errorvar_", input$OC[i])]])
+      # }
+      # 
+      # errorbar_vars <- "output2"
+      
+      if(input$radioErrorsymmetry == "symmetrical"){
+        
+        validate(
+          need(!is.null(input$errorvars), "please define Error variables")
+        )
+        
+        
+        d <- d %>%
+          pivot_longer(
+            # cols = errorbar_vars,
+            cols = input$errorvars,
+            names_to = "errorvar_name",
+            values_to = "error"
+          )
+        
+        # bedingung <- paste0(paste0("`", names(default_filter), "`"),
+        #                     " == ",
+        #                     paste0("'", default_filter, "'"),
+        #                     # default_filter,
+        #                     collapse = " & ")
+        # 
+        # 
+        # df_plot <- subset(data_filteredR(), eval(parse(text = bedingung)))
+        # 
+        bedingung_errorbar <- paste0("(OC == '", input$OC, "' & errorvar_name == '", input$errorvars, "')", collapse = " | ")
+        
+        d <- subset(d, eval(parse(text = bedingung_errorbar)))
+        
+        
+      } else {
+        
+        validate(
+          need(!is.null(input$errorvars_upper), "please define variable for upper bound/deviation")
+        )
+        
+        validate(
+          need(!is.null(input$errorvars_lower), "please define variable for lower bound/deviation")
+        )
+        
+        
+        d <- d %>%
+          pivot_longer(
+            cols = input$errorvars_upper,
+            names_to = "errorvar_upper_name",
+            values_to = "error_upper"
+          )
+        
+        d <- d%>%
+          pivot_longer(
+            cols = input$errorvars_lower,
+            names_to = "errorvar_lower_name",
+            values_to = "error_lower"
+          )
+        
+        # 
+        bedingung_errorbar <- paste0("(OC == '", input$OC, "' & errorvar_upper_name == '", input$errorvars_upper, "' & errorvar_lower_name == '", input$errorvars_lower, "')", collapse = " | ")
+        
+        d <- subset(d, eval(parse(text = bedingung_errorbar)))
+        
+        
+        
+        
+        
+        
+      }
+    }
+    
     d
+    
     
     
   })
@@ -2299,6 +2432,24 @@ server <- function(session, input, output){
   
   # Plot based on which dimensions are chosen
   lineplot_object <- reactive({
+    
+    data_lp <- reactive({
+
+      data_output <- data_longer()
+
+      if(input$checkboxLinetype){
+
+        data_output[[input$linetype]] <- as.factor(data_output[[input$linetype]])
+
+      }
+
+
+      data_output
+    })
+
+    
+
+
     
     # validate(need(length(lUiColors) != 0, message = "Choose colors first"))
     
@@ -2315,7 +2466,7 @@ server <- function(session, input, output){
     })
     p1 <- ggplot(
       #req(data_longer()),
-      data_longer(), 
+      data_lp(), 
       aes_string(x = input$x, y = "value")
     ) 
     
@@ -2340,15 +2491,17 @@ server <- function(session, input, output){
           p1 +
           geom_line(aes(
             y = value,
-            colour  = factor(get(input$color))),
+            color  = factor(get(input$color))),
             size = input$linesize)
+        Code$colour <<- paste(input$color)
       } else {
         p1 <- 
           p1 + 
           geom_line(aes(
             y = value,
-            colour  = OC),
+            color  = OC),
             size = input$linesize)
+        Code$colour <<- "OC"
       }
     }
     
@@ -2358,14 +2511,14 @@ server <- function(session, input, output){
           p1  +
           geom_point(aes(
             y = value,
-            colour  = factor(get(input$color))),
+            color  = factor(get(input$color))),
             size = 3*input$linesize)
       } else {
         p1 <-
           p1  +
           geom_point(aes(
             y = value,
-            colour  = OC),
+            color  = OC),
             size = 3*input$linesize)
         
       }
@@ -2408,28 +2561,37 @@ server <- function(session, input, output){
     
     if(input$checkboxLinetype){
       
+      
+
+      
       p1 <-
         p1 +
-        aes(
+        aes_string(
           
           linetype =
-            factor(get(
-              input$linetype
-            ))
+            # factor(
+            # get(
+           input$linetype
+          # )
+          # )
           ,
-          shape = factor(get(
+          shape =
+            # factor(
+            # get(
             input$linetype
-          ))
-          ,
-          group =
-            interaction(
-              factor(get(
-                input$linetype
-              )),
-              OC
-            )
-        )
-      # ) + labs(linetype = input$linetype, group = input$linetype, shape = input$linetype)
+          # )
+          # )
+          # ,
+          # group =
+          #   interaction(
+          #     factor(get(
+          #       input$linetype
+          #     )),
+          #     OC
+          #   )
+        ) 
+        # ) + guides(linetype = guide_legend(title = "Users By guides"))
+      # ) + labs(linetype = input$linetype, shape = input$linetype)
       
       
     }
@@ -2479,6 +2641,34 @@ server <- function(session, input, output){
         )
     }
     
+    if(input$checkboxErrorbar){
+      
+      if(input$radioErrorsymmetry == "symmetrical"){
+        p1 <- 
+          p1 + geom_errorbar(aes(ymin = value - error, 
+                                 ymax = value + error
+                                 , color = OC), 
+                             position=position_dodge(0.05))
+      } else {
+        
+        if(input$radioErrorstructure == "deviation"){
+          
+          p1 <- 
+            p1 + geom_errorbar(aes(ymin = value - error_lower,
+                                   ymax = value + error_upper,
+                                   color = OC),
+                               position = position_dodge(0.05))
+        } else {
+          p1 <- 
+            p1 + geom_errorbar(aes(ymin = error_lower,
+                                   ymax = error_upper,
+                                   color = OC),
+                               position = position_dodge(0.05))
+          
+        }
+      }
+    }
+    
     
     # if(input$plottype){
     #   
@@ -2498,7 +2688,10 @@ server <- function(session, input, output){
     #   p1
     # }
     
-    p1
+    p1 +
+      theme(legend.key.size = unit(4, 'cm'))
+    # + 
+      # guides(linetype = guide_legend(override.aes = list(size = 4)))
     
   }
   
@@ -2509,26 +2702,26 @@ server <- function(session, input, output){
   )
   
   
-  scatterplot_object <- reactive({
-    
-    p1 <- ggplot(
-      df_plot(), 
-      aes_string(x = input$OC[1], y = input$OC[2])
-    ) + geom_point()
-    
-    p1
-    
-  })
-  
+  # scatterplot_object <- reactive({
+  #   
+  #   p1 <- ggplot(
+  #     df_plot(), 
+  #     aes_string(x = input$OC[1], y = input$OC[2])
+  #   ) + geom_point()
+  #   
+  #   p1
+  #   
+  # })
+  # 
   
   # create plot_object with final settings
   plot_object <- reactive({
     
     # scatterplot or lineplot?
-    if(input$scatterplot)
-      p1 <- scatterplot_object()
-    else
-      p1 <- lineplot_object()
+    # if(input$scatterplot)
+    #   p1 <- scatterplot_object()
+    # else
+    p1 <- lineplot_object()
     
     
     # THEME & other general plot options ---------------------------------------------
@@ -2586,7 +2779,7 @@ server <- function(session, input, output){
     p1 <- p1 + theme(legend.title = element_blank())
     
     
-    updateAceEditor(session, editorId = "print_code", value = plot_code() )
+    #updateAceEditor(session, editorId = "print_code", value = plot_code() )
     
     p1
   })
@@ -2810,16 +3003,22 @@ server <- function(session, input, output){
   )
   
   Code <- reactiveValues()
-  
-  plot_code <- reactive({
-    
-    return(
-      
-      paste0("library(ggplot)", "\n\n", 
-             "ggplot(data = data, aes(x = ", input$x, ", y = ", input$OC,"))")
-    )
-    
-  })
+  # 
+  # plot_code <- reactive({
+  #   
+  #   return(
+  #     
+  #     paste0("library(ggplot)", "\n\n", 
+  #            "ggplot(data = data, aes(x = ", input$x, ", y = ", input$OC, for(i in 2:length(input$OC)){paste0(", ", input$OC[1][i])},"))","\n\n",
+  #            "length input$OC:", length(input$OC),
+  #            "sim_par: ", "paste0(Code$sim_par)",
+  #            "colour:", Code$colour, "\n\n"#,
+  #            
+  #            # "data <- data %>%  pivot_longer(cols = ", input$OC, ",names_to = 'OC', values_to = 'value')"
+  #     )
+  #   )
+  #   
+  # })
   
 }
 

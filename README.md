@@ -1,7 +1,45 @@
 # App for Visualization of Longitudinal Data
 
-## Link to dev version
+## Link to running app
 https://sny.cemsiis.meduniwien.ac.at/~n465jr/dbsv2/
+
+## Info                
+
+This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Laurin Meyer and Michal Majka"
+
+## User Manual
+
+In the following you will find some details on every part of the app and how they are supposed to be used
+
+### Data Settings
+
+There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the design parameters precede the output values/operating characteristics. Each row represents one  simulation run with a different combination of input/design parameters. 
+
+If your data is not aggregated yet (i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index' you can click the checkbox and choose which of your variables is the 'replication run index' The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes.
+                
+### Data
+
+In the Data tab you find an overview of your data. Already here you can set filters for your input parameters, if you are not interested in some observations.
+
+### Default values
+
+The default value is a key tab in this App. Please choose one default value for every variable that has an impact on your simulation. Later in the plot tab the dataset is filtered for these values, unless the respective variable is chosen to be one of the dimensions in the graph (See 'plot' tab).
+
+### Distribution
+
+This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots.
+
+                
+### Plot
+
+After uploading the data and establishing the settings, you can visualize your simulation results on up to 4 dimensions. An x-axis variable as well as at least one OC have to be specified in order for the plot to show up: You can opt to add further design parameters on the 'facet' dimensions (row and column), which splits the plot into a grid as well as the 'shape' dimension, which adds lines/points in different shapes according to the value of the respective input parameter.
+
+Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clicking the 'Download plot' button.
+                
+### Scatterplot
+
+If you are interested in the variability of ceratin operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.
+
 
 ## Disclaimer
 

@@ -2,7 +2,7 @@ options(shiny.sanitize.errors = FALSE)
 options(shiny.maxRequestSize = 50*1024^2)
 library(shiny)
 library(readxl)
-library(xlsx)
+#library(xlsx)
 library(DT)
 library(shinybusy)
 library(plotly)
@@ -127,6 +127,7 @@ ui <-
                                step = 0.1,
                                min = 0.001
                              )
+
                            )
                            
                            
@@ -213,7 +214,9 @@ ui <-
           tabName = "default",
           br(),
           actionButton("buttonDefault", "Take first row as default values"),
+
           actionButton("buttonResetDefault", "Reset selections"),
+
           DT::dataTableOutput("chooseDT")
           # conditionalPanel(
           # "input.checkboxExampleData",
@@ -446,6 +449,9 @@ ui <-
                 HTML("For a correct display, the error variables have to be in the same order as the OCs chosen above"),
                 uiOutput("errorbar_var")
               )
+              # ,
+              # 
+              # verbatimTextOutput("OClength")
             ),
             
             column(
@@ -792,7 +798,9 @@ ui <-
           hr(),
           h2("Code for reproduction"),
           br(),
+
           # aceEditor(outputId = "print_code", value = "", mode = "r", theme = "texmate", readOnly = FALSE),
+
           br(),
           br()
         ),
@@ -801,6 +809,7 @@ ui <-
                 
                 column(10,
                        
+
                        fluidRow(
                          uiOutput("scatter_ui"),
                          
@@ -869,6 +878,7 @@ ui <-
                                 )
                          )
                        )
+
                        
                        
                        
@@ -913,7 +923,7 @@ ui <-
         ),
         
         tabItem("help",
-                
+
                 h4("Info"),
                 HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Meyer (both Medical University Vienna) and Michal Majka"),
                 
@@ -923,6 +933,7 @@ ui <-
                 h4("Data Settings"),
                 HTML("There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the input variables/design parameters precede the output variables/operating characteristics. Each row represents one simulation run with a different combination of input/design parameters. "),
                 HTML("If your data is not aggregated yet i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index variable' you can click the checkbox and choose which of your variables is the 'replication run index' The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
+
                 
                 h3("Data"),
                 HTML("In the Data tab you find an overview of your data. Already here you can set filters for your input parameters, if you are not interested in some observations."),
@@ -972,7 +983,9 @@ server <- function(session, input, output){
   # read in Example data and convert some variables for correct display
   exampleData <- read.csv(
     #"example_data.csv",
+
     "ExampleData.csv",
+
     header = TRUE,
     sep = ",",
     stringsAsFactors = TRUE)
@@ -1026,6 +1039,7 @@ server <- function(session, input, output){
                         "repvar",
                         choices = colnames(exampleData),
                         selected = "replications"
+
       )
       
       updateSelectInput(session,
@@ -1037,6 +1051,7 @@ server <- function(session, input, output){
                         "colvar_scatter",
                         choices = colnames(exampleData),
                         selected = colnames(exampleData)[2]
+
       )
       
       
@@ -1072,7 +1087,9 @@ server <- function(session, input, output){
   
   
   
+
   # Show aggregated datatable and distribution tab only if replication is chosen above
+
   
   observe({
     
@@ -1608,6 +1625,10 @@ server <- function(session, input, output){
     ncol(data_filteredR()) - ind_inputendR()
   })
   
+  # nOCR <- reactive({
+  #   length(input$OC)
+  # })
+  
   
   
   # Create colorInput field for every OC
@@ -1642,11 +1663,30 @@ server <- function(session, input, output){
     
   })
   
-  # 
+
   valColvarR <- reactive({
     req(data_filteredR())
     unique(data_filteredR()[[input$color]])
   })
+
+  nValColvarR <- reactive({
+    req(valColvarR())
+    length(valColvarR())
+  })
+  
+  output$colordim_ui <- renderUI({
+    
+    lapply(1:nValColvarR(), function(i) {
+      colourInput(
+        inputId = paste0("col_", valColvarR()[i]),
+        label = valColvarR()[i],
+        showColour = "both",
+        
+        value = scales::hue_pal()(nValColvarR())[i]
+      )
+    })
+  })
+
   
   nValColvarR <- reactive({
     req(valColvarR())
@@ -1666,7 +1706,32 @@ server <- function(session, input, output){
     })
   })
   
+  valColvar_scatterR <- reactive({
+    req(data_filteredR())
+    unique(data_filteredR()[[input$colvar_scatter]])
+    
+  })
+  nValColvar_scatterR <- reactive({
+    req(valColvar_scatterR())
+    length(valColvar_scatterR())
+  })
   
+  output$colors_scatter_ui <- renderUI({
+    
+    lapply(1:nValColvar_scatterR(), function(i) {
+      colourInput(
+        inputId = paste0("col_", valColvar_scatterR()[i], "_sc"),
+        label = valColvar_scatterR()[i],
+        showColour = "both",
+        
+        value = scales::hue_pal()(nValColvar_scatterR())[i]
+      )
+    })
+  })
+  
+  outputOptions(output, "colors_ui", suspendWhenHidden =FALSE)
+  outputOptions(output, "colordim_ui", suspendWhenHidden = FALSE)
+  outputOptions(output, "colors_scatter_ui", suspendWhenHidden = FALSE)
   
   valColvar_scatterR <- reactive({
     req(data_filteredR())
@@ -1745,8 +1810,7 @@ server <- function(session, input, output){
     
     vColors
   })
-  
-  
+
   
   #-----------------------------------------------------------------------------
   # Errorbar Selection ----
@@ -2308,8 +2372,10 @@ server <- function(session, input, output){
     
     # vector of names of simulation parameters
     sim_par <- input$x
+
     # Code$sim_par <- paste(input$x, input$facet_rows, input$facet_cols, input$linetype, sep = ", ")
     Code$x <- input$x
+
     
     # if(input$checkboxShape){
     #   sim_par <- c(sim_par, input$shape)
@@ -2317,7 +2383,9 @@ server <- function(session, input, output){
     
     if(input$checkboxLinetype){
       sim_par <- c(sim_par, input$linetype)
+
       # Code$sim_par <- paste0(Code$sim_par,", ", input$linetype)
+
     }
     
     if(input$radioFacet == "grid"){
@@ -2333,6 +2401,10 @@ server <- function(session, input, output){
     if(input$checkboxColor){
       sim_par <- c(sim_par, input$color)
       # Code$sim_par <- c(Code$sim_par,", ", input$color)
+    }
+    
+    if(input$checkboxColor){
+      sim_par <- c(sim_par, input$color)
     }
     
     # exclude simulation parameters from df with default values
@@ -2467,8 +2539,7 @@ server <- function(session, input, output){
     
     d
     
-    
-    
+
   })
   
   #output$OClength <- renderPrint({c(input$OC, length(input$OC))})
@@ -2512,7 +2583,9 @@ server <- function(session, input, output){
     })
     p1 <- ggplot(
       #req(data_longer()),
+
       data_lp(), 
+
       aes_string(x = input$x, y = "value")
     ) 
     
@@ -2540,6 +2613,7 @@ server <- function(session, input, output){
             color  = factor(get(input$color))),
             size = input$linesize)
         Code$colour <<- paste(input$color)
+
       } else {
         p1 <- 
           p1 + 
@@ -2548,6 +2622,7 @@ server <- function(session, input, output){
             color  = OC),
             size = input$linesize)
         Code$colour <<- "OC"
+
       }
     }
     
@@ -2558,6 +2633,7 @@ server <- function(session, input, output){
           geom_point(aes(
             y = value,
             color  = factor(get(input$color))),
+
             size = 3*input$linesize)
       } else {
         p1 <-
@@ -2565,6 +2641,7 @@ server <- function(session, input, output){
           geom_point(aes(
             y = value,
             color  = OC),
+
             size = 3*input$linesize)
         
       }
@@ -2638,6 +2715,7 @@ server <- function(session, input, output){
         ) 
       # ) + guides(linetype = guide_legend(title = "Users By guides"))
       # ) + labs(linetype = input$linetype, shape = input$linetype)
+
       
       
     }
@@ -2714,7 +2792,7 @@ server <- function(session, input, output){
         }
       }
     }
-    
+
     
     # if(input$plottype){
     #   
@@ -2826,6 +2904,7 @@ server <- function(session, input, output){
     
     
     #updateAceEditor(session, editorId = "print_code", value = plot_code() )
+
     
     p1
   })
@@ -3065,6 +3144,7 @@ server <- function(session, input, output){
   #   )
   #   
   # })
+
   
 }
 

@@ -110,6 +110,23 @@ ui <-
                              "repvarMethod",
                              "Select the summary method you want to apply to your data",
                              choices = c("mean", "median")
+                           ),
+                           
+                           selectInput(
+                             "deviationMethod",
+                             "Select the deviation you want to calculate",
+                             choices = c("sd", "sem")
+                           ),
+                           
+                           conditionalPanel(
+                             "input.deviationMethod == 'sem'",
+                             numericInput(
+                               "sem_mult",
+                               "multiply with",
+                               value = 1.96,
+                               step = 0.1,
+                               min = 0.001
+                             )
                            )
                            
                            
@@ -784,64 +801,74 @@ ui <-
                 
                 column(10,
                        
-                       uiOutput("scatter_ui"),
-                       
-                       HTML("In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters."),
-                       
-                       selectInput(
-                         "repvar_scatter",
-                         "Choose variability parameter",
-                         choices = NULL
-                       ),
-                       
-                       selectInput(
-                         "colvar_scatter",
-                         "Choose color parameter",
-                         choices = NULL
-                       ),
-                       
-                       selectizeInput(
-                         "OC_scatter", 
-                         "Choose OC to plot", 
-                         choices = NULL,
-                         multiple = TRUE
-                       ),
-                       
-                       radioButtons(
-                         "radioFacet_scatter",
-                         "Do you want to add a facet dimension?",
-                         choices = c("no", "grid", "wrap")
-                       ),
-                       
-                       conditionalPanel(
-                         "input.radioFacet_scatter == 'grid'",
+                       fluidRow(
+                         uiOutput("scatter_ui"),
                          
-                         selectInput(
-                           "facet_rows_scatter", 
-                           "Choose row variable", 
-                           choices = NULL,
-                           multiple = TRUE
+                         HTML("In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters.")
+                       ),
+                       
+                       fluidRow(
+                         column(3,
+                                
+                                selectInput(
+                                  "repvar_scatter",
+                                  "Choose variability parameter",
+                                  choices = NULL
+                                ),
+                                
+                                selectInput(
+                                  "colvar_scatter",
+                                  "Choose color parameter",
+                                  choices = NULL
+                                ),
+                                
+                                selectizeInput(
+                                  "OC_scatter", 
+                                  "Choose OC to plot", 
+                                  choices = NULL,
+                                  multiple = TRUE
+                                )
                          ),
                          
-                         selectInput(
-                           "facet_cols_scatter", 
-                           "Choose col variable", 
-                           choices = NULL,
-                           multiple = TRUE
+                         column(3,
+                                
+                                radioButtons(
+                                  "radioFacet_scatter",
+                                  "Do you want to add a facet dimension?",
+                                  choices = c("no", "grid", "wrap")
+                                ),
+                                
+                                conditionalPanel(
+                                  "input.radioFacet_scatter == 'grid'",
+                                  
+                                  selectInput(
+                                    "facet_rows_scatter", 
+                                    "Choose row variable", 
+                                    choices = NULL,
+                                    multiple = TRUE
+                                  ),
+                                  
+                                  selectInput(
+                                    "facet_cols_scatter", 
+                                    "Choose col variable", 
+                                    choices = NULL,
+                                    multiple = TRUE
+                                  )
+                                ),
+                                
+                                
+                                conditionalPanel(
+                                  "input.radioFacet_scatter == 'wrap'",
+                                  
+                                  selectizeInput(
+                                    "facet_wrap_scatter", 
+                                    "Choose variables to facet wrap",
+                                    choices = NULL,
+                                    multiple = TRUE
+                                  )
+                                )
                          )
-                       ),
-                       
-                       
-                       conditionalPanel(
-                         "input.radioFacet_scatter == 'wrap'",
-                         
-                         selectizeInput(
-                           "facet_wrap_scatter", 
-                           "Choose variables to facet wrap",
-                           choices = NULL,
-                           multiple = TRUE
-                         )
-                       ),
+                       )
                        
                        
                        
@@ -945,7 +972,7 @@ server <- function(session, input, output){
   # read in Example data and convert some variables for correct display
   exampleData <- read.csv(
     #"example_data.csv",
-    "ExampleDataNew.csv",
+    "ExampleData.csv",
     header = TRUE,
     sep = ",",
     stringsAsFactors = TRUE)
@@ -1165,6 +1192,8 @@ server <- function(session, input, output){
   # })
   
   
+  # Define sem function to calculate sem used in deviation method when using replication variable
+  sem <- function(x) {sd(x)/sqrt(length(x))}
   
   # aggregate data (if not aggregated yet) -------------------------------------
   
@@ -1192,16 +1221,22 @@ server <- function(session, input, output){
       outputs <<- colnames(data_full_norep())[ind_outputstartR():ncol(data_full_norep())]
       
       
-      
       d <- group_by_at(d, vars(inputs)) %>%
         summarise(
           
-          across(everything(), get(input$repvarMethod))
+          across(everything(), list(estimate = get(input$repvarMethod), 
+                                    deviation = get(input$deviationMethod)))
+          
         )
       
-      colnames(d) <- c(inputs, input$repvar, outputs)
+      #colnames(d) <- c(inputs, "rep_mean",  outputs)
       
-      d <- d %>% select(-input$repvar)
+      d <- d %>% select(-paste0(input$repvar, "_estimate"))
+      d <- d %>% select(-paste0(input$repvar, "_deviation"))
+      
+      d <- d %>% mutate(
+        across(.cols = contains("_deviation"), ~ .x * input$sem_mult)
+      )
       
     }
     d#[input$dataDT_rows_all,]
@@ -1215,8 +1250,8 @@ server <- function(session, input, output){
     
     d <- data_full_mean()
     
-    if(input$checkboxRepvar)
-      colnames(d) <- c(inputs, paste(input$repvarMethod, "of", outputs))
+    # if(input$checkboxRepvar)
+    #   colnames(d) <- c(inputs, paste(input$repvarMethod, "of", outputs))
     d
   },
   filter = "top",
@@ -1266,6 +1301,15 @@ server <- function(session, input, output){
   # outputvariables
   names_outputsR <- reactive({
     colnames(data_filteredR())[ind_outputstartR():ncol(data_filteredR())]
+  })
+  
+  names_outputsR_distribution <-  reactive({
+    
+    #req(data_filteredR, ind_inputendR)
+    nm <- names(data_prefiltered())
+    nm <- nm[!(nm %in% names_inputsR())]
+    
+    nm
   })
   
   # initialize default value object with all input variables
@@ -1352,7 +1396,7 @@ server <- function(session, input, output){
     updateSelectInput(session,
                       "boxplotOutputVar",
                       # choices = names_outputsR()
-                      choices = names_outputsR()
+                      choices = names_outputsR_distribution()
     )
     
     
@@ -1972,6 +2016,8 @@ server <- function(session, input, output){
     # )
     # req(names_outputsR, data_full(), names_inputsR)
     d <- data_prefiltered()
+    
+    
     for(i in names_inputsR()){
       d[,i] <- as.factor(d[,i])
     }
@@ -2434,22 +2480,22 @@ server <- function(session, input, output){
   lineplot_object <- reactive({
     
     data_lp <- reactive({
-
+      
       data_output <- data_longer()
-
+      
       if(input$checkboxLinetype){
-
+        
         data_output[[input$linetype]] <- as.factor(data_output[[input$linetype]])
-
+        
       }
-
-
+      
+      
       data_output
     })
-
     
-
-
+    
+    
+    
     
     # validate(need(length(lUiColors) != 0, message = "Choose colors first"))
     
@@ -2562,7 +2608,7 @@ server <- function(session, input, output){
     if(input$checkboxLinetype){
       
       
-
+      
       
       p1 <-
         p1 +
@@ -2571,7 +2617,7 @@ server <- function(session, input, output){
           linetype =
             # factor(
             # get(
-           input$linetype
+            input$linetype
           # )
           # )
           ,
@@ -2590,7 +2636,7 @@ server <- function(session, input, output){
           #     OC
           #   )
         ) 
-        # ) + guides(linetype = guide_legend(title = "Users By guides"))
+      # ) + guides(linetype = guide_legend(title = "Users By guides"))
       # ) + labs(linetype = input$linetype, shape = input$linetype)
       
       
@@ -2691,7 +2737,7 @@ server <- function(session, input, output){
     p1 +
       theme(legend.key.size = unit(4, 'cm'))
     # + 
-      # guides(linetype = guide_legend(override.aes = list(size = 4)))
+    # guides(linetype = guide_legend(override.aes = list(size = 4)))
     
   }
   

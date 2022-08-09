@@ -9,6 +9,12 @@ library(plotly)
 library(tidyverse)
 library(shinyBS)
 library(colourpicker)
+library(shinyWidgets)
+library(bslib)
+library(shinydashboard)
+library(scales)
+library(Cairo)
+library(shinyAce)
 
 
 ui <- 
@@ -465,15 +471,6 @@ server <- function(session, input, output){
                  autoWidth = TRUE, 
                  # scrollX = TRUE, 
                  pageLength = 5,
-                 searchCols defines starting values for filters
-                 # searchCols = list(NULL,list(search = '["1"]'),
-                 #                   list(search = '["7"]'),
-                 #                   list(search = '["all"]'),
-                 #                   list(search = '["0.03"]'),
-                 #                   list(search = '["500"]'),
-                 #                   list(search = '["Yes"]'),
-                 #                   list(search = '["Setting 1"]'))
-                 
                  searchCols = eval(parse(text = fil_string))
   )
   )

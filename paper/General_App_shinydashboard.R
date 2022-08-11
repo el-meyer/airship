@@ -19,6 +19,11 @@ library(Cairo)
 library(shinyAce)
 options(shiny.usecairo=T)
 
+library(gganimate)
+library(ggplot2)
+library(gifski)
+library(png)
+
 
 # CSS ----
 # css needed for scrollbar placement in DataTables to appear on top
@@ -365,6 +370,8 @@ ui <-
               #### Plot Output ----
               # plotlyOutput("lineplot")
               uiOutput("lineplot_ui"),
+              ##### animate Test ----
+              imageOutput("animateTest")
               #plotOutput("scatterplot")
               # plotOutput("lineplot")
             ),
@@ -471,9 +478,19 @@ ui <-
                 HTML("Select the corresponding error variable (Sd) for every OC chosen."),
                 HTML("For a correct display, the error variables have to be in the same order as the OCs chosen above"),
                 uiOutput("errorbar_var")
+              ),
+              
+              #### Animate Checkbox ----
+              checkboxInput("checkboxAnimate",
+                            "Animate the Graph?"),
+              
+              conditionalPanel(
+                "input.checkboxAnimate != 0",
+
+                
               )
+              
               # ,
-              # 
               # verbatimTextOutput("OClength")
             ),
             
@@ -2042,7 +2059,7 @@ server <- function(session, input, output){
   
   output$pBoxplot <- renderPlot({
     validate(
-      need(input$repvar != input$inputend, "replication variable can't be an input variable (Please alter last input variable or replication variable")
+      need(input$repvar != input$inputend, "replication variable can't be an input variable ('Please alter last input variable or replication variable")
     )
     # validate(
     #   need(length(defaults_input()) != 0, "Please choose default values first")
@@ -2712,6 +2729,7 @@ server <- function(session, input, output){
         }
       }
     }
+    
 
     # if(input$plottype){
     #   
@@ -2762,7 +2780,9 @@ server <- function(session, input, output){
     # if(input$scatterplot)
     #   p1 <- scatterplot_object()
     # else
+    
     p1 <- lineplot_object()
+    
     
     ### THEME & other general plot options ----
     
@@ -2880,6 +2900,45 @@ server <- function(session, input, output){
     }
     #}
   })
+  
+  # ! animateTest ! ----
+  output$animateTest <- renderImage({
+    
+    # temporary file, saves render
+    outfile <- tempfile(fileext='.gif')
+    
+    # Data, plot, and animation creation
+    ## Data input
+    inputData <- read.csv("C:\\Users\\Viktor\\Documents\\AVLoD\\Main\\sim_vis_shiny\\ExampleData.csv")
+    ## Data Filter
+    inputData2 <- inputData %>% filter(replications < 8,
+                                       input2 == 1,
+                                       #input3 == 'Z',
+                                       input4 == 11
+                                      )
+    ## Plot
+    testP1 <- ggplot(data = inputData2)+
+                  geom_jitter(mapping = aes(
+                                x = input1,
+                                y = output1)
+                  )
+    ## Plot + animation attributes
+    testP2 <- testP1 + transition_states(input3,
+                                 transition_length = 2,
+                                 state_length = 1
+                                )
+    
+    ## animation
+    anim_save("outfile.gif", animate(testP2))
+    
+    
+    # Returns list, contains filename
+    list(src = "outfile.gif",
+         contentType = 'image/gif'
+    )
+  },
+  #Deletes File
+  deleteFile = TRUE)
   
   
   # observes ----

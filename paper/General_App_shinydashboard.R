@@ -187,6 +187,11 @@ ui <-
                        # )
                        ,
                        
+                       menuItem(
+                         "Animation", 
+                         tabName = "animationTab", 
+                         icon = icon("braille")
+                       ),
                        
                        
                        menuItem("Help",
@@ -370,8 +375,6 @@ ui <-
               #### Plot Output ----
               # plotlyOutput("lineplot")
               uiOutput("lineplot_ui"),
-              ##### animate Test ----
-              imageOutput("animateTest")
               #plotOutput("scatterplot")
               # plotOutput("lineplot")
             ),
@@ -480,15 +483,6 @@ ui <-
                 uiOutput("errorbar_var")
               ),
               
-              #### Animate Checkbox ----
-              checkboxInput("checkboxAnimate",
-                            "Animate the Graph?"),
-              
-              conditionalPanel(
-                "input.checkboxAnimate != 0",
-
-                
-              )
               
               # ,
               # verbatimTextOutput("OClength")
@@ -960,6 +954,24 @@ ui <-
                          draggable = TRUE
                        )
                 )
+        ),
+        
+        
+        ### ANIMATION Tab ----
+        
+        tabItem("animationTab",
+                
+                column(10,
+                       
+                       fluidRow(
+                         ##### Animation Output ----
+                         imageOutput("animationOutStatic"),
+                         imageOutput("animationOutDynamic"),
+                         
+                         ##### Infotext ----
+                         HTML("Animation Test")
+                       ),
+                ),
         ),
         
         ### HELP ----
@@ -2901,17 +2913,17 @@ server <- function(session, input, output){
     #}
   })
   
-  # ! animateTest ! ----
-  output$animateTest <- renderImage({
+  # ! animateOutStatic ! ----
+  output$animationOutStatic <- renderImage({
     
     # temporary file, saves render
-    outfile <- tempfile(fileext='.gif')
+    outfileStat <- tempfile(fileext='.gif')
     
     # Data, plot, and animation creation
     ## Data input
     inputData <- read.csv("C:\\Users\\Viktor\\Documents\\AVLoD\\Main\\sim_vis_shiny\\ExampleData.csv")
     ## Data Filter
-    inputData2 <- inputData %>% filter(replications < 8,
+    inputData2 <- inputData %>% filter(replications < 4,
                                        input2 == 1,
                                        #input3 == 'Z',
                                        input4 == 11
@@ -2929,11 +2941,37 @@ server <- function(session, input, output){
                                 )
     
     ## animation
-    anim_save("outfile.gif", animate(testP2))
+    anim_save("outfileStat.gif", animate(testP2))
     
     
     # Returns list, contains filename
-    list(src = "outfile.gif",
+    list(src = "outfileStat.gif",
+         contentType = 'image/gif'
+    )
+  },
+  #Deletes File
+  deleteFile = TRUE)
+  
+  
+  # ! animationOutDynamic ! ----
+  output$animationOutDynamic <- renderImage({
+    
+    # temporary file, saves render
+    outfileDyn <- tempfile(fileext='.gif')
+    
+    
+    ## Plot + animation attributes
+    ap <- plot_object() + transition_states(input3,
+                                         transition_length = 2,
+                                         state_length = 1
+    )
+    
+    ## animation
+    anim_save("outfileDyn.gif", animate(ap))
+    
+    
+    # Returns list, contains filename
+    list(src = "outfileDyn.gif",
          contentType = 'image/gif'
     )
   },

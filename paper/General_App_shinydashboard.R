@@ -961,17 +961,34 @@ ui <-
         
         tabItem("animationTab",
                 
-                column(10,
-                       
-                       fluidRow(
+                fluidRow(
+                  column(10,
                          ##### Animation Output ----
-                         imageOutput("animationOutStatic"),
                          imageOutput("animationOutDynamic"),
-                         
-                         ##### Infotext ----
-                         HTML("Animation Test")
-                       ),
+                  ),
                 ),
+                
+                hr(),
+                
+                fluidRow(
+                  column(5,
+                         ##### Infotext ----
+                         HTML("Animation Test"),
+                         
+                         ##### animateIteratorSelect ----
+                         selectInput(
+                           "animateIteratorSelect", 
+                           "Choose Variable to iterate over", 
+                           choices = NULL
+                         ),
+                         actionButton(
+                           "animationRenderButton",
+                           "Render animation"
+                          ),
+                  ),
+                ),
+                
+                hr(),
         ),
         
         ### HELP ----
@@ -2913,60 +2930,44 @@ server <- function(session, input, output){
     #}
   })
   
-  # ! animateOutStatic ! ----
-  output$animationOutStatic <- renderImage({
-    
-    # temporary file, saves render
-    outfileStat <- tempfile(fileext='.gif')
-    
-    # Data, plot, and animation creation
-    ## Data input
-    inputData <- read.csv("C:\\Users\\Viktor\\Documents\\AVLoD\\Main\\sim_vis_shiny\\ExampleData.csv")
-    ## Data Filter
-    inputData2 <- inputData %>% filter(replications < 4,
-                                       input2 == 1,
-                                       #input3 == 'Z',
-                                       input4 == 11
-                                      )
-    ## Plot
-    testP1 <- ggplot(data = inputData2)+
-                  geom_jitter(mapping = aes(
-                                x = input1,
-                                y = output1)
-                  )
-    ## Plot + animation attributes
-    testP2 <- testP1 + transition_states(input3,
-                                 transition_length = 2,
-                                 state_length = 1
-                                )
-    
-    ## animation
-    anim_save("outfileStat.gif", animate(testP2))
-    
-    
-    # Returns list, contains filename
-    list(src = "outfileStat.gif",
-         contentType = 'image/gif'
+  
+  # Animation ----
+  
+  ## observe ----
+  ### animateIteratorSelect ----
+  
+  observe({
+    updateSelectInput(session,
+                      "animateIteratorSelect",
+                      choices = names(defaults_input())
     )
-  },
-  #Deletes File
-  deleteFile = TRUE)
+  })
   
-  
-  # ! animationOutDynamic ! ----
+  # Variable for saving iteration var
+  animationIteratorVar <- reactiveValues(val=NULL)
+
+  ## animationOutDynamic ---- 
   output$animationOutDynamic <- renderImage({
+    
+    #validates select input
+    validate(need(
+      input$animateIteraorSelect,
+      "please specify iteration variable first"))
+    
+    #only starts animation process if animationIteratorVar has a value
+    if(is.null(animationIteratorVar$val)) return(print("pick an Iterator Variable"))
     
     # temporary file, saves render
     outfileDyn <- tempfile(fileext='.gif')
     
     
-    ## Plot + animation attributes
-    ap <- plot_object() + transition_states(input3,
+    #Plot + animation attributes
+    ap <- plot_object() + transition_states(animationIteratorVar$val,
                                          transition_length = 2,
                                          state_length = 1
     )
     
-    ## animation
+    # animation
     anim_save("outfileDyn.gif", animate(ap))
     
     
@@ -2975,9 +2976,13 @@ server <- function(session, input, output){
          contentType = 'image/gif'
     )
   },
-  #Deletes File
-  deleteFile = TRUE)
+    #Deletes File
+    deleteFile = TRUE)
   
+  #on buttonpress give iteration a var
+  observeEvent(input$animationRenderButton,{
+    animationIteratorVar$val <- input$animateIteratorSelect
+  })
   
   # observes ----
   

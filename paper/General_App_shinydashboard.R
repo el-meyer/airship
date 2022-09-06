@@ -69,6 +69,7 @@ ui <-
     ## Sidebar -----
     dashboardSidebar(width = 300,
                      sidebarMenu(
+                       id = "sidebarMenu",
                        menuItem(
                          text = "Data Settings",
                          
@@ -2943,46 +2944,49 @@ server <- function(session, input, output){
     )
   })
   
-  # Variable for saving iteration var
-  animationIteratorVar <- reactiveValues(val=NULL)
+  ## vars ----
 
-  ## animationOutDynamic ---- 
-  output$animationOutDynamic <- renderImage({
+  ## observeEvents ----
+  
+  observeEvent(input$animationRenderButton,{
     
-    #validates select input
-    validate(need(
-      input$animateIteraorSelect,
-      "please specify iteration variable first"))
-    
-    #only starts animation process if animationIteratorVar has a value
-    if(is.null(animationIteratorVar$val)) return(print("pick an Iterator Variable"))
-    
-    # temporary file, saves render
-    outfileDyn <- tempfile(fileext='.gif')
-    
-    
-    #Plot + animation attributes
-    ap <- plot_object() + transition_states(animationIteratorVar$val,
-                                         transition_length = 2,
-                                         state_length = 1
-    )
-    
-    # animation
-    anim_save("outfileDyn.gif", animate(ap))
-    
-    
-    # Returns list, contains filename
-    list(src = "outfileDyn.gif",
-         contentType = 'image/gif'
-    )
-  },
+    ## animationOutDynamic ---- 
+    output$animationOutDynamic <- renderImage({
+      
+      if(input$animationRenderButton == 0) return()
+      
+      isolate({
+        #validates select input
+        validate(need(
+          input$animateIteratorSelect,
+          "please specify iteration variable first"))
+        
+        # temporary file, saves render
+        outfileDyn <- tempfile(fileext='.gif')
+        
+        #Plot + animation attributes
+        ap <- plot_object() + transition_states(input3,
+                                                transition_length = 2,
+                                                state_length = 1
+        )
+        
+        # animation
+        anim_save("outfileDyn.gif", animate(ap))
+        
+        
+        # Returns list, contains filename
+        list(src = "outfileDyn.gif",
+             contentType = 'image/gif'
+        )
+      })
+    },
     #Deletes File
     deleteFile = TRUE)
-  
-  #on buttonpress give iteration a var
-  observeEvent(input$animationRenderButton,{
-    animationIteratorVar$val <- input$animateIteratorSelect
   })
+  
+  
+  
+  
   
   # observes ----
   

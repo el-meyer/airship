@@ -2944,13 +2944,12 @@ server <- function(session, input, output){
     )
   })
   
-  ## vars ----
 
   ## observeEvents ----
   
   observeEvent(input$animationRenderButton,{
     
-    ## animationOutDynamic ---- 
+    ### animationOutDynamic ---- 
     output$animationOutDynamic <- renderImage({
       
       if(input$animationRenderButton == 0) return()
@@ -2965,9 +2964,10 @@ server <- function(session, input, output){
         outfileDyn <- tempfile(fileext='.gif')
         
         #Plot + animation attributes
-        ap <- plot_object() + transition_states(input3,
-                                                transition_length = 2,
-                                                state_length = 1
+        ap <- plot_object() + transition_states(states = !!(as.symbol(input$animateIteratorSelect)) ,
+                                                transition_length = 1,
+                                                state_length = 2,
+                                                wrap = TRUE
         )
         
         # animation

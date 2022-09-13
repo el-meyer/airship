@@ -2947,13 +2947,16 @@ server <- function(session, input, output){
 
   ## observeEvents ----
   
+  #only renders if Button is clicked (isolate prevents reload on tabswitch)
   observeEvent(input$animationRenderButton,{
     
     ### animationOutDynamic ---- 
     output$animationOutDynamic <- renderImage({
       
+      #prevents rendering if button isnt clicked
       if(input$animationRenderButton == 0) return()
       
+      #isolate prevents rerender on tabswitch
       isolate({
         #validates select input
         validate(need(
@@ -2963,24 +2966,24 @@ server <- function(session, input, output){
         # temporary file, saves render
         outfileDyn <- tempfile(fileext='.gif')
         
-        #Plot + animation attributes
+        #Plot(with PlotTab customisation) + animation attributes
         ap <- plot_object() + transition_states(states = !!(as.symbol(input$animateIteratorSelect)) ,
                                                 transition_length = 1,
                                                 state_length = 2,
                                                 wrap = TRUE
         )
         
-        # animation
+        # animation rendering
         anim_save("outfileDyn.gif", animate(ap))
         
         
-        # Returns list, contains filename
+        # Returns rendering in gif-form
         list(src = "outfileDyn.gif",
              contentType = 'image/gif'
         )
       })
     },
-    #Deletes File
+    #Deletes temporary Files after execution
     deleteFile = TRUE)
   })
   

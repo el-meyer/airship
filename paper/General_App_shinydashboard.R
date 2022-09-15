@@ -2967,14 +2967,24 @@ server <- function(session, input, output){
         outfileDyn <- tempfile(fileext='.gif')
         
         #Plot(with PlotTab customisation) + animation attributes
-        ap <- plot_object() + transition_states(states = !!(as.symbol(input$animateIteratorSelect)) ,
+        ap <- plot_object() + 
+          transition_states(states = !!(as.symbol(input$animateIteratorSelect)) ,
                                                 transition_length = 1,
-                                                state_length = 2,
+                                                state_length = 1,
                                                 wrap = TRUE
-        )
+                                                ) +
+          enter_fade()+
+          exit_fade()
         
         # animation rendering
-        anim_save("outfileDyn.gif", animate(ap))
+        anim_save("outfileDyn.gif", 
+                  animate(ap,
+                          nframes = 180,
+                          fps = 30,
+                          duration = 6,
+                          height = input$plotheight,
+                          width = input$plotwidth,
+                          ))
         
         
         # Returns rendering in gif-form

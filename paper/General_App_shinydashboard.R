@@ -826,8 +826,41 @@ ui <-
                      "animationRenderButton",
                      "Render animation"
                    ),
+                   
+                   ##### render options ----
+                   actionButton("changeRender", label = "render options"),
+                   
+                   bsModal("modal_render",
+                           "Change render options",
+                           trigger = "changeRender",
+                           size = "large",
+
+                           sliderInput(
+                             "frameAmount",
+                             "number of frames to render",
+                             value = 100,
+                             min = 10,
+                             max = 1000
+                           ),
+                           
+                           sliderInput(
+                             "renderFPS",
+                             "frames per second",
+                             value = 10,
+                             min = 1,
+                             max = 120
+                           ),
+
+                           numericInput(
+                             "durationAnimation",
+                             "length of animation in seconds",
+                             value = 10,
+                             min = 1,
+                             max = 1000,
+                             step = 1
+                           )
+                   )
             ),
-            
           ),
           hr(),
           
@@ -2956,9 +2989,9 @@ server <- function(session, input, output){
         # animation rendering
         anim_save("outfileDyn.gif", 
                   animate(ap,
-                          nframes = 180,
-                          fps = 30,
-                          duration = 6,
+                          nframes = input$frameAmount,
+                          fps = input$renderFPS,
+                          duration = input$durationAnimation,
                           height = input$plotheight,
                           width = input$plotwidth,
                           ))

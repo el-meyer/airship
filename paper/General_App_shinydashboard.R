@@ -187,14 +187,7 @@ ui <-
                        #   )
                        # )
                        ,
-                       
-                       menuItem(
-                         "Animation", 
-                         tabName = "animationTab", 
-                         icon = icon("braille")
-                       ),
-                       
-                       
+
                        menuItem("Help",
                                 tabName = "help",
                                 icon = icon("question")
@@ -373,9 +366,12 @@ ui <-
           fluidRow(
             column(
               10,
+              
               #### Plot Output ----
               # plotlyOutput("lineplot")
               uiOutput("lineplot_ui"),
+              imageOutput("animationOutDynamic",
+                          inline = TRUE),
               #plotOutput("scatterplot")
               # plotOutput("lineplot")
             ),
@@ -816,7 +812,22 @@ ui <-
                       
                       downloadButton("download_plot", "Download")
               )
-            )
+            ),
+            
+            #### Animation Input ----
+            column(3,
+                   ##### animateIteratorSelect ----
+                   selectInput(
+                     "animateIteratorSelect", 
+                     "Choose variable to animate over:", 
+                     choices = NULL
+                   ),
+                   actionButton(
+                     "animationRenderButton",
+                     "Render animation"
+                   ),
+            ),
+            
           ),
           hr(),
           
@@ -957,40 +968,6 @@ ui <-
                 )
         ),
         
-        
-        ### ANIMATION Tab ----
-        
-        tabItem("animationTab",
-                
-                fluidRow(
-                  column(10,
-                         ##### Animation Output ----
-                         imageOutput("animationOutDynamic"),
-                  ),
-                ),
-                
-                hr(),
-                
-                fluidRow(
-                  column(5,
-                         ##### Infotext ----
-                         HTML("Animation Test"),
-                         
-                         ##### animateIteratorSelect ----
-                         selectInput(
-                           "animateIteratorSelect", 
-                           "Choose Variable to iterate over", 
-                           choices = NULL
-                         ),
-                         actionButton(
-                           "animationRenderButton",
-                           "Render animation"
-                          ),
-                  ),
-                ),
-                
-                hr(),
-        ),
         
         ### HELP ----
         tabItem("help",

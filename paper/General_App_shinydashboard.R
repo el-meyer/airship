@@ -1243,19 +1243,6 @@ server <- function(session, input, output){
         )}
       )
       
-      # d <- tryCatch({
-      #   d %>% select(-paste0(input$repvar, "_estimate"))
-      #   d <- d %>% select(-paste0(input$repvar, "_deviation"))
-      #   
-      #   d %>% mutate(
-      #     across(.cols = contains("_deviation"), ~ .x * input$sem_mult)
-      #   )  
-      # }, error = function(e) { 
-      #   err_ <- ""
-      #   validate(
-      #     need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
-      #   )}
-      # )
       d <- d %>% select(-paste0(input$repvar, "_estimate"))
       d <- d %>% select(-paste0(input$repvar, "_deviation"))
       
@@ -2097,14 +2084,6 @@ server <- function(session, input, output){
   ## plot_object_scatter ----
   plot_object_scatter <- reactive({
     
-    validate(
-      need(input$OC_scatter, "No OCs chosen")
-    )
-    
-    validate(
-      need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
-    )
-    
     req(lUiColors_scatter())
     
     colScale_scatter <- scale_colour_manual(values = lUiColors_scatter())
@@ -2163,7 +2142,23 @@ server <- function(session, input, output){
   
   ## plot_scatter output ----
   output$plot_scatter <- renderPlot({
-    plot_object_scatter()
+    
+    validate(
+      need(input$OC_scatter, "No OCs chosen")
+    )
+    
+    validate(
+      need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
+    )
+    
+    tryCatch({
+      print(plot_object_scatter())  
+    }, error = function(e) {
+      err_ <- ""
+      validate(
+        need(err_ != "", "Change default values or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+      )  
+    })
   })
   
   ## scatter_ui output ----

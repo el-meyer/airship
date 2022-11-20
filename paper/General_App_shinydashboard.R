@@ -941,14 +941,14 @@ ui <-
         tabItem("help",
 
                 h4("Info"),
-                HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Meyer (both Medical University Vienna) and Michal Majka"),
+                HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Meyer (both Medical University Vienna) and Michal Majka."),
                 
                 h2("User Manual"),
-                HTML("Following you will find details on every part of the app and how they are to be used"),
+                HTML("Following you will find details on every part of the app and how they are to be used."),
                 
                 h4("Data Settings"),
                 HTML("There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the input variables/design parameters precede the output variables/operating characteristics. Each row represents one simulation run with a different combination of input/design parameters. "),
-                HTML("If your data is not aggregated yet i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index variable' you can click the checkbox and choose which of your variables is the 'replication run index' The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
+                HTML("If your data is not aggregated yet i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index variable' you can click the checkbox and choose which of your variables is the 'replication run index'. The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
 
                 
                 h3("Data"),
@@ -1880,7 +1880,11 @@ server <- function(session, input, output){
       need(input$repvar != input$inputend, "Replication variable can't be an input variable")
     )
     
-    req(input$boxplotOutputVar, input$boxplotGroupVar, input$boxplotGroupVar)
+    validate(
+      need(isTruthy(input$boxplotOutputVar), "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+    )
+    
+    req(input$boxplotGroupVar)
     
     d <- data_prefiltered()
    
@@ -1900,73 +1904,124 @@ server <- function(session, input, output){
       }
     )
     
-    facets_distribution <- input$facet_distribution_wrap %>% 
-      str_replace_all(",", "+") %>% 
-      rlang::parse_exprs()
-    
-    frows_distribution <- input$facet_distribution_rows %>%
-      str_replace_all(",", "+") %>%
-      rlang::parse_exprs()
-    
-    fcols_distribution <- input$facet_distribution_cols %>%
-      str_replace_all(",", "+") %>%
-      rlang::parse_exprs()
-    
-    
     if(input$radioFacetDistribution == "grid"){
-      boxplot <- 
-        boxplot + 
-        facet_grid(vars(!!!frows_distribution),
-                   vars(!!!fcols_distribution),
-                   labeller = "label_both"
+      
+      if (any(input$facet_distribution_rows %in% input$facet_distribution_cols)) {
+        err_ <- ""
+        validate(
+          need(err_ != "", "Faceting variables can only appear in row or cols, not both")
         )
+      }
+      
+      boxplot <- 
+        tryCatch({
+          
+          frows_distribution <- input$facet_distribution_rows %>%
+            str_replace_all(",", "+") %>%
+            rlang::parse_exprs()
+
+          fcols_distribution <- input$facet_distribution_cols %>%
+            str_replace_all(",", "+") %>%
+            rlang::parse_exprs()
+          
+          boxplot + 
+            facet_grid(vars(!!!frows_distribution),
+                       vars(!!!fcols_distribution),
+                       labeller = "label_both"
+          )}, error = function(e) {
+              err_ <- ""
+              validate(
+                need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+              )
+        })
     }
     
     if(input$radioFacetDistribution == "wrap"){
-      
+
       boxplot <-
-        boxplot +
-        facet_wrap(vars(!!!facets_distribution)
-                   
-                   , labeller = "label_both"
-        )
+        tryCatch({
+          
+          facets_distribution <- input$facet_distribution_wrap %>%
+            str_replace_all(",", "+") %>%
+            rlang::parse_exprs()
+          
+          boxplot +
+            facet_wrap(vars(!!!facets_distribution),
+                       labeller = "label_both"
+            ) }, error = function(e) {
+              err_ <- ""
+              validate(
+                need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+              )
+        })
     }
 
     if(input$boxplottype == "Densityplot"){
       if("Density" %in% input$densitytype){
         boxplot <-
-          boxplot + 
-          geom_density(aes(y = ..density..), 
-                       alpha = input$alpha)
+          tryCatch({
+            boxplot + 
+              suppressWarnings(geom_density(aes(y = ..density..), 
+                                            alpha = input$alpha)
+            )}, error = function(e) {
+              err_ <- ""
+              validate(
+                need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+              )
+            })
       }
       
       if("Histogram" %in% input$densitytype){
         boxplot <-
-          boxplot + 
-          geom_histogram(aes(y = ..density..),
-                         bins = input$bins,
-                         alpha = input$alpha,
-                         position = input$hist_position
-          )
+          tryCatch({
+            boxplot + 
+              suppressWarnings(geom_histogram(aes(y = ..density..),
+                                              bins = input$bins,
+                                              alpha = input$alpha,
+                                              position = input$hist_position)  
+          )}, error = function(e) {
+            err_ <- ""
+            validate(
+              need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+            )
+          })
       }
       
-      boxplot
+      tryCatch({
+        suppressMessages(suppressWarnings(print(boxplot)))
+        
+      }, error = function(e) {
+          err_ <- ""
+          validate(
+            need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+          )
+        })
       
     } else {
       
-      if(input$boxplottype == "Violinplot"){
-        boxplot + geom_violin(aes_string(x = input$boxplotGroupVar,
-                                         y = input$boxplotOutputVar,
-                                         color = input$boxplotGroupVar,
-                                         fill = input$boxplotGroupVar),
-                              alpha = input$alpha)
-      } else {
-        boxplot + geom_boxplot(aes_string(x = input$boxplotGroupVar,
-                                          y = input$boxplotOutputVar,
-                                          color = input$boxplotGroupVar,
-                                          fill = input$boxplotGroupVar),
-                               alpha = input$alpha)
-      }
+      tryCatch({
+
+        if(input$boxplottype == "Violinplot"){
+          suppressMessages(suppressWarnings(print(boxplot + geom_violin(aes_string(
+                                          x = input$boxplotGroupVar,
+                                           y = input$boxplotOutputVar,
+                                           color = input$boxplotGroupVar,
+                                           fill = input$boxplotGroupVar),
+                                alpha = input$alpha))))
+        } else {
+          suppressMessages(suppressWarnings(print(boxplot + geom_boxplot(aes_string(
+                                            x = input$boxplotGroupVar,
+                                            y = input$boxplotOutputVar,
+                                            color = input$boxplotGroupVar,
+                                            fill = input$boxplotGroupVar),
+                                 alpha = input$alpha))))
+        }
+      }, error = function(e) {
+        err_ <- ""
+        validate(
+          need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+        )
+      })
     }
   })
   

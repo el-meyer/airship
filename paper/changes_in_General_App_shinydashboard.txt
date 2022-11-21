@@ -23,6 +23,10 @@ converted into informative warnings that try to guide the user on "what to do".
           after a new data set was uploaded. The if/else condition is executed
           properly but the distribution tab is not showing up anymore. Maybe
           it is an issue with shiny.
+ - FIXED: when uploading a new dataset no errors are shown
+ - FIXED: when facet_grid and the same variable is chosen for both rows and colums
+          an error is given in the UI. The error is catched and outputed as 
+          a message.
 
 
  4) Data aggregation
@@ -49,7 +53,7 @@ converted into informative warnings that try to guide the user on "what to do".
           This solved the issue since after the second time the widget was used
           it was not NULL anymore but an empty character or something else than 
           NULL.
-          
+        
 6) Misc:
  - FIXED: No more warning in the R console at app start-up complaining about
           icon("paint-brush"). The icon name "paint-brush" has been changed to

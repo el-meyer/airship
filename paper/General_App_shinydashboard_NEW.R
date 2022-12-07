@@ -210,6 +210,7 @@ ui <-
                     tabName = "default",
                     br(),
                     actionButton("buttonDefault", "Take first row as default values"),
+                    actionButton("buttonDefaultHighlighted", "Take highlighted row as default values"),
                     
                     actionButton("buttonResetDefault", "Reset selections"),
                     
@@ -1011,7 +1012,7 @@ server <- function(session, input, output){
         
         reacVals$first_row_filters_string <- "NULL"
         updateTabItems(session, "sidebarMenu", "default")
-        Sys.sleep(0.2)
+        Sys.sleep(0.05)
         updateTabItems(session, "sidebarMenu", "data")
         
         
@@ -1366,7 +1367,6 @@ server <- function(session, input, output){
         input$buttonDefault
         input$buttonResetDefault # reset selection 
         
-        
         for(i in colnames(data_filtered)){
             # transforms variables to factors to be able to choose 1 factor level as default value
             data_filtered[,i] <<- factor(as.factor(data_filtered[,i]))  #factor(...) drops unused factor levels from prefiltering
@@ -1377,6 +1377,7 @@ server <- function(session, input, output){
     },
     
     filter = "top",
+    selection = "single",
     
     options = list(lengthChange = FALSE, 
                    autoWidth = TRUE, 
@@ -1405,6 +1406,22 @@ server <- function(session, input, output){
             ")"
         )
     })
+    
+    observeEvent(input$buttonDefaultHighlighted, {
+
+        req(input$chooseDT_rows_selected)
+        ith_row <- input$chooseDT_rows_selected
+        
+        data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactor = FALSE)
+        
+        first_row_filters <- paste0("'[\"", data_filtered_helper[ith_row,], "\"]'")
+        reacVals$first_row_filters_string <- paste0( 
+            "list(NULL, ",
+            paste0("list(search = ", first_row_filters, ")", collapse = ", "),
+            ")"
+        )
+    })
+    
     
     ### Reset filters----
     observeEvent(input$buttonResetDefault ,{

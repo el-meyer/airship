@@ -5,17 +5,17 @@ https://sny.cemsiis.meduniwien.ac.at/~n465jr/dbsv2/
 
 ## Info                
 
-This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Laurin Meyer and Michal Majka"
+This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Laurin Meyer and Michal Majka.
 
 ## User Manual
 
-In the following you will find some details on every part of the app and how they are supposed to be used
+In the following you will find some details on every part of the app and how they are supposed to be used.
 
 ### Data Settings
 
 There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the design parameters precede the output values/operating characteristics. Each row represents one  simulation run with a different combination of input/design parameters. 
 
-If your data is not aggregated yet (i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index' you can click the checkbox and choose which of your variables is the 'replication run index' The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes.
+If your data is not aggregated yet (i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index' you can click the checkbox and choose which of your variables is the 'replication run index'. The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes.
                 
 ### Data
 

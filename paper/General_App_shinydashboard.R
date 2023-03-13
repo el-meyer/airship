@@ -1,6 +1,7 @@
 # Libraries ----
 options(shiny.sanitize.errors = FALSE) 
 options(shiny.maxRequestSize = 50*1024^2)
+
 library(shiny)
 library(readxl)
 #library(xlsx)
@@ -11,13 +12,14 @@ library(tidyverse)
 library(shinyBS)
 library(colourpicker)
 library(shinyWidgets)
+library(transformr)
 
 library(bslib)
 library(shinydashboard)
 library(scales)
 library(Cairo)
 library(shinyAce)
-options(shiny.usecairo=T)
+options(shiny.usecairo = TRUE)
 
 library(gganimate)
 library(ggplot2)
@@ -64,8 +66,6 @@ ui <-
       title = "Simulation Results"
     ), 
     
-    
-    
     ## Sidebar -----
     dashboardSidebar(width = 300,
                      sidebarMenu(
@@ -100,8 +100,6 @@ ui <-
                              "State last input variable", 
                              choices = NULL
                            ),
-                           
-                           
                          ),
                          
                          checkboxInput(
@@ -139,10 +137,7 @@ ui <-
                                step = 0.1,
                                min = 0.001
                              )
-
                            )
-                           
-                           
                          ),
                          tabName = "data_settings",icon = icon("gear")
                        ),
@@ -175,28 +170,16 @@ ui <-
                          tabName = "plot", 
                          icon = icon("chart-line")
                        ),
-                       
-                       # conditionalPanel(
-                       #   "input.checkboxRepvar != 0",
-                       #   sidebarMenu(
                        menuItem(
                          "Scatterplot", 
                          tabName = "scatterplot", 
                          icon = icon("braille")
-                       )
-                       #   )
-                       # )
-                       ,
-
+                       ),
                        menuItem("Help",
                                 tabName = "help",
                                 icon = icon("question")
                        ),
-                       
                        hr()
-                       # h3("Default value overview"),
-                       # uiOutput("defaults_df_ui")
-                       
                      )
     ),
     
@@ -219,10 +202,6 @@ ui <-
         tabItem(
           tabName = "data",
           DT::dataTableOutput("dataDT"),
-          # conditionalPanel("input.checkboxRepvar != 0",
-          #                  h3("Summarized Data"),
-          #                  DT::dataTableOutput("repDataDT")
-          # )
           uiOutput("dataDT_summarized")
         ),
         
@@ -235,9 +214,6 @@ ui <-
           actionButton("buttonResetDefault", "Reset selections"),
 
           DT::dataTableOutput("chooseDT")
-          # conditionalPanel(
-          # "input.checkboxExampleData",
-          # )
         ),
         
         ### DISTRIBUTION ----
@@ -368,12 +344,9 @@ ui <-
               10,
               
               #### Plot Output ----
-              # plotlyOutput("lineplot")
               uiOutput("lineplot_ui"),
               imageOutput("animationOutDynamic",
-                          inline = TRUE),
-              #plotOutput("scatterplot")
-              # plotOutput("lineplot")
+                          inline = TRUE)
             ),
             
             column(
@@ -392,7 +365,7 @@ ui <-
                     status = "primary",
                     circle = TRUE,
                     right = TRUE,
-                    icon = icon("paint-brush"),
+                    icon = icon("paintbrush"),
                     tooltip = TRUE,
                     uiOutput("colors_ui"),
                     inputId = "dropdown_colors"
@@ -414,7 +387,7 @@ ui <-
                     status = "primary",
                     circle = TRUE,
                     right = TRUE,
-                    icon = icon("paint-brush"),
+                    icon = icon("paintbrush"),
                     uiOutput("colordim_ui"),
                     inputId = "dropdown_colordim"
                   ),
@@ -478,11 +451,7 @@ ui <-
                 HTML("Select the corresponding error variable (Sd) for every OC chosen."),
                 HTML("For a correct display, the error variables have to be in the same order as the OCs chosen above"),
                 uiOutput("errorbar_var")
-              ),
-              
-              
-              # ,
-              # verbatimTextOutput("OClength")
+              )
             ),
             
             column(
@@ -570,13 +539,8 @@ ui <-
                           value = FALSE,
                           size = "small"),
               
-              # switchInput("scatterplot",
-              #             "Scatterplot",
-              #             value = FALSE,
-              #             size = "small"),
-              
               #### Style options ----
-              actionButton("change_style", label = "style options"),
+              actionButton("change_style", label = "Style options"),
               
               bsModal("modal_style", 
                       "Change style and size of plot", 
@@ -594,12 +558,6 @@ ui <-
                         "Add points?",
                         value = TRUE
                       ),
-                      
-                      
-                      # checkboxInput(
-                      #   "checkboxLegend",
-                      #   "Specify legend coordinates?"
-                      # ),
                       
                       conditionalPanel(
                         "input.plottype",
@@ -620,12 +578,6 @@ ui <-
                                     value = 0.5,
                                     step = 0.05)
                       ),
-                      # 
-                      #                 sliderInput("res",
-                      #                             "Change resolution",
-                      #                             value = 72,
-                      #                             min = 50, 
-                      #                             max = 200),
                       
                       checkboxInput(
                         "checkboxSize", 
@@ -828,7 +780,7 @@ ui <-
                    ),
                    
                    ##### render options ----
-                   actionButton("changeRender", label = "render options"),
+                   actionButton("changeRender", label = "Render options"),
                    
                    bsModal("modal_render",
                            "Change render options",
@@ -859,8 +811,12 @@ ui <-
                              max = 1000,
                              step = 1
                            )
+                   ),
+                   actionButton(
+                     "animationCloseButton",
+                     "Close animation"
                    )
-            ),
+            )
           ),
           hr(),
           
@@ -868,18 +824,11 @@ ui <-
           h2("Plotted Data"),
           br(),
           fluidRow(
-            # verbatimTextOutput("df_plot")
             DT::dataTableOutput("df_plot")
           ),
           
           hr(),
-          
-          #### Code for reproduction ----
-          h2("Code for reproduction"),
           br(),
-
-          # aceEditor(outputId = "print_code", value = "", mode = "r", theme = "texmate", readOnly = FALSE),
-
           br(),
           br()
         ),
@@ -964,20 +913,6 @@ ui <-
                                 )
                          )
                        )
-
-                       # checkboxInput(
-                       #   "checkboxShape_scatter", 
-                       #   "Do you want to add a shape dimension?"
-                       # ),
-                       # conditionalPanel(
-                       #   "input.checkboxShape_scatter != 0",
-                       #   
-                       #   selectInput(
-                       #     "shape_scatter", 
-                       #     "Choose shape variable",
-                       #     choices = NULL
-                       #   )
-                       # )
                 ),
                 
                 #### Color Button ----
@@ -992,7 +927,7 @@ ui <-
                            status = "primary",
                            circle = TRUE,
                            right = TRUE,
-                           icon = icon("paint-brush"),
+                           icon = icon("paintbrush"),
                            uiOutput("colors_scatter_ui"),
                            inputId = "dropdown_colors_scatter"
                          ),
@@ -1006,14 +941,14 @@ ui <-
         tabItem("help",
 
                 h4("Info"),
-                HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Meyer (both Medical University Vienna) and Michal Majka"),
+                HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Meyer (both Medical University Vienna) and Michal Majka."),
                 
                 h2("User Manual"),
-                HTML("Following you will find details on every part of the app and how they are to be used"),
+                HTML("Following you will find details on every part of the app and how they are to be used."),
                 
                 h4("Data Settings"),
                 HTML("There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the input variables/design parameters precede the output variables/operating characteristics. Each row represents one simulation run with a different combination of input/design parameters. "),
-                HTML("If your data is not aggregated yet i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index variable' you can click the checkbox and choose which of your variables is the 'replication run index' The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
+                HTML("If your data is not aggregated yet i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index variable' you can click the checkbox and choose which of your variables is the 'replication run index'. The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
 
                 
                 h3("Data"),
@@ -1044,10 +979,7 @@ server <- function(session, input, output){
   # Example Data read ----
   # read in Example data and convert some variables for correct display
   exampleData <- read.csv(
-    #"example_data.csv",
-
     "ExampleData.csv",
-
     header = TRUE,
     sep = ",",
     stringsAsFactors = TRUE
@@ -1059,7 +991,7 @@ server <- function(session, input, output){
   upload <- reactive({
     validate(
       # if no file is uploaded yet "no file" appears everywhere upload() is called
-      need(input$file, "no file")
+      need(input$file, "No file")
     ) 
     
     # file = user uploaded file in tab Data Settings
@@ -1069,17 +1001,6 @@ server <- function(session, input, output){
                        header = TRUE,
                        sep = input$sep,
                        stringsAsFactors = TRUE)
-    
-    # mydata <- read_csv(inFile$datapath,
-    #                    col_names = TRUE)
-    
-    # names(mydata) <- gsub("\\.", " ", names(mydata))
-    
-    
-    # for(i in 1:length(input$session)){
-    #   mydata[,input$session[i]] <- as.numeric(mydata[,input$session[i]])
-    # }
-
     return(mydata) 
   })
   
@@ -1090,52 +1011,58 @@ server <- function(session, input, output){
   data_full <- reactive({
         
     if(input$checkboxExampleData){
+      
+      col_names_example_dat <- colnames(exampleData)
       updateSelectInput(session, 
                         "inputend", 
-                        choices = colnames(exampleData),
+                        choices = col_names_example_dat,
                         selected = "input4"
       )
       
       updateSelectInput(session,
                         "repvar",
-                        choices = colnames(exampleData),
+                        choices = col_names_example_dat,
                         selected = "replications"
       )
       
       updateSelectInput(session,
                         "repvar_scatter",
-                        choices = colnames(exampleData)
+                        choices = col_names_example_dat
       )
       
       updateSelectInput(session,
                         "colvar_scatter",
-                        choices = colnames(exampleData),
-                        selected = colnames(exampleData)[2]
+                        choices = col_names_example_dat,
+                        selected = col_names_example_dat[2]
       )
       
       return(exampleData)
       
       
     } else {
+      
+      col_names_upload <- colnames(upload())
+      
       updateSelectInput(session,
                         "inputend",
-                        choices = colnames(upload())
+                        choices = col_names_upload
       )
       
       updateSelectInput(session,
                         "repvar",
-                        choices = colnames(upload()),
-                        selected = colnames(upload())[1]
+                        choices = col_names_upload,
+                        selected = col_names_upload[1]
       )
       
       updateSelectInput(session,
                         "repvar_scatter",
-                        choices = colnames(upload())
+                        choices = col_names_upload
       )
       
       updateSelectInput(session,
                         "colvar_scatter",
-                        choices = colnames(upload())
+                        choices = col_names_upload,
+                        selected = col_names_upload[2]
       )
       
       return(upload())
@@ -1145,14 +1072,13 @@ server <- function(session, input, output){
   
   # hide/show Tabs (aggregation) ----
   # Show aggregated datatable and distribution tab only if replication is chosen above
-  # TODO: Find out: what is "Summarized Data"?
+  
   observe({
+    data_full()
     if(input$checkboxRepvar){
-      showTab("tabs", target = "Summarized Data")
-      showTab("tabs", target = "Distribution")
+      showTab("tabs", target = "Distribution", select = FALSE, session = session)
     } else {
-      hideTab("tabs", target = "Summarized Data")
-      hideTab("tabs", target = "Distribution")
+      hideTab("tabs", target = "Distribution", session = session)
     }
   })
   
@@ -1160,16 +1086,25 @@ server <- function(session, input, output){
   # daata_full_norep ----
   # if there is replication variable 'data_full_norep' has one column less than 'data_full', otherwise they are identical
   data_full_norep <- reactive({
+    
     validate(
-      need(input$repvar != input$inputend, "replication variable can't be input variable (Please alter last input variable or replication variable)")
+      need(input$repvar != input$inputend, "Replication variable can't be input variable (Please alter last input variable or replication variable)")
     )
     
-    ## data adapting ----
-    if(input$checkboxRepvar){
-      data_full() %>% select(-input$repvar)
-    } else {
-      data_full()
-    }
+    tryCatch({
+      ## data adapting ----
+      if(input$checkboxRepvar){
+        data_full() %>% select(-input$repvar)
+      } else {
+        data_full()
+      }  
+    }, error = function(e) {
+      err_ <- ""
+      validate(
+        need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+      ) 
+    })
+    
   })
 
   
@@ -1192,12 +1127,6 @@ server <- function(session, input, output){
   # add first_row_filters_string
   reacVals <- reactiveValues(first_row_filters_string = "NULL")
   
-  # observe({
-  #   reacVals$ind_inputend <- which(colnames(data_full_norep()) == input$inputend)
-  #   # reacVals$ind_outputstart <- which(colnames(data_full_norep()== input$inputend) +1)
-  # })
-  
-  
   # ind_inputendR ----
   # index of last input variable
   ind_inputendR  <- reactive({
@@ -1217,7 +1146,7 @@ server <- function(session, input, output){
         ncol(
           data_full_norep()
         ) != ind_inputendR(),
-        "last input variable cannot be last variable in data frame")
+        "Last input variable cannot be last variable in data frame")
     )
     ind_inputendR() + 1
   })
@@ -1229,14 +1158,13 @@ server <- function(session, input, output){
     req(ind_outputstartR())
     req(data_full())
     validate(
-      need(input$repvar != input$inputend, "replication variable can't be input variable (Please alter last input variable or replication variable)")
+      need(input$repvar != input$inputend, "Replication variable can't be input variable (Please alter last input variable or replication variable)")
     )
     req(input$dataDT_rows_all)
     d <- data_full()
     #ind_outputstart <<- isolate(which(colnames(d) == input$inputend)+1) # which column is the last input column?
     
     # Convert output parameters to numeric values
-    # TODO: findout: can this be more optimized?
     for(i in ind_outputstartR():ncol(d)){
       d[[i]] <- as.numeric(d[[i]])
     }
@@ -1252,38 +1180,13 @@ server <- function(session, input, output){
   })
   
   
-  # inputsR <- reactive({
-  #   colnames(data_full_norep())[1:ind_inputendR()]
-  # })
-  # inputs <- inputs[!(inputs %in% input$repvar)]
-  
-  # outputsR <- reactive({
-  #   colnames(data_full_norep())[ind_outputstartR():ncol(data_full_norep())]
-  # })
-  # outputs <- outputs[!(outputs %in% input$repvar)]
-  
-  
-  # names_inputsR <- reactive({
-  #   nm <- colnames(data_full_norep())[1:ind_inputendR()]
-  #   if(input$checkboxRepvar){
-  #     nm <- nm[!(nm %in% input$repvar)]
-  #   }
-  #   nm
-  # })
-  # 
-  # 
-  # #outputvariables
-  # names_outputsR <- reactive({
-  #   colnames(data_full_norep())[ind_outputstartR():ncol(data_full_norep())]
-  # })
-  
-  
   # Define sem function to calculate sem used in deviation method when using replication variable
   sem <- function(x) {sd(x)/sqrt(length(x))}
   
   # data_full_mean ----
   # aggregate data (if not aggregated yet)
   data_full_mean <- reactive({
+    
     validate(
       need(input$repvar != input$inputend, 
            "Replication variable can't be input variable (Please alter last input variable or replication run variable)")
@@ -1291,25 +1194,54 @@ server <- function(session, input, output){
     
     # summarize DT with replication runs by averaging outputs for every setting
     req(input$dataDT_rows_all)
+    req(data_full())
     d <- data_full()[input$dataDT_rows_all,]
-    
     
     if(input$checkboxRepvar){
 
-      inputs <<- colnames(data_full_norep())[1:ind_inputendR()]
+      req(data_full_norep())
+      req(ind_inputendR())
+      req(ind_outputstartR())      
       
+      inputs <<- colnames(data_full_norep())[1:ind_inputendR()]
       outputs <<- colnames(data_full_norep())[ind_outputstartR():ncol(data_full_norep())]
       
-      d <- group_by_at(d, vars(inputs)) %>%
-        summarise(
-          across(everything(), 
-                 list(
-                   estimate = get(input$repvarMethod), 
-                   deviation = get(input$deviationMethod)
-        )))
+      output_class <- sapply(d[outputs], class)
+      if (any(output_class != "numeric")) {
+        
+        ind_not_num <- which(output_class != "numeric")
+        vars_not_num <- outputs[ind_not_num]
+        n_vars <- length(vars_not_num)
+        xx <- paste0("Currently `", paste0(vars_not_num, collapse = "`, "), "`", 
+                     ifelse(n_vars == 1, " variable is", " variables are"),
+                     " defined as output ",
+                     ifelse(n_vars == 1, "variable", "variables"),
+                     ifelse(n_vars == 1, 
+                            " but is not of class numeric",
+                            " but are not of class numeric")
+                      ) 
+        text_err <- paste0("All defined output variables must be of class numeric. ", xx)
+        
+        validate(
+          need(all(output_class == "numeric"), text_err)
+        )
+      }
       
-      
-      #colnames(d) <- c(inputs, "rep_mean",  outputs)
+      d <- tryCatch({
+        suppressMessages(group_by_at(d, vars(inputs)) %>%
+                           summarise(across(
+                             everything(),
+                             list(
+                               estimate = get(input$repvarMethod),
+                               deviation = get(input$deviationMethod)
+                             )
+                          )))
+      }, warning = function(w) {
+        err_ <- ""
+        validate(
+          need(err_ != "", "Replication variable must be an integer variable")
+        )}
+      )
       
       d <- d %>% select(-paste0(input$repvar, "_estimate"))
       d <- d %>% select(-paste0(input$repvar, "_deviation"))
@@ -1318,9 +1250,6 @@ server <- function(session, input, output){
         across(.cols = contains("_deviation"), ~ .x * input$sem_mult)
       )
     }
-    
-    d#[input$dataDT_rows_all,]
-    
     as.data.frame(d)
   })
   
@@ -1328,12 +1257,8 @@ server <- function(session, input, output){
   # render Data Table ----
   output$repDataDT <- 
     DT::renderDataTable({
-    
-    d <- data_full_mean()
-    
-    # if(input$checkboxRepvar)
-    #   colnames(d) <- c(inputs, paste(input$repvarMethod, "of", outputs))
-    d
+      d <- data_full_mean()
+      d
     },
   
     filter = "top",
@@ -1399,63 +1324,14 @@ server <- function(session, input, output){
     data_filteredR()[names_inputsR()]
   })
   
-  
-  # output$test <- renderPrint({list(
-  # "input$file" = input$file,
-  # "length(input$file)" = length(input$file),
-  # "input$checkboxExampleData" = input$checkboxExampleData
-  #   "names_inputsR" = names_inputsR()
-  #   ,
-  #   "names_outputsR" = names_outputsR(),
-  #   # "outputs" = outputs,
-  #   # "inputs" = inputs,
-  #   "ind_inputendR" = ind_inputendR(),
-  #   "ind_outputstartR" = ind_outputstartR()
-  #   ,
-  #   "ncol(data_filteredR())" = ncol(data_filteredR()),
-  #   "colnames(data_filteredR())" = colnames(data_filteredR()),
-  #   "head(data_filteredR)" = head(data_filteredR()),
-  #   "head(data_full_mean())" = head(data_full_mean()),
-  #   "head(data_prefiltered())" = head(data_prefiltered()),
-  #   "head(data_choose_defaultR()" = head(data_choose_defaultR())
-  # )
-  # })
-  
-  
   # Default values Tab ----
   ## chooseDT ----
   # Choose default values Tab 
   output$chooseDT <- DT::renderDataTable({
     
-    #input$goDT
     validate(
-      need(data_full(), "no file")
+      need(data_full(), "No file")
     )
-    
-    # validate(
-    #   need(input$inputend != input$repvar, "Replication run variable can't be an input variable")
-    # )
-    
-    
-    # Table displayed at start in tab 'Choose default values'
-    # execute filters to create new DT upon clicking action button
-    
-    # if(input$checkboxRepvar){
-    #   data_filteredR <- data_full_mean()
-    # } else {
-    #   data_filteredR <- data_prefiltered()
-    # }  
-    
-    # which column is the last input column?
-    # ind_inputend <- isolate(which(colnames(data_filteredR == input$inputend)) 
-    
-    # display only input columns
-    
-    # 
-    # data_choose_defaultR <- reactive({
-    #   data_filteredR()[,1:ind_inputendR()]
-    # })
-    
     
     ### choice-updates for inputs ----
     updateSelectizeInput(session,
@@ -1477,42 +1353,18 @@ server <- function(session, input, output){
                       choices = names_outputsR_distribution()
     )
     
+    
     ### display only columns with more than 1 unique entry ----
     uniques <- lapply(data_choose_defaultR(), unique)
     bUniques <- sapply(uniques, function(x) {length(x) == 1})
     data_filtered <<- data_choose_defaultR()[,which(!bUniques), drop = FALSE]
     
-    # validate(
-    #   need(ncol(data_filtered) > 1, "Data has to have more than 1 input variables with non-unique characteristics.")
-    # )
-    
+    input$buttonResetDefault # reset selection 
     
     for(i in colnames(data_filtered)){
       # transforms variables to factors to be able to choose 1 factor level as default value
       data_filtered[,i] <<- factor(as.factor(data_filtered[,i]))  #factor(...) drops unused factor levels from prefiltering
     }
-    
-    # if(input$buttonDefault > input$buttonResetDefault) {
-    
-    # observeEvent(input$buttonDefault,{
-    # 
-    #   # Let first row be standard default value combination
-    #   data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactor = FALSE)
-    # 
-    #   first_row_filters <- paste0("'[\"", data_filtered_helper[1,], "\"]'")
-    #   first_row_filters_string <<- paste0(
-    #     "list(NULL, ",
-    #     paste0("list(search = ", first_row_filters, ")", collapse = ", "),
-    #     ")"
-    #   )
-    # }
-    # )
-    # 
-    # observeEvent(input$buttonResetDefault ,{
-    #   # } else {
-    #   first_row_filters_string <<- "NULL"
-    # }
-    # )
     
     data_filtered
     
@@ -1527,8 +1379,6 @@ server <- function(session, input, output){
                  pageLength = 5,
                  searchCols = eval(parse(text = reacVals$first_row_filters_string))
   )
-  #, columns = list(search = "applied")
-  
   )
   
   
@@ -1569,7 +1419,6 @@ server <- function(session, input, output){
   # named vector with names of input variables
   # filled successively after default values are chosen from DT
   output$search <- renderPrint({
-    
     search_vector()
   })
   
@@ -1579,31 +1428,15 @@ server <- function(session, input, output){
   ## defaults_input ----
   # subsetting above vector only with variables that have been assigned default value
   defaults_input <- reactive({
-    # req(input$chooseDT_search_columns)
-    
     defaults_input <- search_vector()[search_vector() != ""]
- 
     defaults_input
-    
-    # paste0(names(defaults_input),
-    #        " == ",
-    #        defaults_input,
-    #        collapse = " & ")
-    
-    #names(defaults_input)
-
-    # paste0(names(defaults_input),
-    #        " == ",
-    #        defaults_input,
-    #        collapse = " & ")
   })
+  
   
   ### output ----
   # print subsetted data frame with filled default values
   output$defaultsInput <- renderPrint({
-    
     as.data.frame(t(defaults_input()))
-    #dim(as.data.frame(defaults_input()))
   })
   
   ## defaults_df ----
@@ -1629,23 +1462,6 @@ server <- function(session, input, output){
   
   # Color vector specification ------------------------------------
   
-  # Adding reactive Values for number of OCs and names of OCs
-  
-  # observe({
-  #   
-  #   reacVals$nOC <- ncol(data_prefiltered()) - reacVals$ind_inputend
-  #   
-  # })
-  # 
-  # 
-  # observe({
-  # 
-  #   reacVals$names_outputs <- colnames(data_prefiltered()[, reacVals$ind_outputstart:ncol(data_prefiltered())])
-  # })
-  
-  
-  
-  
   # dynamic number of color selectors (one for every OC) ---------------------
   
   ## nOCR ----
@@ -1655,34 +1471,15 @@ server <- function(session, input, output){
     ncol(data_filteredR()) - ind_inputendR()
   })
   
-  # nOCR <- reactive({
-  #   length(input$OC)
-  # })
-  
-  
   ## colors_ui ----
   # Create colorInput field for every OC
   output$colors_ui <- renderUI({
     
-    # req(nOCR())
-    # nWidgets <- as.integer(reacVals$nOC)
-    # 
-    # nWidgetsR <- reactive({
-    #   nOCR()
-    # })
-    
     lapply(1:nOCR(), function(i) {
-      colourInput(#inputId = paste0("col", i), 
+      colourInput(
         inputId = paste0("col_", names_outputsR()[i]),
-        # label = reacVals$names_outputs[i],
         label = names_outputsR()[i],
-        # label = input$OC[i],
         showColour = "both",
-        # value = "black"
-        # value = colors()[sample(1:length(colors()),
-        #                         size = 1,
-        #                         replace = FALSE)]
-        
         value = scales::hue_pal()(nOCR())[i]
       )
     })
@@ -1715,33 +1512,42 @@ server <- function(session, input, output){
   })
 
   
-  ## nValColvarR ----
-  # TODO: check: is this function repetition neccessery?
-  nValColvarR <- reactive({
-    req(valColvarR())
-    length(valColvarR())
-  })
+  # ## nValColvarR ----
+  # # TODO: check: is this function repetition neccessery?
+  # nValColvarR <- reactive({
+  #   req(valColvarR())
+  #   length(valColvarR())
+  # })
   
-  
-  ## colordim_ui ----
-  # TODO: check: is this function repetition neccessery?
-  output$colordim_ui <- renderUI({
-    
-    lapply(1:nValColvarR(), function(i) {
-      colourInput(
-        inputId = paste0("col_", valColvarR()[i]),
-        label = valColvarR()[i],
-        showColour = "both",
-        
-        value = scales::hue_pal()(nValColvarR())[i]
-      )
-    })
-  })
+  # 
+  # ## colordim_ui ----
+  # # TODO: check: is this function repetition neccessery?
+  # output$colordim_ui <- renderUI({
+  #   
+  #   lapply(1:nValColvarR(), function(i) {
+  #     colourInput(
+  #       inputId = paste0("col_", valColvarR()[i]),
+  #       label = valColvarR()[i],
+  #       showColour = "both",
+  #       
+  #       value = scales::hue_pal()(nValColvarR())[i]
+  #     )
+  #   })
+  # })
   
   ## valColvar_scatterR ----
   valColvar_scatterR <- reactive({
+    
     req(data_filteredR())
-    unique(data_filteredR()[[input$colvar_scatter]])
+    tryCatch({
+      unique(data_filteredR()[[input$colvar_scatter]])  
+    }, error = function(e) {
+      err_ <- ""
+      validate(
+        need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+      )}
+    )
+    
   })
   
   
@@ -1771,62 +1577,61 @@ server <- function(session, input, output){
   outputOptions(output, "colors_scatter_ui", suspendWhenHidden = FALSE)
   
   
-  ## valColvar_scatterR ----
-  # TODO: check: is this function repetition neccessery?
-  valColvar_scatterR <- reactive({
-    req(data_filteredR())
-    unique(data_filteredR()[[input$colvar_scatter]])
-  })
-  
-  
-  ## nValColvar_scatterR ----
-  # TODO: check: is this function repetition neccessery? 
-  nValColvar_scatterR <- reactive({
-    req(valColvar_scatterR())
-    length(valColvar_scatterR())
-  })
-  
-  
-  ## colors_scatter_ui ----
-  # TODO: check: is this function repetition neccessery?
-  output$colors_scatter_ui <- renderUI({
-    
-    lapply(1:nValColvar_scatterR(), function(i) {
-      colourInput(
-        inputId = paste0("col_", valColvar_scatterR()[i], "_sc"),
-        label = valColvar_scatterR()[i],
-        showColour = "both",
-        
-        value = scales::hue_pal()(nValColvar_scatterR())[i]
-      )
-    })
-  })
-  
-  outputOptions(output, "colors_ui", suspendWhenHidden =FALSE)
-  outputOptions(output, "colordim_ui", suspendWhenHidden = FALSE)
-  outputOptions(output, "colors_scatter_ui", suspendWhenHidden = FALSE)
-  
+  # ## valColvar_scatterR ----
+  # # TODO: check: is this function repetition neccessery?
+  # valColvar_scatterR <- reactive({
+  # 
+  #   req(data_filteredR())
+  #   tryCatch({
+  #       unique(data_filteredR()[[input$colvar_scatter]])
+  #     }, error = function(e) {
+  #     err_ <- ""
+  #     validate(
+  #       need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+  #     )}
+  #   )
+  # })
+  # 
+  # 
+  # ## nValColvar_scatterR ----
+  # # TODO: check: is this function repetition neccessery?
+  # nValColvar_scatterR <- reactive({
+  #   req(valColvar_scatterR())
+  #   length(valColvar_scatterR())
+  # })
+  # 
+  # 
+  # ## colors_scatter_ui ----
+  # # TODO: check: is this function repetition neccessery?
+  # output$colors_scatter_ui <- renderUI({
+  # 
+  #   lapply(1:nValColvar_scatterR(), function(i) {
+  #     colourInput(
+  #       inputId = paste0("col_", valColvar_scatterR()[i], "_sc"),
+  #       label = valColvar_scatterR()[i],
+  #       showColour = "both",
+  # 
+  #       value = scales::hue_pal()(nValColvar_scatterR())[i]
+  #     )
+  #   })
+  # })
+  # 
+  # outputOptions(output, "colors_ui", suspendWhenHidden =FALSE)
+  # outputOptions(output, "colordim_ui", suspendWhenHidden = FALSE)
+  # outputOptions(output, "colors_scatter_ui", suspendWhenHidden = FALSE)
+  # 
   
   ## lUiColors ----
   lUiColors <- reactive({
     
-    #nWidgets <- as.integer(reacVals$nOC)
-    #names_outputs <- colnames(data_prefiltered()[,reacVals$ind_outputstart:ncol(data_prefiltered())])
-    
-    # df_colors <- data.frame(lapply(1:nOCR(), function(i) {
-    #   input[[paste0("col", i)]]
-    # }))
-    
+    req(input$OC)
     df_colors <- data.frame(lapply(input$OC, function(i) {
       input[[paste0("col_", i)]]
     }))
     
     vColors <- as.vector(t(df_colors))
-    
     # names(vColors) <- names_outputsR()
     names(vColors) <- input$OC
-    
-    # df_colors
     vColors
   })
   
@@ -1838,21 +1643,19 @@ server <- function(session, input, output){
     }))
     
     vColors <- as.vector(t(df_colors))
-    
     names(vColors) <- valColvarR()
-    
     vColors
   })
   
   ## lUiColors_scatter ----
   lUiColors_scatter <- reactive({
-    
+    req(valColvar_scatterR)
     df_colors <- data.frame(lapply(valColvar_scatterR(), function(i) {
       input[[paste0("col_", i, "_sc")]]
     }))
     
     vColors <- as.vector(t(df_colors))
-    
+    req(vColors)
     names(vColors) <- valColvar_scatterR()
     
     vColors
@@ -1864,16 +1667,6 @@ server <- function(session, input, output){
   ## Errorbar Selection ----
   output$errorbar_var <- renderUI({
 
-    # lapply(1:length(input$OC), function(i) {
-    #   
-    #   selectInput(
-    #     inputId = paste0("errorvar_", input$OC[i]),
-    #     label = input$OC[i],
-    #     choices = names_outputsR(),
-    #     selected = names_outputsR()[which(names_outputsR() == input$OC[i]) + 1]
-    #   )
-    # }) 
-    
     if(input$radioErrorsymmetry == "symmetrical"){
       
       selectizeInput(
@@ -2050,43 +1843,14 @@ server <- function(session, input, output){
                       choices = names(defaults_input()))
   })
   
-
-  # 
-  # updateSelectInput(session,
-  #                   "facet_rows",
-  #                   choices = names_inputs
-  # )
-  # 
-  # 
-  # updateSelectInput(session,
-  #                   "facet_cols",
-  #                   choices = names_inputs
-  # )
-  # 
-  # updateSelectInput(session,
-  #                   "shape",
-  #                   choices = names_inputs
-  # )
-  # 
-  
-  
-  
   
   # save default values in a list upon clicking action button
   
   # deactivated in ui -------------------------------------------
   
-  # # variant with checkboxes for all variables
-  # lDefault <- eventReactive(input$updateDefaultList, {as.list(data_default()[1, input$checkboxDefault])})
-  # 
-  
-  
-  
   # lDefault ----
   # variant with automatic input of chosen filters as default values
-  lDefault <- eventReactive(input$updateDefaultList, 
-                            {as.list(defaults_input())}
-                            )
+  lDefault <- eventReactive(input$updateDefaultList,  { as.list(defaults_input()) } )
   ## output ----
   # Output of list with default values
   output$lDefault <- renderPrint({
@@ -2098,98 +1862,153 @@ server <- function(session, input, output){
   # Boxplot -------------------------------------------------------------
   
   output$pBoxplot <- renderPlot({
+    
     validate(
-      need(input$repvar != input$inputend, "replication variable can't be an input variable ('Please alter last input variable or replication variable")
+      need(input$repvar != input$inputend, "Replication variable can't be an input variable")
     )
-    # validate(
-    #   need(length(defaults_input()) != 0, "Please choose default values first")
-    # )
-    # req(names_outputsR, data_full(), names_inputsR)
+    
+    validate(
+      need(isTruthy(input$boxplotOutputVar), "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+    )
+    
+    req(input$boxplotGroupVar)
+    
     d <- data_prefiltered()
    
     for(i in names_inputsR()){
       d[,i] <- as.factor(d[,i])
     }
     
-    boxplot <- ggplot(d, aes_string(fill = input$boxplotGroupVar,
-                                    col = input$boxplotGroupVar,
-                                    x = input$boxplotOutputVar)
+    boxplot <- tryCatch({
+      ggplot(d, aes_string(fill = input$boxplotGroupVar,
+                           col = input$boxplotGroupVar,
+                           x = input$boxplotOutputVar)
+      )}, error = function(e) {
+        err_ <- ""
+        validate(
+          need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+        )
+      }
     )
     
-    facets_distribution <- input$facet_distribution_wrap %>% 
-      str_replace_all(",", "+") %>% 
-      rlang::parse_exprs()
-    
-    frows_distribution <- input$facet_distribution_rows %>%
-      str_replace_all(",", "+") %>%
-      rlang::parse_exprs()
-    
-    fcols_distribution <- input$facet_distribution_cols %>%
-      str_replace_all(",", "+") %>%
-      rlang::parse_exprs()
-    
-    # if(input$radioFacet == "grid"){
-    #   p1 <- 
-    #     p1 + 
-    #     facet_grid(vars(get(input$facet_rows)),
-    #                vars(get(input$facet_cols))
-    #     )
-    # }
-    
     if(input$radioFacetDistribution == "grid"){
-      boxplot <- 
-        boxplot + 
-        facet_grid(vars(!!!frows_distribution),
-                   vars(!!!fcols_distribution),
-                   labeller = "label_both"
+      
+      if (any(input$facet_distribution_rows %in% input$facet_distribution_cols)) {
+        err_ <- ""
+        validate(
+          need(err_ != "", "Faceting variables can only appear in row or cols, not both")
         )
+      }
+      
+      boxplot <- 
+        tryCatch({
+          
+          frows_distribution <- input$facet_distribution_rows %>%
+            str_replace_all(",", "+") %>%
+            rlang::parse_exprs()
+
+          fcols_distribution <- input$facet_distribution_cols %>%
+            str_replace_all(",", "+") %>%
+            rlang::parse_exprs()
+          
+          boxplot + 
+            facet_grid(vars(!!!frows_distribution),
+                       vars(!!!fcols_distribution),
+                       labeller = "label_both"
+          )}, error = function(e) {
+              err_ <- ""
+              validate(
+                need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+              )
+        })
     }
     
     if(input$radioFacetDistribution == "wrap"){
-      
+
       boxplot <-
-        boxplot +
-        facet_wrap(vars(!!!facets_distribution)
-                   # facet_wrap(vars(get(!!!(input$facet_wrap)))
-                   , labeller = "label_both"
-        )
+        tryCatch({
+          
+          facets_distribution <- input$facet_distribution_wrap %>%
+            str_replace_all(",", "+") %>%
+            rlang::parse_exprs()
+          
+          boxplot +
+            facet_wrap(vars(!!!facets_distribution),
+                       labeller = "label_both"
+            ) }, error = function(e) {
+              err_ <- ""
+              validate(
+                need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+              )
+        })
     }
 
     if(input$boxplottype == "Densityplot"){
       if("Density" %in% input$densitytype){
         boxplot <-
-          boxplot + 
-          geom_density(aes(y = ..density..), 
-                       alpha = input$alpha)
+          tryCatch({
+            boxplot + 
+              suppressWarnings(geom_density(aes(y = ..density..), 
+                                            alpha = input$alpha)
+            )}, error = function(e) {
+              err_ <- ""
+              validate(
+                need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+              )
+            })
       }
       
       if("Histogram" %in% input$densitytype){
         boxplot <-
-          boxplot + 
-          geom_histogram(aes(y = ..density..),
-                         bins = input$bins,
-                         alpha = input$alpha,
-                         position = input$hist_position
-          )
+          tryCatch({
+            boxplot + 
+              suppressWarnings(geom_histogram(aes(y = ..density..),
+                                              bins = input$bins,
+                                              alpha = input$alpha,
+                                              position = input$hist_position)  
+          )}, error = function(e) {
+            err_ <- ""
+            validate(
+              need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+            )
+          })
       }
       
-      boxplot
+      tryCatch({
+        suppressMessages(suppressWarnings(print(boxplot)))
+        
+      }, error = function(e) {
+          err_ <- ""
+          validate(
+            need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+          )
+        })
       
     } else {
       
-      if(input$boxplottype == "Violinplot"){
-        boxplot + geom_violin(aes_string(x = input$boxplotGroupVar,
-                                         y = input$boxplotOutputVar,
-                                         color = input$boxplotGroupVar,
-                                         fill = input$boxplotGroupVar),
-                              alpha = input$alpha)
-      } else {
-        boxplot + geom_boxplot(aes_string(x = input$boxplotGroupVar,
-                                          y = input$boxplotOutputVar,
-                                          color = input$boxplotGroupVar,
-                                          fill = input$boxplotGroupVar),
-                               alpha = input$alpha)
-      }
+      tryCatch({
+
+        if(input$boxplottype == "Violinplot"){
+          suppressMessages(suppressWarnings(print(boxplot + geom_violin(aes_string(
+                                          x = input$boxplotGroupVar,
+                                           y = input$boxplotOutputVar,
+                                           color = input$boxplotGroupVar,
+                                           fill = input$boxplotGroupVar),
+                                alpha = input$alpha))))
+        } else {
+          suppressMessages(suppressWarnings(print(boxplot + geom_boxplot(aes_string(
+                                            x = input$boxplotGroupVar,
+                                            y = input$boxplotOutputVar,
+                                            color = input$boxplotGroupVar,
+                                            fill = input$boxplotGroupVar),
+                                 alpha = input$alpha))))
+        }
+      }, error = function(e) {
+        err_ <- ""
+        validate(
+          need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+        )
+      })
     }
   })
   
@@ -2201,8 +2020,6 @@ server <- function(session, input, output){
     
     # 1 line df with default values for variables that are checked
 
-    # default_df <- defaults_input()
-    # default_df <- as.data.frame(defaults_input())
     ### derfault_df ----
     default_df <- defaults_input()
     
@@ -2211,9 +2028,6 @@ server <- function(session, input, output){
     sim_par <- input$repvar_scatter
     
     sim_par <- c(sim_par, input$colvar_scatter)
-    # if(input$checkboxShape_scatter){
-    #   sim_par <- c(sim_par, input$shape_scatter)
-    # }
     
     if(input$radioFacet_scatter == "grid"){
       sim_par <- c(sim_par, input$facet_rows_scatter, input$facet_cols_scatter)
@@ -2264,52 +2078,34 @@ server <- function(session, input, output){
     
     d <- df_scatterplot()
     d <- d[input$chooseDT_rows_all,]
-    
-    # d <-
-    #   d %>%
-    #   pivot_longer(cols = input$OC_scatter,
-    #                names_to = "OC",
-    #                values_to = "value")
     d
   })
   
   ## plot_object_scatter ----
   plot_object_scatter <- reactive({
-
+    
+    req(lUiColors_scatter())
+    
     colScale_scatter <- scale_colour_manual(values = lUiColors_scatter())
     
-    p1 <- ggplot(
-      df_scatterplot(), 
-      #aes_string(x = value, color = OC)
-      aes_string(x = input$OC_scatter[1], y = input$OC_scatter[2])
-    ) + geom_point(aes(colour = factor(get(input$colvar_scatter)))) + labs(colour = input$colvar_scatter)
+    p1 <- tryCatch({
+      p1 <- ggplot(
+        df_scatterplot(), 
+        aes_string(x = input$OC_scatter[1], y = input$OC_scatter[2])
+      ) + geom_point(aes(colour = factor(get(input$colvar_scatter)))) + 
+        labs(colour = input$colvar_scatter)
+    }, error = function(e) {
+        err_ <- ""
+        validate(
+          need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+        )
+      }
+    )
     
     if(input$checkboxPalette_scatter){
       p1 <- p1 + colScale_scatter
     }
  
-    # if(input$checkboxShape_scatter){
-    #   p1 <-
-    #     p1 +
-    #     aes(
-    #       
-    #       shape =
-    #         factor(get(
-    #           input$shape_scatter
-    #         ))
-    #       ,
-    #       group =
-    #         interaction(
-    #           factor(get(
-    #             input$shape_scatter
-    #           )),
-    #           OC
-    #         )
-    #     )
-    #   
-    # } else {
-    #   p1 <-  p1 + aes(group = OC)
-    # }
     
     facets <- input$facet_wrap_scatter %>%
       str_replace_all(",", "+") %>%
@@ -2323,13 +2119,6 @@ server <- function(session, input, output){
       str_replace_all(",", "+") %>%
       rlang::parse_exprs()
     
-    # if(input$radioFacet == "grid"){
-    #   p1 <-
-    #     p1 +
-    #     facet_grid(vars(get(input$facet_rows)),
-    #                vars(get(input$facet_cols))
-    #     )
-    # }
     
     if(input$radioFacet_scatter == "grid"){
       p1 <-
@@ -2344,9 +2133,7 @@ server <- function(session, input, output){
       
       p1 <-
         p1 +
-        facet_wrap(vars(!!!facets)
-                   # facet_wrap(vars(get(!!!(input$facet_wrap)))
-                   , labeller = "label_both"
+        facet_wrap(vars(!!!facets), labeller = "label_both"
         )
     }
     
@@ -2356,8 +2143,24 @@ server <- function(session, input, output){
   ## plot_scatter output ----
   output$plot_scatter <- renderPlot({
     
-    plot_object_scatter()
+    validate(
+      need(input$OC_scatter, "No OCs chosen")
+    )
+    
+    validate(
+      need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
+    )
+    
+    tryCatch({
+      print(plot_object_scatter())  
+    }, error = function(e) {
+      err_ <- ""
+      validate(
+        need(err_ != "", "Change default values or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+      )  
+    })
   })
+  
   ## scatter_ui output ----
   output$scatter_ui <- renderUI({
     plotOutput("plot_scatter")
@@ -2373,9 +2176,6 @@ server <- function(session, input, output){
   df_plot <- reactive({
     
     # 1 line df with default values for variables that are checked
-
-    # default_df <- defaults_input()
-    # default_df <- as.data.frame(defaults_input())
     default_df <- defaults_input()
 
     # vector of names of simulation parameters
@@ -2383,31 +2183,21 @@ server <- function(session, input, output){
 
     # Code$sim_par <- paste(input$x, input$facet_rows, input$facet_cols, input$linetype, sep = ", ")
     Code$x <- input$x
-
-    # if(input$checkboxShape){
-    #   sim_par <- c(sim_par, input$shape)
-    # }
     
     if(input$checkboxLinetype){
       sim_par <- c(sim_par, input$linetype)
-
-      # Code$sim_par <- paste0(Code$sim_par,", ", input$linetype)
-
     }
     
     if(input$radioFacet == "grid"){
       sim_par <- c(sim_par, input$facet_rows, input$facet_cols)
-      # Code$sim_par <- paste0(Code$sim_par,", ", input$facet_rows,", ", input$facet_cols)
     }
     
     if(input$radioFacet == "wrap"){
       sim_par <- c(sim_par, input$facet_wrap)
-      # Code$sim_par <- paste0(Code$sim_par,", ", input$facet_wrap)
     }
     
     if(input$checkboxColor){
       sim_par <- c(sim_par, input$color)
-      # Code$sim_par <- c(Code$sim_par,", ", input$color)
     }
     
     if(input$checkboxColor){
@@ -2429,9 +2219,14 @@ server <- function(session, input, output){
                         # default_filter,
                         collapse = " & ")
     
-    
     if(length(default_filter) != 0){
-      df_plot <- subset(data_filteredR(), eval(parse(text = bedingung)))
+      df_plot <- tryCatch({ subset(data_filteredR(), eval(parse(text = bedingung))) },
+                          error = function(e) {
+                            err_ <- ""
+                            validate(
+                              need(err_ != "", "Change default values or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+                            )
+                          })
     } else {
       df_plot <- data_filteredR()
     }
@@ -2443,7 +2238,9 @@ server <- function(session, input, output){
   
   # df_plot output ----
   output$df_plot <- DT::renderDataTable({
-    
+    validate(
+      need(any(input$chooseDT_search_columns != ""), "    Please specify default values first")
+    )
     df_plot()
   },
   options = list(scrollX = TRUE)
@@ -2453,51 +2250,43 @@ server <- function(session, input, output){
   # data_longer ----
   # Transform dataset to long format on chosen output variables for easy plotting
   data_longer <- reactive({
-    #req(input$OC)
     
+    req(input$OC)    
     d <- df_plot()
-    # d <- d[input$chooseDT_rows_all,]
-    
     d <- 
-      d %>%
-      pivot_longer(
-        cols = input$OC,
-        names_to = "OC",
-        values_to = "value"
+      tryCatch({ d %>%
+        pivot_longer(
+          cols = input$OC,
+          names_to = "OC",
+          values_to = "value"
+        )}, error = function(e) { 
+          err_ <- ""
+          validate(
+            need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+          )
+        }
       )
-    
     if(input$checkboxErrorbar){
-      
-      # errorbar_vars <- c()
-      # for(i in 1:input$OC){
-      #   errorbar_vars <- c(errorbar_vars, input[[paste0("errorvar_", input$OC[i])]])
-      # }
-      # 
-      # errorbar_vars <- "output2"
       
       if(input$radioErrorsymmetry == "symmetrical"){
         
         validate(
-          need(!is.null(input$errorvars), "please define Error variables")
+          need(isTruthy(input$errorvars), "Please define error variables")
         )
         
-        d <- d %>%
+        d <- tryCatch({
+          d %>%
           pivot_longer(
-            # cols = errorbar_vars,
             cols = input$errorvars,
             names_to = "errorvar_name",
             values_to = "error"
-          )
-        
-        # bedingung <- paste0(paste0("`", names(default_filter), "`"),
-        #                     " == ",
-        #                     paste0("'", default_filter, "'"),
-        #                     # default_filter,
-        #                     collapse = " & ")
-        # 
-        # 
-        # df_plot <- subset(data_filteredR(), eval(parse(text = bedingung)))
-        # 
+          )}, error = function(e) {
+            err_ <- ""
+            validate(
+              need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+            )   
+      })
+         
         bedingung_errorbar <- paste0("(OC == '", input$OC, "' & errorvar_name == '", input$errorvars, "')", collapse = " | ")
         
         d <- subset(d, eval(parse(text = bedingung_errorbar)))
@@ -2505,26 +2294,40 @@ server <- function(session, input, output){
       } else {
         
         validate(
-          need(!is.null(input$errorvars_upper), "please define variable for upper bound/deviation")
+          need(isTruthy(input$errorvars_upper), "Please define variable for upper bound/deviation")
         )
         
         validate(
-          need(!is.null(input$errorvars_lower), "please define variable for lower bound/deviation")
+          need(isTruthy(input$errorvars_lower), "Please define variable for upper bound/deviation")
         )
         
-        d <- d %>%
-          pivot_longer(
-            cols = input$errorvars_upper,
-            names_to = "errorvar_upper_name",
-            values_to = "error_upper"
-          )
+        d <- tryCatch({
+          d %>%
+            pivot_longer(
+              cols = input$errorvars_upper,
+              names_to = "errorvar_upper_name",
+              values_to = "error_upper"
+            )
+        }, error = function(e) {
+          err_ <- ""
+          validate(
+            need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go to the tab with the data and then re-define default values")
+          )     
+        })
         
-        d <- d%>%
-          pivot_longer(
-            cols = input$errorvars_lower,
-            names_to = "errorvar_lower_name",
-            values_to = "error_lower"
-          )
+        d <- tryCatch({
+          d %>%
+              pivot_longer(
+                cols = input$errorvars_lower,
+                names_to = "errorvar_lower_name",
+                values_to = "error_lower"
+              )
+        }, error = function(e) {
+          err_ <- ""
+          validate(
+            need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go to the tab with the data and then re-define default values")
+          )     
+        })
         
         bedingung_errorbar <- paste0("(OC == '", input$OC, "' & errorvar_upper_name == '", input$errorvars_upper, "' & errorvar_lower_name == '", input$errorvars_lower, "')", collapse = " | ")
         
@@ -2532,12 +2335,8 @@ server <- function(session, input, output){
  
       }
     }
-    
     d
-    
   })
-  
-  #output$OClength <- renderPrint({c(input$OC, length(input$OC))})
   
   
   # Plots ---------------------------------------
@@ -2558,24 +2357,16 @@ server <- function(session, input, output){
       data_output
     })
     
-    # validate(need(length(lUiColors) != 0, message = "Choose colors first"))
-    
-    # output$lineplot <-renderPlot({
-    
     colScale <- reactive({
       if(input$checkboxColor){
         scale_colour_manual(values = lUiColordim())
       } else {
         scale_colour_manual(values = lUiColors())
       }
-      
     })
     
     p1 <- ggplot(
-      #req(data_longer()),
-
       data_lp(), 
-
       aes_string(x = input$x, y = "value")
     ) 
     
@@ -2586,11 +2377,6 @@ server <- function(session, input, output){
     if(input$checkboxPalette_dim){
       p1 <- p1 + colScale()
     }
-    
-    # if(input$checkboxShape){
-    #   colScale <- scale_colour_manual(values = lUiColors())
-    #   p1 <- p1 + colScale
-    #   }
 
     if(input$checkboxLine){
       if(input$checkboxColor){
@@ -2634,74 +2420,16 @@ server <- function(session, input, output){
       }
     }
   
-    # 
-    # if(input$checkboxShape){
-    #   p1 <-
-    #     p1 +
-    #     aes(
-    #       # linetype =
-    #       #   factor(get(
-    #       #     input$shape
-    #       #   ))
-    #       # 
-    #       # ,
-    #       shape =
-    #         factor(get(
-    #           input$shape
-    #         ))
-    #       # ,
-    #       # group =
-    #       #   interaction(
-    #       #     factor(get(
-    #       #       input$shape
-    #       #     )),
-    #       #   OC
-    #       # )
-    #     ) + labs(shape = input$shape)
-    #   
-    #   
-    #   #, linetype = paste(input$shape)
-    #   # )
-    #   
-    # } 
-   
+  
     if(input$checkboxLinetype){
   
       p1 <-
         p1 +
         aes_string(
-          
-          linetype =
-            # factor(
-            # get(
-            input$linetype
-          # )
-          # )
-          ,
-          shape =
-            # factor(
-            # get(
-            input$linetype
-          # )
-          # )
-          # ,
-          # group =
-          #   interaction(
-          #     factor(get(
-          #       input$linetype
-          #     )),
-          #     OC
-          #   )
+          linetype = input$linetype,
+          shape = input$linetype
         ) 
-      # ) + guides(linetype = guide_legend(title = "Users By guides"))
-      # ) + labs(linetype = input$linetype, shape = input$linetype)
-
     }
-    # 
-    # else {
-    #  p1 <-  p1 
-    #   + aes(group = OC)
-    # }
     
     facets <- input$facet_wrap %>% 
       str_replace_all(",", "+") %>% 
@@ -2714,14 +2442,6 @@ server <- function(session, input, output){
     fcols <- input$facet_cols %>%
       str_replace_all(",", "+") %>%
       rlang::parse_exprs()
-    
-    # if(input$radioFacet == "grid"){
-    #   p1 <- 
-    #     p1 + 
-    #     facet_grid(vars(get(input$facet_rows)),
-    #                vars(get(input$facet_cols))
-    #     )
-    # }
     
     if(input$radioFacet == "grid"){
       p1 <- 
@@ -2736,9 +2456,7 @@ server <- function(session, input, output){
       
       p1 <-
         p1 +
-        facet_wrap(vars(!!!facets)
-                   # facet_wrap(vars(get(!!!(input$facet_wrap)))
-                   , labeller = "label_both"
+        facet_wrap(vars(!!!facets), labeller = "label_both"
         )
     }
     
@@ -2770,59 +2488,15 @@ server <- function(session, input, output){
       }
     }
     
-
-    # if(input$plottype){
-    #   
-    # p2 <- ggplotly(p1)
-    # p2
-    # 
-    # } else {
+    p1 + theme(legend.key.size = unit(4, 'cm'))
     
-    # p2 <- ggplotly(p1)
-    # p2 %>% layout(legend = list(x = input$xLegend, y = input$yLegend))
-    
-    # }
-    
-    # if(input$plottype){
-    #   ggplotly(p1)
-    # } else {
-    #   p1
-    # }
-    
-    p1 +
-      theme(legend.key.size = unit(4, 'cm'))
-    # + 
-    # guides(linetype = guide_legend(override.aes = list(size = 4)))
-    
-  }
-  # res = exprToFunction(input$resolution)
-  # res = input$resolution
-  )
-  
-  
-  # scatterplot_object <- reactive({
-  #   
-  #   p1 <- ggplot(
-  #     df_plot(), 
-  #     aes_string(x = input$OC[1], y = input$OC[2])
-  #   ) + geom_point()
-  #   
-  #   p1
-  #   
-  # })
-  # 
+  })
   
   ## plot_object ----
   # create plot_object with final settings
   plot_object <- reactive({
-    
-    # scatterplot or lineplot?
-    # if(input$scatterplot)
-    #   p1 <- scatterplot_object()
-    # else
-    
+  
     p1 <- lineplot_object()
-    
     
     ### THEME & other general plot options ----
     
@@ -2874,8 +2548,6 @@ server <- function(session, input, output){
     }
     
     p1 <- p1 + theme(legend.title = element_blank())
-    
-    #updateAceEditor(session, editorId = "print_code", value = plot_code() )
 
     p1
   })
@@ -2887,14 +2559,12 @@ server <- function(session, input, output){
       
       output$lineplotly <- renderPlotly({
         ggplotly(plot_object())
-        #ggplotly(lineplot_object())
       })
       
     } else {
       
       output$lineplot <- renderPlot({
         plot_object()
-        #lineplot_object()
       })
     }
   })
@@ -2902,6 +2572,7 @@ server <- function(session, input, output){
   
   # scatterplot output----
   output$scatterplot <- renderPlot({
+    
     scatterplot_object()
   })
   
@@ -2910,35 +2581,28 @@ server <- function(session, input, output){
   output$lineplot_ui <- renderUI({
     
     validate(
-      need(input$OC, "no OCs chosen")
-    )
-    validate(
-      need(input$x, "please specify default values first")
+      need(input$OC, "No OCs chosen")
     )
     
-    # plotOutput("lineplot",
-    #            height = input$plotheight,
-    #            width = input$plotwidth
-    # )
-    # if(input$scatterplot){
-    #   plotOutput("scatterplot",
-    #              height = input$plotheight,
-    #              width = input$plotwidth)
-    # } else {
+    validate(
+      need(input$x, "Please specify default values first")
+    )
+    
+    validate(
+      need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
+    )
+    
     if(input$plottype){
       plotlyOutput("lineplotly",
                    height = input$plotheight,
                    width = input$plotwidth
       )
-    } 
-    #if(!input$plottype){
-    else{
+    }else{
       plotOutput("lineplot",
                  height = input$plotheight,
                  width = input$plotwidth
       )
     }
-    #}
   })
   
   
@@ -2957,58 +2621,66 @@ server <- function(session, input, output){
 
   ## observeEvents ----
   
+  observeEvent(input$animationCloseButton, {
+    output$animationOutDynamic <- renderImage({ req("") })
+  })
+  
+    
   #only renders if Button is clicked (isolate prevents reload on tabswitch)
   observeEvent(input$animationRenderButton,{
     
     ### animationOutDynamic ---- 
     output$animationOutDynamic <- renderImage({
       
-      #prevents rendering if button isnt clicked
-      if(input$animationRenderButton == 0) return()
+      tryCatch({
+        #prevents rendering if button isnt clicked
+        if(input$animationRenderButton == 0) return()
+        
+        #isolate prevents rerender on tabswitch
+        isolate({
+          #validates select input
+          validate(need(
+            input$animateIteratorSelect,
+            "Please specify iteration variable first"))
+          
+          # temporary file, saves render
+          outfileDyn <- tempfile(fileext='.gif')
+          
+          #Plot(with PlotTab customisation) + animation attributes
+          ap <- plot_object() + 
+            transition_states(states = !!(as.symbol(input$animateIteratorSelect)) ,
+                              transition_length = 1,
+                              state_length = 1,
+                              wrap = TRUE
+            ) +
+            enter_fade()+
+            exit_fade()
+          
+          # animation rendering
+          anim_save("outfileDyn.gif", 
+                    animate(ap,
+                            nframes = input$frameAmount,
+                            fps = input$renderFPS,
+                            duration = input$durationAnimation,
+                            height = input$plotheight,
+                            width = input$plotwidth,
+                    ))
+          
+          
+          # Returns rendering in gif-form
+          list(src = "outfileDyn.gif",
+               contentType = 'image/gif'
+          )
+      })
       
-      #isolate prevents rerender on tabswitch
-      isolate({
-        #validates select input
-        validate(need(
-          input$animateIteratorSelect,
-          "please specify iteration variable first"))
-        
-        # temporary file, saves render
-        outfileDyn <- tempfile(fileext='.gif')
-        
-        #Plot(with PlotTab customisation) + animation attributes
-        ap <- plot_object() + 
-          transition_states(states = !!(as.symbol(input$animateIteratorSelect)) ,
-                                                transition_length = 1,
-                                                state_length = 1,
-                                                wrap = TRUE
-                                                ) +
-          enter_fade()+
-          exit_fade()
-        
-        # animation rendering
-        anim_save("outfileDyn.gif", 
-                  animate(ap,
-                          nframes = input$frameAmount,
-                          fps = input$renderFPS,
-                          duration = input$durationAnimation,
-                          height = input$plotheight,
-                          width = input$plotwidth,
-                          ))
-        
-        
-        # Returns rendering in gif-form
-        list(src = "outfileDyn.gif",
-             contentType = 'image/gif'
-        )
+      }, error = function(e) {
+        err_ <- ""
+        validate(need(err_ != "", "Animation cannot be created"))
       })
     },
     #Deletes temporary Files after execution
     deleteFile = TRUE)
   })
-  
-  
-  
   
   
   # observes ----
@@ -3053,172 +2725,14 @@ server <- function(session, input, output){
           units = input$download_unit,
           res = input$download_resolution)
       
-      # fun(file,
-      #     height = input$plotheight,
-      #     width = input$plotwidth,
-      #     res = input$resolution)
       print(plot_object())
       dev.off()
-      
-      # -----IFELSE for gr_Devices----------------------
-      
-      # if(download_type() == "png"){
-      #   device <- function(..., width, height) {
-      #     grDevices::png(...,
-      #                    width = input$download_plotwidth,
-      #                    height = input$download_plotheight,
-      #                    res = input$download_resolution,
-      #                    units = input$download_unit)
-      #   }
-      #   ggsave(file, plot = plot_object(), device = device)
-      #   
-      
-      
-      # ggsave(file,
-      #        plot = plot_object(),
-      #        device = png(res = input$download_resolution),
-      #        width = input$download_plotwidth,
-      #        height = input$download_plotheight,
-      #        units = input$download_unit
-      # )
-      
-      
-      # plot_object()
-      # png(file,
-      #        width = input$download_plotwidth,
-      #        height = input$download_plotheight,
-      #        units = input$download_unit,
-      #        res = input$resolution
-      # )
-      # 
-      # dev.off()
-      
-      
-      # } else {
-      #   if(download_type() == "jpeg"){
-      #     device <- function(..., width, height) {
-      #       grDevices::jpeg(..., 
-      #                       width = input$download_plotwidth, 
-      #                       height = input$download_plotheight,
-      #                       res = input$download_resolution,
-      #                       units = input$download_unit)
-      #     }
-      #     ggsave(file, plot = plot_object(), device = device)
-      #   } else {
-      #     if(download_type() == "tiff"){
-      #       device <- function(..., width, height) {
-      #         grDevices::tiff(..., 
-      #                         width = input$download_plotwidth, 
-      #                         height = input$download_plotheight,
-      #                         res = input$download_resolution, 
-      #                         units = input$download_unit)
-      #       }
-      #       ggsave(file, plot = plot_object(), device = device)
-      #     } else {
-      #       if(download_type() == "pdf"){
-      #         ggsave(file,
-      #                plot = plot_object(),
-      #                device = pdf(),
-      #                width = input$download_plotwidth,
-      #                height = input$download_plotheight,
-      #                units = input$download_unit
-      #         )
-      #         
-      #       }
-      #       
-
-      # ggsave(file, plot = plot_object(), device = device, width = 11, height = 4, dpi = 300, units = "in")
-      # ggsave(file, plot = plot_object()
-      #        ,width = input$download_plotwidth
-      #        ,height = input$download_plotheight
-      #        #,units = input$download_unit
-      #        ,device = device
-      # )
-       
-      #}
-      
-      # }
-      # }
-      
-      
-      # device <- function(..., width, height) {
-      #   fun(..., width = width, height = height,
-      #                  res = input$resolution, units = "icm")
-      # }
-      # ggsave(file, plot = lineplot_object(), device = device)
-      #  
-      
     }
   )
   
-  
   # Code ----
   Code <- reactiveValues()
-  # 
-  # plot_code <- reactive({
-  #   
-  #   return(
-  #     
-  #     paste0("library(ggplot)", "\n\n", 
-  #            "ggplot(data = data, aes(x = ", input$x, ", y = ", input$OC, for(i in 2:length(input$OC)){paste0(", ", input$OC[1][i])},"))","\n\n",
-  #            "length input$OC:", length(input$OC),
-  #            "sim_par: ", "paste0(Code$sim_par)",
-  #            "colour:", Code$colour, "\n\n"#,
-  #            
-  #            # "data <- data %>%  pivot_longer(cols = ", input$OC, ",names_to = 'OC', values_to = 'value')"
-  #     )
-  #   )
-  #   
-  # })
 }
 
 # shinyApp ----
-shinyApp(ui = ui, server = server
-         , options = list(launch.browser = TRUE)
-)
-
-#shinyBS::bsModal()
-
-
-
-
-
-
-
-# data_test <- read.csv("example_data.csv",
-#                       header = TRUE,
-#                       sep = ",",
-#                       stringsAsFactors = FALSE)
-# 
-# default_list <- as.list(data_test[1,1:which(names(data_test) == "setting")])
-# 
-# 
-# # default_df <- as.data.frame(do.call(cbind, default_list))
-# 
-# default_df <- as.data.frame(default_list)
-# 
-# 
-# 
-# sim_par <- c("n_int", "sharing_type", "cohorts_max", "sensitivity_biomarker")
-# default_filter <- default_df[!(names(default_df) %in% sim_par)]
-# 
-# bedingung <- paste0(names(default_filter),
-#                     " == ",
-#                     paste0("'", default_filter[1,], "'"),
-#                     collapse = " & ")
-# 
-# 
-# 
-# df_plot <- subset(data_test, eval(parse(text = bedingung)))
-# dim(df_plot)
-# 
-# remove.factors(df_plot)
-# 
-# p <- ggplot(df_plot, aes(x = n_int))
-# p <- p + geom_line(aes(y = FWER, color = factor(sensitivity_biomarker), linetype = factor(sensitivity_biomarker)))
-# p <- p + facet_grid(rows = vars(sharing_type), cols = vars(cohorts_max))
-# p
-# 
-# 
-
-
+shinyApp(ui = ui, server = server, options = list(launch.browser = TRUE))

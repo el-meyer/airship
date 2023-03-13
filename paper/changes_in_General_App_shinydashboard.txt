@@ -1,0 +1,66 @@
+Improvements as of 20.11.2022:
+
+In general, there are no messages/warnings/errors outputted into the console.
+Also no red errors appear in the UI as they are mittigated in the code and 
+converted into informative warnings that try to guide the user on "what to do".
+
+ 
+ 1) Default Value Tab:
+ - FIXED: when not all default values were selected, pressing the "Reset selection" 
+          button was not working.
+
+
+ 2) Scatterplot:
+ - FIXED: added messages "no OCs chosen" and "please specify default values first" 
+          when OCs are not yet available or default values are not yet chosen
+
+ - FIXED: changing the value of the widget "Choose color parameter" causes
+          errors (red colored errors in the UI and in the console)
+
+
+ 3) Distribution tab
+ - ISSUE: sometimes the distribution tab is not shown after it was hidden and 
+          after a new data set was uploaded. The if/else condition is executed
+          properly but the distribution tab is not showing up anymore. Maybe
+          it is an issue with shiny.
+ - FIXED: when uploading a new dataset no errors are shown
+ - FIXED: when facet_grid and the same variable is chosen for both rows and colums
+          an error is given in the UI. The error is catched and outputed as 
+          a message.
+
+
+ 4) Data aggregation
+ - FIXED: when new data is uploaded and defined output variables 
+          via "State last input variable" are not numeric (or cannot be converted into
+          numeric) the app is not crashing (no standard deviations and means 
+          are defined for characters etc.). An informative warning is given
+          
+ - FIXED: when replication variable is not an integer variable the app crashes
+          (user gets a message that a replication variable must be an integer variable)
+
+
+ 5) Plot tab:
+ - IMPROVED: one can also close an animation (new button)
+ - IMPROVED: if an animation cannot be created there is no more red errors
+             popping in the UI. Instead, there is a message the animation cannot be created
+ - FIXED: when error bars were defined and then a new data set was uploaded
+          the plot was constantly blocked and it was demanded that lower/upper
+          bounds are defined (even if they were defined again!) 
+          That was cased by the following code:
+            need(!is.null(input$errorvars), "Please define error variables")
+          The fix was to use isTruthy instead of "!is.null":
+            need(isTruthy(input$errorvars), "Please define error variables")
+          This solved the issue since after the second time the widget was used
+          it was not NULL anymore but an empty character or something else than 
+          NULL.
+        
+6) Misc:
+ - FIXED: No more warning in the R console at app start-up complaining about
+          icon("paint-brush"). The icon name "paint-brush" has been changed to
+          "paintbrush" in the "fontawesome" package.
+- IMPROVED: redundant comments in the code have been removed
+- IMPROVED: the output with the "Code for reproduction"" in the plot tab has been
+            removed, since there is not yet such functionality
+
+
+

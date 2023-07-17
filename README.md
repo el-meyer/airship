@@ -1,11 +1,8 @@
 # App for Visualization of Longitudinal Data
 
-## Link to running app
-https://sny.cemsiis.meduniwien.ac.at/~n465jr/dbsv2/
-
 ## Info                
 
-This app is designed to plot simulation results of clinical trials. It has been developed by Constantin Kumaus, Elias Laurin Meyer and Michal Majka.
+This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus and Michal Majka.
 
 ## User Manual
 

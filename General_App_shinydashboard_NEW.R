@@ -1212,9 +1212,9 @@ server <- function(session, input, output){
             outputs <<- colnames(data_full_norep())[ind_outputstartR():ncol(data_full_norep())]
             
             output_class <- sapply(d[outputs], class)
-            if (any(output_class != "numeric")) {
-                
-                ind_not_num <- which(output_class != "numeric")
+            if (any(output_class != "numeric" & output_class != "integer")) {
+              
+              ind_not_num <- which(output_class != "numeric" & output_class != "integer")
                 vars_not_num <- outputs[ind_not_num]
                 n_vars <- length(vars_not_num)
                 xx <- paste0("Currently `", paste0(vars_not_num, collapse = "`, "), "`", 

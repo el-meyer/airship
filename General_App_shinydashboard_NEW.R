@@ -2426,7 +2426,9 @@ server <- function(session, input, output){
                     geom_line(aes(
                         y = value,
                         color  = factor(get(input$color))),
-                        size = input$linesize)
+                        size = input$linesize) + 
+                  labs(colour = input$color)
+                
                 Code$colour <<- paste(input$color)
                 
             } else {
@@ -2541,11 +2543,11 @@ server <- function(session, input, output){
         p1 <- lineplot_object()
         
         ### THEME & other general plot options ----
-        
+
         plot_theme <- input$plottheme
         plot_fontsize <- input$plotfontsize
         plot_font <- input$plotfont
-        
+
         if (plot_theme == "Grey") {
             p1 <- p1 + theme_gray(plot_fontsize, plot_font)
         }
@@ -2564,32 +2566,26 @@ server <- function(session, input, output){
         if (plot_theme == "Classic") {
             p1 <- p1 + theme_classic(plot_fontsize, plot_font)
         }
-        
-        
-        if (plot_fontsize == 12 & plot_font == "sans" & plot_theme == "Grey") {
-        }
-        
+
         ## TITLE ----------------------------------------
-        
+
         if (input$checkboxTitle){
-            p1 <- p1 + 
-                labs(title = input$plot_title)  + 
+            p1 <- p1 +
+                labs(title = input$plot_title)  +
                 theme(plot.title = element_text(colour = input$plot_title_colour,
-                                                size = input$plot_title_size, 
+                                                size = input$plot_title_size,
                                                 vjust = 1.5,
                                                 hjust = input$plot_title_place))
         }
-        
+
         ## LABS ----------------------------------------
-        
+
         if(input$checkboxAxis){
-            
+
             p1 <- p1 +
                 labs(x = input$xLab,
                      y = input$yLab)
         }
-        
-        p1 <- p1 + theme(legend.title = element_blank())
         
         p1
     })

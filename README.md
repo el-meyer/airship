@@ -1,4 +1,4 @@
-# An interactive R-Shiny app for visualizing tidy long data
+# AIRSHIP - An Interactive R-SHIny apP for visualizing tidy long data
 
 ## Info                
 

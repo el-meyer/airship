@@ -2469,7 +2469,8 @@ server <- function(session, input, output){
                 aes_string(
                     linetype = input$linetype,
                     shape = input$linetype
-                ) 
+                ) + 
+              labs(linetype = input$linetype, shape = input$linetype)
         }
         
         facets <- input$facet_wrap %>% 

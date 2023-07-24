@@ -2,7 +2,7 @@
 
 ## Info                
 
-This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus and Michal Majka.
+This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus and Michal Majka and was published in [SoftwareX](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext).
 
 ## User Manual
 

@@ -1,4 +1,4 @@
-# App for Visualization of Longitudinal Data
+# An interactive R-Shiny app for visualizing tidy long data
 
 ## Info                
 

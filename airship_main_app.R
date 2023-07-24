@@ -2262,12 +2262,17 @@ server <- function(session, input, output){
     
     # df_plot output ----
     output$df_plot <- DT::renderDataTable({
-        validate(
-            need(any(input$chooseDT_search_columns != ""), "    Please specify default values first")
-        )
-        df_plot()
+      validate(
+        need(any(input$chooseDT_search_columns != ""), "    Please specify default values first")
+      )
+      df_plot()
     },
-    options = list(scrollX = TRUE)
+    extensions = 'Buttons', 
+    options = list(
+      scrollX = TRUE, 
+      dom = 'Bfrtip',
+      buttons = c('csv', 'excel')
+      )
     )
     
     

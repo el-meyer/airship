@@ -2427,7 +2427,8 @@ server <- function(session, input, output){
                         y = value,
                         color  = factor(get(input$color))),
                         size = input$linesize) + 
-                  labs(colour = input$color)
+                  labs(colour = input$color) + 
+                  ylab(input$OC)
                 
                 Code$colour <<- paste(input$color)
                 
@@ -2450,16 +2451,18 @@ server <- function(session, input, output){
                     geom_point(aes(
                         y = value,
                         color  = factor(get(input$color))),
-                        
-                        size = 3*input$linesize)
+                        size = 3*input$linesize) + 
+                  labs(colour = input$color) + 
+                  ylab(input$OC)
+                
             } else {
                 p1 <-
                     p1  +
                     geom_point(aes(
                         y = value,
                         color  = OC),
-                        
                         size = 3*input$linesize)
+                
             }
         }
         

@@ -1,6 +1,6 @@
 # AIRSHIP - An Interactive R-SHIny apP for visualizing tidy long data
 
-## Info                
+## General Information                
 
 This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus and Michal Majka and was published in [SoftwareX](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext).
 
@@ -38,7 +38,9 @@ Furthermore you can change the style of your plot when clicking the 'style optio
 If you are interested in the variability of ceratin operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.
 
 
-## Disclaimer
+## Funding
+
+Development is currently funded by [Berry Consultants](https://www.berryconsultants.com/) and was previously funded by EU-PEARL. 
 
 EU-PEARL (EU Patient-cEntric clinicAl tRial pLatforms) project has
 received funding from the Innovative Medicines Initiative (IMI) 2 Joint
@@ -49,7 +51,6 @@ Alliance for TB Drug Development non-profit organization, Springworks
 Therapeutics Inc. This publication reflects the authors’ views. Neither
 IMI nor the European Union, EFPIA, or any Associated Partners are
 responsible for any use that may be made of the information contained
-herein. The research of Elias Laurin Meyer was funded until 11/2020 by
-Novartis through the University and not at an individual level.
+herein.
 
 

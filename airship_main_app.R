@@ -83,37 +83,61 @@ ui <-
                                  conditionalPanel(
                                      "input.checkboxExampleData == 0",
                                      
-                                     radioButtons(
+                                     checkboxInput(
+                                       "checkboxFactsData", 
+                                       "Use FACTS aggregated simulations"
+                                     ),
+                                     
+                                     fileInput(
+                                       "file", 
+                                       "Choose file to upload"
+                                     ),
+                                     
+                                     conditionalPanel(
+                                       "input.checkboxFactsData == 0",
+                                       
+                                       radioButtons(
                                          "sep", 
                                          "Csv-Separator", 
                                          choiceValues = c(",", ";", ""),
                                          choiceNames = c(",", ";", "whitespace")
-                                     ),
-                                     
-                                     fileInput(
-                                         "file", 
-                                         "Choose file to upload"
-                                     ),
-                                     
-                                     selectInput(
+                                       ),
+                                       
+                                       numericInput(
+                                         "rowSkip",
+                                         "Initial rows to skip",
+                                         value = 0,
+                                         min = 0, 
+                                         step = 1
+                                       ),
+                                       
+                                       selectInput(
                                          "inputend", 
-                                         "State last input variable", 
+                                         "Select last input variable", 
                                          choices = NULL
+                                       ),
+                                       
                                      ),
+                                     
                                  ),
-                                 
+                                   
                                  checkboxInput(
-                                     "checkboxRepvar",
-                                     "Do you want to aggregate over a replication run variable?"
+                                   "checkboxRepvar",
+                                   "Aggregate over individual simulations?"
                                  ),
                                  
                                  conditionalPanel(
                                      "input.checkboxRepvar != 0",
                                      
-                                     selectInput(
+                                     conditionalPanel(
+                                       "input.checkboxFactsData == 0",
+                                       
+                                       selectInput(
                                          "repvar",
-                                         "Select the replication run variable",
+                                         "Select the simulation run variable",
                                          choices = NULL
+                                       ),
+                                       
                                      ),
                                      
                                      selectInput(
@@ -139,7 +163,7 @@ ui <-
                                          )
                                      )
                                  ),
-                                 tabName = "data_settings",icon = icon("gear")
+                                 tabName = "data_settings", icon = icon("gear")
                              ),
                              
                              menuItem(
@@ -996,12 +1020,21 @@ server <- function(session, input, output){
         ) 
         
         # file = user uploaded file in tab Data Settings
-        inFile <-input$file 
+        inFile <- input$file 
         
-        try(read.csv(inFile$datapath,
-                     header = TRUE,
-                     sep = input$sep,
-                     stringsAsFactors = TRUE))
+        df_candidate <- 
+          try(read.csv(inFile$datapath,
+                       header = TRUE,
+                       sep = input$sep,
+                       skip = input$rowSkip,
+                       stringsAsFactors = TRUE))
+        
+        if ("X" %in% colnames(df_candidate)) {
+          df_candidate <- df_candidate[, -which(colnames(df_candidate) == "X")]
+        }
+        
+        df_candidate
+        
     })
     
     
@@ -1017,6 +1050,17 @@ server <- function(session, input, output){
         
         
         if(input$checkboxExampleData){
+          
+          updateCheckboxInput(
+            session,
+            "checkboxFactsData",
+            value = FALSE
+          )
+          
+          updateCheckboxInput(session,
+                              "checkboxRepvar",
+                              value = FALSE
+          )
             
             col_names_example_dat <- colnames(exampleData)
             updateSelectInput(session, 
@@ -1033,7 +1077,8 @@ server <- function(session, input, output){
             
             updateSelectInput(session,
                               "repvar_scatter",
-                              choices = col_names_example_dat
+                              choices = col_names_example_dat,
+                              selected = "replications"
             )
             
             updateSelectInput(session,
@@ -1046,8 +1091,50 @@ server <- function(session, input, output){
             
             
         } else {
+          
+          col_names_upload <- colnames(upload())
+          
+          if (input$checkboxFactsData == 1) {
             
-            col_names_upload <- colnames(upload())
+            updateNumericInput(session,
+                              "rowSkip",
+                              value = 2
+            )
+            
+            updateCheckboxInput(session,
+                               "checkboxRepvar",
+                               value = TRUE
+            )
+            
+            updateSelectInput(session,
+                              "inputend",
+                              choices = col_names_upload,
+                              selected = "Agg.Timestamp"
+            )
+            
+            updateSelectInput(session,
+                              "repvar",
+                              choices = col_names_upload,
+                              selected = "X.Sim"
+            )
+            
+            updateSelectInput(session,
+                              "repvar_scatter",
+                              choices = col_names_upload,
+                              selected = "X.Sim"
+            )
+            
+          } else {
+            
+            updateNumericInput(session,
+                               "rowSkip",
+                               value = 0
+            )
+            
+            updateCheckboxInput(session,
+                                "checkboxRepvar",
+                                value = FALSE
+            )
             
             updateSelectInput(session,
                               "inputend",
@@ -1064,6 +1151,9 @@ server <- function(session, input, output){
                               "repvar_scatter",
                               choices = col_names_upload
             )
+            
+          }
+            
             
             updateSelectInput(session,
                               "colvar_scatter",

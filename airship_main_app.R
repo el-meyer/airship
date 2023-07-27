@@ -250,29 +250,30 @@ ui <-
                         column(
                             4,
                             
+                            #### Distribution Var ----
+                            selectInput(
+                              "boxplotOutputVar",
+                              "Select y-axis",
+                              choices = NULL
+                            ),
+                            
                             #### Grouping Var ----
                             selectInput(
                                 "boxplotGroupVar",
-                                "Select grouping variable for distribution plot",
+                                "Select x-axis",
                                 choices = NULL
                             ),
                             
                             #### Transparancy ----
                             sliderInput(
                                 "alpha",
-                                "Select transparency (alpha)",
+                                "Select transparency",
                                 min = 0,
                                 max = 1,
                                 value = 0.1,
                                 step = 0.1
-                            ),
-                            
-                            #### Distribution Var ----
-                            selectInput(
-                                "boxplotOutputVar",
-                                "Select distribution variable",
-                                choices = NULL
                             )
+                          
                         ),
                         
                         column(
@@ -281,7 +282,7 @@ ui <-
                             #### Facet Dimension ----
                             radioButtons(
                                 "radioFacetDistribution",
-                                "Do you want to add a facet dimension?",
+                                "Add a facet dimension?",
                                 choices = c("no", "grid", "wrap")
                             ),
                             
@@ -291,14 +292,14 @@ ui <-
                                 
                                 selectInput(
                                     "facet_distribution_rows", 
-                                    "Choose row variable", 
+                                    "Add row variable", 
                                     choices = NULL,
                                     multiple = TRUE
                                 ),
                                 
                                 selectInput(
                                     "facet_distribution_cols", 
-                                    "Choose col variable", 
+                                    "Add column variable", 
                                     choices = NULL,
                                     multiple = TRUE
                                 )
@@ -320,7 +321,7 @@ ui <-
                             4,
                             
                             #### Plottype ----
-                            HTML("<b>Choose plottype</b>"),
+                            HTML("<b>Choose plot type</b>"),
                             
                             radioButtons(
                                 "boxplottype",
@@ -382,7 +383,7 @@ ui <-
                                 "input.checkboxColor == 0",
                                 checkboxInput(
                                     "checkboxPalette_OC", 
-                                    "Do you want to specify your own colors for every OC?"
+                                    "Specify your own colors?"
                                 ),
                                 ##### Brush button ----
                                 absolutePanel(
@@ -405,7 +406,7 @@ ui <-
                                 checkboxInput(
                                     "checkboxPalette_dim",
                                     # TODO: Check if need Fix: This text wont change on checking checkboxColor
-                                    "Do you want to specify your own colors for color dimension?"
+                                    "Specify your own colors?"
                                 ),
                                 absolutePanel(
                                     shinyWidgets::dropdownButton(
@@ -440,21 +441,21 @@ ui <-
                             #### X Var ----
                             selectInput(
                                 "x", 
-                                "Choose x-Variable", 
+                                "x-axis", 
                                 choices = NULL
                             ),
                             
                             #### Oc to Plot ----
                             selectizeInput(
                                 "OC", 
-                                "Choose OC to plot", 
+                                "y-axis", 
                                 choices = NULL,
                                 multiple = TRUE
                             ),
                             
                             #### add Errorbars ----
                             checkboxInput("checkboxErrorbar",
-                                          "Do you want to add Errorbars?"),
+                                          "Add errorbars?"),
                             
                             conditionalPanel(
                                 "input.checkboxErrorbar != 0",
@@ -486,7 +487,7 @@ ui <-
                             #### Facet Dimension ----
                             radioButtons(
                                 "radioFacet",
-                                "Do you want to add a facet dimension?",
+                                "Add a facet dimension?",
                                 choices = c("no", "grid", "wrap")
                             ),
                             
@@ -496,14 +497,14 @@ ui <-
                                 
                                 selectInput(
                                     "facet_rows", 
-                                    "Choose row variable", 
+                                    "Add row variable", 
                                     choices = NULL,
                                     multiple = TRUE
                                 ),
                                 
                                 selectInput(
                                     "facet_cols", 
-                                    "Choose col variable", 
+                                    "Add column variable", 
                                     choices = NULL,
                                     multiple = TRUE
                                 )
@@ -524,7 +525,7 @@ ui <-
                             #### Linetype ----
                             checkboxInput(
                                 "checkboxLinetype",
-                                "Do you want to add a Linetype dimension?"
+                                "Add a linetype dimension?"
                             ),
                             conditionalPanel(
                                 "input.checkboxLinetype != 0",
@@ -542,7 +543,7 @@ ui <-
                                 
                                 checkboxInput(
                                     "checkboxColor",
-                                    "Do you want to add a Color dimension?"
+                                    "Add a color dimension?"
                                 ),
                                 conditionalPanel(
                                     "input.checkboxColor != 0",
@@ -869,7 +870,7 @@ ui <-
                                    uiOutput("scatter_ui"),
                                    
                                    ##### Infotext ----
-                                   HTML("In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters.")
+                                   # HTML("In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters.")
                                ),
                                
                                fluidRow(
@@ -892,7 +893,7 @@ ui <-
                                           ##### OC to plot ----
                                           selectizeInput(
                                               "OC_scatter", 
-                                              "Choose OC to plot", 
+                                              "Choose variables to plot", 
                                               choices = NULL,
                                               multiple = TRUE
                                           )
@@ -903,7 +904,7 @@ ui <-
                                           ##### Facet dimension ----
                                           radioButtons(
                                               "radioFacet_scatter",
-                                              "Do you want to add a facet dimension?",
+                                              "Add a facet dimension?",
                                               choices = c("no", "grid", "wrap")
                                           ),
                                           
@@ -913,14 +914,14 @@ ui <-
                                               
                                               selectInput(
                                                   "facet_rows_scatter", 
-                                                  "Choose row variable", 
+                                                  "Add row variable", 
                                                   choices = NULL,
                                                   multiple = TRUE
                                               ),
                                               
                                               selectInput(
                                                   "facet_cols_scatter", 
-                                                  "Choose col variable", 
+                                                  "Add column variable", 
                                                   choices = NULL,
                                                   multiple = TRUE
                                               )
@@ -945,7 +946,7 @@ ui <-
                         column(2,
                                checkboxInput(
                                    "checkboxPalette_scatter",
-                                   "Do you want to specify your own colors"
+                                   "Specify your own colors?"
                                ),
                                absolutePanel(
                                    shinyWidgets::dropdownButton(

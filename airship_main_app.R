@@ -883,19 +883,35 @@ ui <-
                                               choices = NULL
                                           ),
                                           
-                                          ##### Color param. ----
-                                          selectInput(
-                                              "colvar_scatter",
-                                              "Choose color parameter",
-                                              choices = NULL
-                                          ),
-                                          
                                           ##### OC to plot ----
                                           selectizeInput(
                                               "OC_scatter", 
                                               "Choose variables to plot", 
                                               choices = NULL,
                                               multiple = TRUE
+                                          ),
+                                          
+                                          # ##### Color param. ----
+                                          # selectInput(
+                                          #     "colvar_scatter",
+                                          #     "Choose color parameter",
+                                          #     choices = NULL
+                                          # ),
+                                          
+                                          
+                                          ###### Color param
+                                          checkboxInput(
+                                            "checkboxColorScatter",
+                                            "Add a color dimension?"
+                                          ),
+                                          conditionalPanel(
+                                            "input.checkboxColorScatter != 0",
+                                            
+                                            selectInput(
+                                              "colvar_scatter",
+                                              "Choose color variable",
+                                              choices = NULL
+                                            )
                                           )
                                    ),
                                    
@@ -2143,7 +2159,9 @@ server <- function(session, input, output){
         # vector of names of simulation parameters
         sim_par <- input$repvar_scatter
         
-        sim_par <- c(sim_par, input$colvar_scatter)
+        if (input$checkboxColorScatter) {
+          sim_par <- c(sim_par, input$colvar_scatter)
+        }
         
         if(input$radioFacet_scatter == "grid"){
             sim_par <- c(sim_par, input$facet_rows_scatter, input$facet_cols_scatter)
@@ -2208,8 +2226,8 @@ server <- function(session, input, output){
             p1 <- ggplot(
                 df_scatterplot(), 
                 aes_string(x = input$OC_scatter[1], y = input$OC_scatter[2])
-            ) + geom_point(aes(colour = factor(get(input$colvar_scatter)))) + 
-                labs(colour = input$colvar_scatter)
+            ) + 
+              geom_point()
         }, error = function(e) {
             err_ <- ""
             validate(
@@ -2217,6 +2235,14 @@ server <- function(session, input, output){
             )
         }
         )
+        
+        if(input$checkboxColorScatter){
+          
+          p1 <-
+            p1 +
+            aes_string(color = input$colvar_scatter) + 
+            labs(colour = input$colvar_scatter)
+        }
         
         if(input$checkboxPalette_scatter){
             p1 <- p1 + colScale_scatter

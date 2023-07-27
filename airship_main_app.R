@@ -213,6 +213,7 @@ ui <-
             ### Busy Spinner ----
             tags$head(tags$style(css)),
             add_busy_spinner(spin = "fading-circle"),
+            add_busy_bar(color = "red", height = "8px"),
             
             
             tabItems(
@@ -1014,6 +1015,7 @@ server <- function(session, input, output){
     # Upload Data ----
     # widget for user data upload
     upload <- reactive({
+      
         validate(
             # if no file is uploaded yet "no file" appears everywhere upload() is called
             need(input$file, "No file")
@@ -1047,7 +1049,6 @@ server <- function(session, input, output){
         updateTabItems(session, "sidebarMenu", "default")
         Sys.sleep(0.05)
         updateTabItems(session, "sidebarMenu", "data")
-        
         
         if(input$checkboxExampleData){
           
@@ -1163,6 +1164,7 @@ server <- function(session, input, output){
             
             return(upload())
         }
+        
     })
     
     

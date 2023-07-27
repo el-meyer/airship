@@ -2298,7 +2298,7 @@ server <- function(session, input, output){
         }, error = function(e) {
             err_ <- ""
             validate(
-                need(err_ != "", "Change default values or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+                need(err_ != "", "This is not working because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values.")
             )  
         })
     })
@@ -2368,7 +2368,7 @@ server <- function(session, input, output){
                                  error = function(e) {
                                      err_ <- ""
                                      validate(
-                                         need(err_ != "", "Change default values or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+                                         need(err_ != "", "This is not working because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values.")
                                      )
                                  })
         } else {

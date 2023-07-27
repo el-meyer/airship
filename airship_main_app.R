@@ -899,7 +899,7 @@ ui <-
                                           # ),
                                           
                                           
-                                          ###### Color param
+                                          ###### Color param ----
                                           checkboxInput(
                                             "checkboxColorScatter",
                                             "Add a color dimension?"
@@ -1975,6 +1975,14 @@ server <- function(session, input, output){
                           choices = names(defaults_input()))
     })
     
+    ## color_scatter -----
+    observe({
+      updateSelectInput(session,
+                        "colvar_scatter",
+                        choices = names(defaults_input())
+      )
+    })
+    
     
     # save default values in a list upon clicking action button
     
@@ -2298,7 +2306,7 @@ server <- function(session, input, output){
         }, error = function(e) {
             err_ <- ""
             validate(
-                need(err_ != "", "This is not working because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values.")
+                need(err_ != "", "This is not working. Probably because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values. If this does not fix it, please report a bug.")
             )  
         })
     })
@@ -2368,7 +2376,7 @@ server <- function(session, input, output){
                                  error = function(e) {
                                      err_ <- ""
                                      validate(
-                                         need(err_ != "", "This is not working because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values.")
+                                         need(err_ != "", "This is not working. Probably because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values. If this does not fix it, please report a bug.")
                                      )
                                  })
         } else {

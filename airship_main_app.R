@@ -182,7 +182,7 @@ ui <-
                                  "input.checkboxRepvar != 0",
                                  sidebarMenu(
                                      menuItem(
-                                         "Distribution", 
+                                         "Boxplot/Densityplot", 
                                          tabName = "distribution", 
                                          icon = icon("chart-area")
                                      )
@@ -190,7 +190,7 @@ ui <-
                              ),
                              
                              menuItem(
-                                 "Plot", 
+                                 "Line/Dotplot", 
                                  tabName = "plot", 
                                  icon = icon("chart-line")
                              ),

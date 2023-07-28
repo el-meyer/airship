@@ -2743,11 +2743,11 @@ server <- function(session, input, output){
     })
     
     
-    # scatterplot output----
-    output$scatterplot <- renderPlot({
-        
-        scatterplot_object()
-    })
+    # # scatterplot output----
+    # output$scatterplot <- renderPlot({
+    #     
+    #     scatterplot_object()
+    # })
     
     
     # lineplot_ui output ----

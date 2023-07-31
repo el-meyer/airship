@@ -1,0 +1,23 @@
+
+install.packages(
+  c(
+    "shiny", 
+    "DT",
+    "shinybusy",
+    "plotly",
+    "tidyverse",
+    "shinyBS",
+    "colourpicker",
+    "shinyWidgets",
+    "transformr",
+    "bslib",
+    "shinydashboard",
+    "scales",
+    "Cairo",
+    "shinyAce",
+    "gganimate",
+    "ggplot2",
+    "gifski",
+    "png"
+    )
+  )

@@ -3,8 +3,6 @@ options(shiny.sanitize.errors = FALSE)
 options(shiny.maxRequestSize = 50*1024^2)
 
 library(shiny)
-library(readxl)
-#library(xlsx)
 library(DT)
 library(shinybusy)
 library(plotly)
@@ -1133,6 +1131,7 @@ server <- function(session, input, output){
                           selected = "X.Sim"
         )
         
+        
       } else {
         
         updateNumericInput(session,
@@ -1457,6 +1456,15 @@ server <- function(session, input, output){
                       # choices = names_outputsR()
                       choices = names_outputsR_distribution()
     )
+    
+    if (input$checkboxFactsData == 1) {
+      
+      updateSelectInput(session,
+                        "boxplotOutputVar",
+                        selected = "Duration"
+      )
+      
+    }
     
     
     ### display only columns with more than 1 unique entry ----

@@ -60,7 +60,7 @@ ui <-
     
     # title in browser window tab
     dashboardHeader(
-      title = "Simulation Results"
+      title = "AIRSHIP"
     ), 
     
     ## Sidebar -----

@@ -10,7 +10,6 @@ library(tidyverse)
 library(shinyBS)
 library(colourpicker)
 library(shinyWidgets)
-library(transformr)
 
 library(bslib)
 library(shinydashboard)

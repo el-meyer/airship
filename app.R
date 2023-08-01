@@ -972,7 +972,8 @@ ui <-
         tabItem("help",
                 
                 h4("Info"),
-                HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus and Michal Majka."),
+                HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus, Michal Majka and Franz König.
+                     It has been published in <a href='https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext'>SoftwareX</a>."),
                 
                 h2("User Manual"),
                 HTML("Following you will find details on every part of the app and how they are to be used."),

@@ -1331,14 +1331,24 @@ server <- function(session, input, output){
         )
       }
       
+      custom_list <- 
+        list(
+          agg1 = get(input$repvarMethod),
+          agg2 = get(input$deviationMethod)
+        )
+      
+      names(custom_list) <- 
+        c(
+          input$repvarMethod,
+          input$deviationMethod
+        )
+      
+      
       d <- tryCatch({
         suppressMessages(group_by_at(d, vars(inputs)) %>%
                            summarise(across(
                              everything(),
-                             list(
-                               estimate = get(input$repvarMethod),
-                               deviation = get(input$deviationMethod)
-                             )
+                             custom_list
                            )))
       }, warning = function(w) {
         err_ <- ""
@@ -1347,11 +1357,11 @@ server <- function(session, input, output){
         )}
       )
       
-      d <- d %>% select(-paste0(input$repvar, "_estimate"))
-      d <- d %>% select(-paste0(input$repvar, "_deviation"))
+      d <- d %>% select(-paste0(input$repvar, "_", input$repvarMethod))
+      d <- d %>% select(-paste0(input$repvar, "_", input$deviationMethod))
       
       d <- d %>% mutate(
-        across(.cols = contains("_deviation"), ~ .x * input$sem_mult)
+        across(.cols = contains(paste0("_", input$deviationMethod)), ~ .x * input$sem_mult)
       )
     }
     as.data.frame(d)

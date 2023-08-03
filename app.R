@@ -364,8 +364,8 @@ ui <-
               
               #### Plot Output ----
               uiOutput("lineplot_ui"),
-              imageOutput("animationOutDynamic",
-                          inline = TRUE)
+              # imageOutput("animationOutDynamic",
+              #             inline = TRUE)
             )
           ),
           
@@ -628,6 +628,50 @@ ui <-
               #### Download Plot Button ----
               actionButton("save_plot", label = "Download plot"),
               
+              #### Color choice ----
+              conditionalPanel(
+                "input.checkboxColor == 0",
+                checkboxInput(
+                  "checkboxPalette_OC", 
+                  "Specify your own colors?"
+                ),
+                ##### Brush button ----
+                absolutePanel(
+                  shinyWidgets::dropdownButton(
+                    label = "Color Choices",
+                    status = "primary",
+                    circle = TRUE,
+                    right = TRUE,
+                    icon = icon("paintbrush"),
+                    tooltip = TRUE,
+                    uiOutput("colors_ui"),
+                    inputId = "dropdown_colors"
+                  ),
+                  draggable = TRUE
+                )
+              ),
+              
+              conditionalPanel(
+                "input.checkboxColor != 0",
+                checkboxInput(
+                  "checkboxPalette_dim",
+                  # TODO: Check if need Fix: This text wont change on checking checkboxColor
+                  "Specify your own colors?"
+                ),
+                absolutePanel(
+                  shinyWidgets::dropdownButton(
+                    label = "Color choices",
+                    status = "primary",
+                    circle = TRUE,
+                    right = TRUE,
+                    icon = icon("paintbrush"),
+                    uiOutput("colordim_ui"),
+                    inputId = "dropdown_colordim"
+                  ),
+                  draggable = TRUE
+                )
+              )
+              
             ),
             
             column(
@@ -735,104 +779,60 @@ ui <-
                       textInput("download_name", "Specify file name"),
                       
                       downloadButton("download_plot", "Download")
-              ),
-              
-              #### Color choice ----
-              conditionalPanel(
-                "input.checkboxColor == 0",
-                checkboxInput(
-                  "checkboxPalette_OC", 
-                  "Specify your own colors?"
-                ),
-                ##### Brush button ----
-                absolutePanel(
-                  shinyWidgets::dropdownButton(
-                    label = "Color Choices",
-                    status = "primary",
-                    circle = TRUE,
-                    right = TRUE,
-                    icon = icon("paintbrush"),
-                    tooltip = TRUE,
-                    uiOutput("colors_ui"),
-                    inputId = "dropdown_colors"
-                  ),
-                  draggable = TRUE
-                )
-              ),
-              
-              conditionalPanel(
-                "input.checkboxColor != 0",
-                checkboxInput(
-                  "checkboxPalette_dim",
-                  # TODO: Check if need Fix: This text wont change on checking checkboxColor
-                  "Specify your own colors?"
-                ),
-                absolutePanel(
-                  shinyWidgets::dropdownButton(
-                    label = "Color choices",
-                    status = "primary",
-                    circle = TRUE,
-                    right = TRUE,
-                    icon = icon("paintbrush"),
-                    uiOutput("colordim_ui"),
-                    inputId = "dropdown_colordim"
-                  ),
-                  draggable = TRUE
-                )
               )
             ),
             
-            #### Animation Input ----
-            column(3,
-                   ##### animateIteratorSelect ----
-                   selectInput(
-                     "animateIteratorSelect", 
-                     "Choose variable to animate over:", 
-                     choices = NULL
-                   ),
-                   actionButton(
-                     "animationRenderButton",
-                     "Render animation"
-                   ),
-                   
-                   ##### render options ----
-                   actionButton("changeRender", label = "Render options"),
-                   
-                   bsModal("modal_render",
-                           "Change render options",
-                           trigger = "changeRender",
-                           size = "large",
-                           
-                           sliderInput(
-                             "frameAmount",
-                             "number of frames to render",
-                             value = 100,
-                             min = 10,
-                             max = 1000
-                           ),
-                           
-                           sliderInput(
-                             "renderFPS",
-                             "frames per second",
-                             value = 10,
-                             min = 1,
-                             max = 120
-                           ),
-                           
-                           numericInput(
-                             "durationAnimation",
-                             "length of animation in seconds",
-                             value = 10,
-                             min = 1,
-                             max = 1000,
-                             step = 1
-                           )
-                   ),
-                   actionButton(
-                     "animationCloseButton",
-                     "Close animation"
-                   )
-            )
+            # #### Animation Input ----
+            # column(3,
+            #        ##### animateIteratorSelect ----
+            #        selectInput(
+            #          "animateIteratorSelect", 
+            #          "Choose variable to animate over:", 
+            #          choices = NULL
+            #        ),
+            #        actionButton(
+            #          "animationRenderButton",
+            #          "Render animation"
+            #        ),
+            #        
+            #        ##### render options ----
+            #        actionButton("changeRender", label = "Render options"),
+            #        
+            #        bsModal("modal_render",
+            #                "Change render options",
+            #                trigger = "changeRender",
+            #                size = "large",
+            #                
+            #                sliderInput(
+            #                  "frameAmount",
+            #                  "number of frames to render",
+            #                  value = 100,
+            #                  min = 10,
+            #                  max = 1000
+            #                ),
+            #                
+            #                sliderInput(
+            #                  "renderFPS",
+            #                  "frames per second",
+            #                  value = 10,
+            #                  min = 1,
+            #                  max = 120
+            #                ),
+            #                
+            #                numericInput(
+            #                  "durationAnimation",
+            #                  "length of animation in seconds",
+            #                  value = 10,
+            #                  min = 1,
+            #                  max = 1000,
+            #                  step = 1
+            #                )
+            #        ),
+            #        actionButton(
+            #          "animationCloseButton",
+            #          "Close animation"
+            #        )
+            # )
           ),
           hr(),
           
@@ -2850,81 +2850,81 @@ server <- function(session, input, output){
   })
   
   
-  # Animation ----
-  
-  ## observe ----
-  ### animateIteratorSelect ----
-  
-  observe({
-    updateSelectInput(session,
-                      "animateIteratorSelect",
-                      choices = names(defaults_input())
-    )
-  })
-  
-  
-  ## observeEvents ----
-  
-  observeEvent(input$animationCloseButton, {
-    output$animationOutDynamic <- renderImage({ req("") })
-  })
-  
-  
-  #only renders if Button is clicked (isolate prevents reload on tabswitch)
-  observeEvent(input$animationRenderButton,{
-    
-    ### animationOutDynamic ---- 
-    output$animationOutDynamic <- renderImage({
-      
-      tryCatch({
-        #prevents rendering if button isnt clicked
-        if(input$animationRenderButton == 0) return()
-        
-        #isolate prevents rerender on tabswitch
-        isolate({
-          #validates select input
-          validate(need(
-            input$animateIteratorSelect,
-            "Please specify iteration variable first"))
-          
-          # temporary file, saves render
-          outfileDyn <- tempfile(fileext='.gif')
-          
-          #Plot(with PlotTab customisation) + animation attributes
-          ap <- plot_object() + 
-            transition_states(states = !!(as.symbol(input$animateIteratorSelect)) ,
-                              transition_length = 1,
-                              state_length = 1,
-                              wrap = TRUE
-            ) +
-            enter_fade()+
-            exit_fade()
-          
-          # animation rendering
-          anim_save("outfileDyn.gif", 
-                    animate(ap,
-                            nframes = input$frameAmount,
-                            fps = input$renderFPS,
-                            duration = input$durationAnimation,
-                            height = input$plotheight,
-                            width = input$plotwidth,
-                    ))
-          
-          
-          # Returns rendering in gif-form
-          list(src = "outfileDyn.gif",
-               contentType = 'image/gif'
-          )
-        })
-        
-      }, error = function(e) {
-        err_ <- ""
-        validate(need(err_ != "", "Animation cannot be created"))
-      })
-    },
-    #Deletes temporary Files after execution
-    deleteFile = TRUE)
-  })
+  # # Animation ----
+  # 
+  # ## observe ----
+  # ### animateIteratorSelect ----
+  # 
+  # observe({
+  #   updateSelectInput(session,
+  #                     "animateIteratorSelect",
+  #                     choices = names(defaults_input())
+  #   )
+  # })
+  # 
+  # 
+  # ## observeEvents ----
+  # 
+  # observeEvent(input$animationCloseButton, {
+  #   output$animationOutDynamic <- renderImage({ req("") })
+  # })
+  # 
+  # 
+  # #only renders if Button is clicked (isolate prevents reload on tabswitch)
+  # observeEvent(input$animationRenderButton,{
+  #   
+  #   ### animationOutDynamic ---- 
+  #   output$animationOutDynamic <- renderImage({
+  #     
+  #     tryCatch({
+  #       #prevents rendering if button isnt clicked
+  #       if(input$animationRenderButton == 0) return()
+  #       
+  #       #isolate prevents rerender on tabswitch
+  #       isolate({
+  #         #validates select input
+  #         validate(need(
+  #           input$animateIteratorSelect,
+  #           "Please specify iteration variable first"))
+  #         
+  #         # temporary file, saves render
+  #         outfileDyn <- tempfile(fileext='.gif')
+  #         
+  #         #Plot(with PlotTab customisation) + animation attributes
+  #         ap <- plot_object() + 
+  #           transition_states(states = !!(as.symbol(input$animateIteratorSelect)) ,
+  #                             transition_length = 1,
+  #                             state_length = 1,
+  #                             wrap = TRUE
+  #           ) +
+  #           enter_fade()+
+  #           exit_fade()
+  #         
+  #         # animation rendering
+  #         anim_save("outfileDyn.gif", 
+  #                   animate(ap,
+  #                           nframes = input$frameAmount,
+  #                           fps = input$renderFPS,
+  #                           duration = input$durationAnimation,
+  #                           height = input$plotheight,
+  #                           width = input$plotwidth,
+  #                   ))
+  #         
+  #         
+  #         # Returns rendering in gif-form
+  #         list(src = "outfileDyn.gif",
+  #              contentType = 'image/gif'
+  #         )
+  #       })
+  #       
+  #     }, error = function(e) {
+  #       err_ <- ""
+  #       validate(need(err_ != "", "Animation cannot be created"))
+  #     })
+  #   },
+  #   #Deletes temporary Files after execution
+  #   deleteFile = TRUE)
+  # })
   
   
   # observes ----

@@ -350,65 +350,18 @@ ui <-
         ),
         
         
-        ### PLOT ----
+        ### LINEPLOT ----
         tabItem(
           tabName = "plot",
           
           fluidRow(
             column(
-              10,
+              12,
               
               #### Plot Output ----
               uiOutput("lineplot_ui"),
               imageOutput("animationOutDynamic",
                           inline = TRUE)
-            ),
-            
-            column(
-              2,
-              #### Color choice ----
-              conditionalPanel(
-                "input.checkboxColor == 0",
-                checkboxInput(
-                  "checkboxPalette_OC", 
-                  "Specify your own colors?"
-                ),
-                ##### Brush button ----
-                absolutePanel(
-                  shinyWidgets::dropdownButton(
-                    label = "Color Choices",
-                    status = "primary",
-                    circle = TRUE,
-                    right = TRUE,
-                    icon = icon("paintbrush"),
-                    tooltip = TRUE,
-                    uiOutput("colors_ui"),
-                    inputId = "dropdown_colors"
-                  ),
-                  draggable = TRUE
-                )
-              ),
-              
-              conditionalPanel(
-                "input.checkboxColor != 0",
-                checkboxInput(
-                  "checkboxPalette_dim",
-                  # TODO: Check if need Fix: This text wont change on checking checkboxColor
-                  "Specify your own colors?"
-                ),
-                absolutePanel(
-                  shinyWidgets::dropdownButton(
-                    label = "Color choices",
-                    status = "primary",
-                    circle = TRUE,
-                    right = TRUE,
-                    icon = icon("paintbrush"),
-                    uiOutput("colordim_ui"),
-                    inputId = "dropdown_colordim"
-                  ),
-                  draggable = TRUE
-                )
-              )
             )
           ),
           
@@ -778,6 +731,50 @@ ui <-
                       textInput("download_name", "Specify file name"),
                       
                       downloadButton("download_plot", "Download")
+              ),
+              
+              #### Color choice ----
+              conditionalPanel(
+                "input.checkboxColor == 0",
+                checkboxInput(
+                  "checkboxPalette_OC", 
+                  "Specify your own colors?"
+                ),
+                ##### Brush button ----
+                absolutePanel(
+                  shinyWidgets::dropdownButton(
+                    label = "Color Choices",
+                    status = "primary",
+                    circle = TRUE,
+                    right = TRUE,
+                    icon = icon("paintbrush"),
+                    tooltip = TRUE,
+                    uiOutput("colors_ui"),
+                    inputId = "dropdown_colors"
+                  ),
+                  draggable = TRUE
+                )
+              ),
+              
+              conditionalPanel(
+                "input.checkboxColor != 0",
+                checkboxInput(
+                  "checkboxPalette_dim",
+                  # TODO: Check if need Fix: This text wont change on checking checkboxColor
+                  "Specify your own colors?"
+                ),
+                absolutePanel(
+                  shinyWidgets::dropdownButton(
+                    label = "Color choices",
+                    status = "primary",
+                    circle = TRUE,
+                    right = TRUE,
+                    icon = icon("paintbrush"),
+                    uiOutput("colordim_ui"),
+                    inputId = "dropdown_colordim"
+                  ),
+                  draggable = TRUE
+                )
               )
             ),
             
@@ -848,18 +845,17 @@ ui <-
           br()
         ),
         
-        ### SCATTERPLOT ----
+        ## SCATTERPLOT ----
         tabItem("scatterplot",
                 
-                column(10,
-                       
-                       fluidRow(
-                         ##### Scatterplot Output ----
-                         uiOutput("scatter_ui"),
+                fluidRow(
+                  
+                  column(12,
                          
-                         ##### Infotext ----
-                         # HTML("In this tab you can look at the variability and scatter of two OCs by letting 1 variable take on every possible value, whereas all other variables remain at their set default value. This could for example be a replication run variable, if you want to investigate the variability of your outcome for a certain set of design parameters.")
-                       ),
+                         ##### Scatterplot Output ----
+                         uiOutput("scatter_ui")
+                  )
+                ),
                        
                        fluidRow(
                          column(3,
@@ -899,7 +895,31 @@ ui <-
                                     "colvar_scatter",
                                     "Choose color variable",
                                     choices = NULL
-                                  )
+                                  ),
+                                  
+                                  
+                                  
+                                  #### Color Button ----
+                                         checkboxInput(
+                                           "checkboxPalette_scatter",
+                                           "Specify your own colors?"
+                                         ),
+                                         absolutePanel(
+                                           shinyWidgets::dropdownButton(
+                                             label = "Color choices",
+                                             status = "primary",
+                                             circle = TRUE,
+                                             right = TRUE,
+                                             icon = icon("paintbrush"),
+                                             uiOutput("colors_scatter_ui"),
+                                             inputId = "dropdown_colors_scatter"
+                                           ),
+                                           draggable = TRUE
+                                         )
+                                  
+                                  
+                                  
+                                  
                                 )
                          ),
                          
@@ -943,28 +963,22 @@ ui <-
                                   )
                                 )
                          )
-                       )
+                       ),
+                
+                hr(),
+                hr(),
+                
+                #### Plotted Data ----
+                h2("Plotted Data"),
+                br(),
+                fluidRow(
+                  DT::dataTableOutput("df_scatterplot")
                 ),
                 
-                #### Color Button ----
-                column(2,
-                       checkboxInput(
-                         "checkboxPalette_scatter",
-                         "Specify your own colors?"
-                       ),
-                       absolutePanel(
-                         shinyWidgets::dropdownButton(
-                           label = "Color choices",
-                           status = "primary",
-                           circle = TRUE,
-                           right = TRUE,
-                           icon = icon("paintbrush"),
-                           uiOutput("colors_scatter_ui"),
-                           inputId = "dropdown_colors_scatter"
-                         ),
-                         draggable = TRUE
-                       )
-                )
+                hr(),
+                br(),
+                br(),
+                br()
         ),
         
         
@@ -2024,7 +2038,9 @@ server <- function(session, input, output){
   })
   
   
-  # Boxplot -------------------------------------------------------------
+  # Plots -------------------------------------------------------------------
+  
+  ## Boxplot -------------------------------------------------------------
   
   output$pBoxplot <- renderPlot({
     
@@ -2208,15 +2224,12 @@ server <- function(session, input, output){
     
   })
   
-  
-  # PLOT -------------------------------------------------------------------
-  
-  ## df_scatterplot ----
+  ## Scatterplot ----
   df_scatterplot <- reactive({
     
     # 1 line df with default values for variables that are checked
     
-    ### derfault_df ----
+    ### default_df ----
     default_df <- defaults_input()
     
     ## sim_par ----
@@ -2267,7 +2280,12 @@ server <- function(session, input, output){
     
     df_scatterplot()
   },
-  options = list(scrollX = TRUE)
+  extensions = 'Buttons', 
+  options = list(
+    scrollX = TRUE, 
+    dom = 'Bfrtip',
+    buttons = c('csv', 'excel')
+  )
   )
   
   ## data_longer_scatter ----
@@ -2373,7 +2391,7 @@ server <- function(session, input, output){
   })
   
   
-  # Plot Df ------------------------------------------
+  # Lineplot ------------------------------------------
   
   # Data frame used for plot
   # Filters every variable for the specified default value except the chosen simulation parameters, which can have more distinguishable values
@@ -2797,13 +2815,6 @@ server <- function(session, input, output){
       })
     }
   })
-  
-  
-  # # scatterplot output----
-  # output$scatterplot <- renderPlot({
-  #     
-  #     scatterplot_object()
-  # })
   
   
   # lineplot_ui output ----

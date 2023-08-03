@@ -118,9 +118,13 @@ ui <-
                            
                          ),
                          
-                         checkboxInput(
-                           "checkboxRepvar",
-                           "Aggregate over individual simulations?"
+                         conditionalPanel(
+                           "input.checkboxFactsData == 0",
+                           
+                           checkboxInput(
+                             "checkboxRepvar",
+                             "Aggregate over individual simulations?"
+                           )
                          ),
                          
                          conditionalPanel(

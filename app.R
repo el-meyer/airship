@@ -243,6 +243,8 @@ ui <-
         tabItem(
           tabName = "distribution",
           
+          plotOutput("pBoxplot"),
+          
           fluidRow(
             column(
               4,
@@ -344,9 +346,7 @@ ui <-
               )
               
             )
-          ),
-          
-          plotOutput("pBoxplot")
+          )
         ),
         
         

@@ -239,7 +239,7 @@ ui <-
           DT::dataTableOutput("chooseDT")
         ),
         
-        ### DISTRIBUTION ----
+        ### BOXPLOT ----
         tabItem(
           tabName = "distribution",
           
@@ -1982,10 +1982,18 @@ server <- function(session, input, output){
     )
   })
   
-  ## color_distribution -----
+  ## color_boxplot -----
   observe({
     updateSelectInput(session,
                       "colvar_dist",
+                      choices = names(defaults_input())
+    )
+  })
+  
+  ## xaxis_boxplot -----
+  observe({
+    updateSelectInput(session,
+                      "boxplotGroupVar",
                       choices = names(defaults_input())
     )
   })

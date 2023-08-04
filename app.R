@@ -272,10 +272,17 @@ ui <-
               
               hr(),
               
+              #### Grouping Var ----
+              selectInput(
+                "boxplotGroupVar",
+                "Select x-axis",
+                choices = NULL
+              ),
+              
               #### Distribution Var ----
               selectInput(
                 "boxplotOutputVar",
-                "Select outcome",
+                "Select y-axis",
                 choices = NULL
               ),
               
@@ -287,35 +294,12 @@ ui <-
                 max = 1,
                 value = 0.1,
                 step = 0.1
-              ),
-              
-              #### Grouping Var ----
-              selectInput(
-                "boxplotGroupVar",
-                "Select x-axis",
-                choices = NULL
               )
               
             ),
             
             column(
               4,
-              
-              #### Color Dimension ----
-              checkboxInput(
-                "checkboxColorDist",
-                "Add a color dimension?"
-              ),
-              conditionalPanel(
-                "input.checkboxColorDist != 0",
-                
-                selectInput(
-                  "colvar_dist",
-                  "Choose color variable",
-                  choices = NULL
-                )
-                
-              ),
               
               #### Facet Dimension ----
               radioButtons(
@@ -353,10 +337,23 @@ ui <-
                   choices = NULL,
                   multiple = TRUE
                 )
-              )),
-            
-            column(
-              4,
+              ),
+              
+              #### Color Dimension ----
+              checkboxInput(
+                "checkboxColorDist",
+                "Add a color dimension?"
+              ),
+              conditionalPanel(
+                "input.checkboxColorDist != 0",
+                
+                selectInput(
+                  "colvar_dist",
+                  "Choose color variable",
+                  choices = NULL
+                )
+                
+              ),
               
               #### Plottype ----
               HTML("<b>Choose plot type</b>"),
@@ -368,7 +365,7 @@ ui <-
                 selected = "Boxplot",
               )
               
-            )
+              ),
           ),
           
           hr(),
@@ -928,52 +925,6 @@ ui <-
                                   multiple = TRUE
                                 ),
                                 
-                                # ##### Color param. ----
-                                # selectInput(
-                                #     "colvar_scatter",
-                                #     "Choose color parameter",
-                                #     choices = NULL
-                                # ),
-                                
-                                
-                                ###### Color param ----
-                                checkboxInput(
-                                  "checkboxColorScatter",
-                                  "Add a color dimension?"
-                                ),
-                                conditionalPanel(
-                                  "input.checkboxColorScatter != 0",
-                                  
-                                  selectInput(
-                                    "colvar_scatter",
-                                    "Choose color variable",
-                                    choices = NULL
-                                  ),
-                                  
-                                  
-                                  
-                                  #### Color Button ----
-                                         checkboxInput(
-                                           "checkboxPalette_scatter",
-                                           "Specify your own colors?"
-                                         ),
-                                         absolutePanel(
-                                           shinyWidgets::dropdownButton(
-                                             label = "Color choices",
-                                             status = "primary",
-                                             circle = TRUE,
-                                             right = TRUE,
-                                             icon = icon("paintbrush"),
-                                             uiOutput("colors_scatter_ui"),
-                                             inputId = "dropdown_colors_scatter"
-                                           ),
-                                           draggable = TRUE
-                                         )
-                                  
-                                  
-                                  
-                                  
-                                )
                          ),
                          
                          column(3,
@@ -1014,7 +965,44 @@ ui <-
                                     choices = NULL,
                                     multiple = TRUE
                                   )
+                                ),
+                                
+                                ###### Color param ----
+                                checkboxInput(
+                                  "checkboxColorScatter",
+                                  "Add a color dimension?"
+                                ),
+                                conditionalPanel(
+                                  "input.checkboxColorScatter != 0",
+                                  
+                                  selectInput(
+                                    "colvar_scatter",
+                                    "Choose color variable",
+                                    choices = NULL
+                                  ),
+                                  
+                                  
+                                  
+                                  #### Color Button ----
+                                  checkboxInput(
+                                    "checkboxPalette_scatter",
+                                    "Specify your own colors?"
+                                  ),
+                                  absolutePanel(
+                                    shinyWidgets::dropdownButton(
+                                      label = "Color choices",
+                                      status = "primary",
+                                      circle = TRUE,
+                                      right = TRUE,
+                                      icon = icon("paintbrush"),
+                                      uiOutput("colors_scatter_ui"),
+                                      inputId = "dropdown_colors_scatter"
+                                    ),
+                                    draggable = TRUE
+                                  )
+                                  
                                 )
+
                          )
                        ),
                 

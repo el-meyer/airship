@@ -357,7 +357,23 @@ ui <-
               )
               
             )
-          )
+          ),
+          
+          hr(),
+          hr(),
+          
+          #### Plotted Data ----
+          h2("Plotted Data"),
+          br(),
+          fluidRow(
+            DT::dataTableOutput("df_boxplot")
+          ),
+          
+          hr(),
+          br(),
+          br(),
+          br()
+          
         ),
         
         
@@ -2104,6 +2120,19 @@ server <- function(session, input, output){
     df_boxplot # return data frame
     
   })
+  
+  ## df_scatterplot output ----
+  output$df_boxplot <- DT::renderDataTable({
+    
+    df_boxplot()
+  },
+  extensions = 'Buttons', 
+  options = list(
+    scrollX = TRUE, 
+    dom = 'Bfrtip',
+    buttons = c('csv', 'excel')
+  )
+  )
   
   output$pBoxplot <- renderPlot({
     

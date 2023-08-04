@@ -767,7 +767,7 @@ ui <-
                       
                       selectInput("download_type", 
                                   "Choose file type",
-                                  choices = c("png", "jpeg", "tiff", "pdf")
+                                  choices = c("png", "jpeg", "tiff")
                       ),
                       
                       selectInput("download_unit", 

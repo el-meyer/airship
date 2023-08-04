@@ -2055,6 +2055,56 @@ server <- function(session, input, output){
   
   ## Boxplot -------------------------------------------------------------
   
+  df_boxplot <- reactive({
+    
+    # 1 line df with default values for variables that are checked
+    
+    ### default_df ----
+    default_df <- defaults_input()
+    
+    ## sim_par ----
+    # vector of names of simulation parameters
+    sim_par <- c(input$repvar, input$boxplotGroupVar)
+    
+    if (input$checkboxColorDist) {
+      sim_par <- c(sim_par, input$colvar_dist)
+    }
+    
+    if(input$radioFacetDistribution == "grid"){
+      sim_par <- c(sim_par, input$facet_distribution_rows, input$facet_distribution_cols)
+    }
+    
+    if(input$radioFacetDistribution == "wrap"){
+      sim_par <- c(sim_par, input$facet_distribution_wrap)
+    }
+    
+    ## default_filter ----
+    # exclude simulation parameters from df with default values
+    default_filter <- default_df[!(names(default_df) %in% sim_par)]
+    
+    # default_filter <- gsub('\\[', "", default_filter)
+    # default_filter <- gsub('\\]', "", default_filter)
+    
+    default_filter <- gsub('\\[\\"', "", default_filter)
+    default_filter <- gsub('\\"\\]', "", default_filter)
+    
+    ## bedingung ----
+    bedingung <- paste0(paste0("`", names(default_filter), "`"),
+                        " == ",
+                        paste0("'", default_filter, "'"),
+                        # default_filter,
+                        collapse = " & ")
+    
+    if(length(default_filter) != 0){
+      df_boxplot <- subset(data_prefiltered(), eval(parse(text = bedingung)))
+    } else {
+      df_boxplot <- data_filteredR()
+    }
+    
+    df_boxplot # return data frame
+    
+  })
+  
   output$pBoxplot <- renderPlot({
     
     validate(
@@ -2067,7 +2117,7 @@ server <- function(session, input, output){
     
     req(input$boxplotGroupVar)
     
-    d <- data_prefiltered()
+    d <- df_boxplot()
     
     for(i in names_inputsR()){
       d[,i] <- as.factor(d[,i])

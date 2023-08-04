@@ -1314,9 +1314,9 @@ server <- function(session, input, output){
   # Define sem function to calculate sem used in deviation method when using replication variable
   sem <- function(x) {sd(x)/sqrt(length(x))}
   
-  # data_full_mean ----
+  # data_agg ----
   # aggregate data (if not aggregated yet)
-  data_full_mean <- reactive({
+  data_agg <- reactive({
     
     validate(
       need(input$repvar != input$inputend, 
@@ -1398,7 +1398,7 @@ server <- function(session, input, output){
   # render Data Table ----
   output$repDataDT <- 
     DT::renderDataTable({
-      d <- data_full_mean()
+      d <- data_agg()
       d
     },
     
@@ -1424,8 +1424,8 @@ server <- function(session, input, output){
   data_filteredR <- reactive({
     req(data_prefiltered())
     if(input$checkboxRepvar){
-      #req(data_full_mean)
-      data_full_mean()
+      #req(data_agg)
+      data_agg()
     } else {
       #req(data_prefiltered)
       data_prefiltered()
@@ -2098,7 +2098,7 @@ server <- function(session, input, output){
     if(length(default_filter) != 0){
       df_boxplot <- subset(data_prefiltered(), eval(parse(text = bedingung)))
     } else {
-      df_boxplot <- data_filteredR()
+      df_boxplot <- data_prefiltered()
     }
     
     df_boxplot # return data frame
@@ -2331,7 +2331,7 @@ server <- function(session, input, output){
     if(length(default_filter) != 0){
       df_scatterplot <- subset(data_prefiltered(), eval(parse(text = bedingung)))
     } else {
-      df_scatterplot <- data_filteredR()
+      df_scatterplot <- data_prefiltered()
     }
     
     df_scatterplot # return data frame
@@ -2351,14 +2351,14 @@ server <- function(session, input, output){
   )
   )
   
-  ## data_longer_scatter ----
-  data_longer_scatter <- reactive({
-    req(input$OC_scatter)
-    
-    d <- df_scatterplot()
-    d <- d[input$chooseDT_rows_all,]
-    d
-  })
+  # ## data_longer_scatter ----
+  # data_longer_scatter <- reactive({
+  #   req(input$OC_scatter)
+  #   
+  #   d <- df_scatterplot()
+  #   d <- d[input$chooseDT_rows_all,]
+  #   d
+  # })
   
   ## plot_object_scatter ----
   plot_object_scatter <- reactive({

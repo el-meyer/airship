@@ -256,9 +256,21 @@ ui <-
           
           plotOutput("pBoxplot"),
           
+          hr(),
+          
           fluidRow(
             column(
               4,
+              
+              #### Default Value overview----
+              shinyWidgets::dropdown(
+                label = "Default value overview",
+                HTML("Current default value settings"),
+                
+                uiOutput("defaults_df_ui_box")
+              ),
+              
+              hr(),
               
               #### Distribution Var ----
               selectInput(
@@ -402,9 +414,11 @@ ui <-
               shinyWidgets::dropdown(
                 label = "Default value overview",
                 HTML("Current default value settings"),
-                
-                uiOutput("defaults_df_ui")
+
+                uiOutput("defaults_df_ui_line")
               ),
+              
+              hr(),
               
               #### X Var ----
               selectInput(
@@ -883,9 +897,21 @@ ui <-
                          uiOutput("scatter_ui")
                   )
                 ),
+                
+                hr(),
                        
                        fluidRow(
                          column(3,
+                                
+                                #### Default Value overview----
+                                shinyWidgets::dropdown(
+                                  label = "Default value overview",
+                                  HTML("Current default value settings"),
+                                  
+                                  uiOutput("defaults_df_ui_scatter")
+                                ),
+                                
+                                hr(),
                                 
                                 ##### Variability Parameter ----
                                 selectInput(
@@ -1625,7 +1651,23 @@ server <- function(session, input, output){
   
   ## defaults_df ----
   # table output in dropdown within plot tab, displaying chosen default values
-  output$defaults_df <- renderTable({
+  output$defaults_df_line <- renderTable({
+    
+    Values <- data.frame("Variable" = names(defaults_input()),
+                         "Default value" = defaults_input(),
+                         check.names = FALSE) # makes whitespace in header names possible
+    Values
+  })
+  
+  output$defaults_df_box <- renderTable({
+    
+    Values <- data.frame("Variable" = names(defaults_input()),
+                         "Default value" = defaults_input(),
+                         check.names = FALSE) # makes whitespace in header names possible
+    Values
+  })
+  
+  output$defaults_df_scatter <- renderTable({
     
     Values <- data.frame("Variable" = names(defaults_input()),
                          "Default value" = defaults_input(),
@@ -1635,13 +1677,26 @@ server <- function(session, input, output){
   
   
   ## defaults_df_ui ----
-  output$defaults_df_ui <- renderUI({
+  output$defaults_df_ui_box <- renderUI({
     
-    tableOutput("defaults_df")
+    tableOutput("defaults_df_box")
   })
   
+  ## defaults_df_ui ----
+  output$defaults_df_ui_line <- renderUI({
+    
+    tableOutput("defaults_df_line")
+  })
   
-  outputOptions(output, "defaults_df_ui", suspendWhenHidden=FALSE)
+  ## defaults_df_ui ----
+  output$defaults_df_ui_scatter <- renderUI({
+    
+    tableOutput("defaults_df_scatter")
+  })
+  
+  outputOptions(output, "defaults_df_ui_box", suspendWhenHidden=FALSE)
+  outputOptions(output, "defaults_df_ui_line", suspendWhenHidden=FALSE)
+  outputOptions(output, "defaults_df_ui_scatter", suspendWhenHidden=FALSE)
   
   
   # Color vector specification ------------------------------------

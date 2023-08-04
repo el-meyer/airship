@@ -1092,6 +1092,7 @@ server <- function(session, input, output){
                    skip = input$rowSkip,
                    stringsAsFactors = TRUE))
     
+    # Get rid of empty columns?
     if ("X" %in% colnames(df_candidate)) {
       df_candidate <- df_candidate[, -which(colnames(df_candidate) == "X")]
     }
@@ -1188,11 +1189,6 @@ server <- function(session, input, output){
         
         
       } else {
-        
-        updateNumericInput(session,
-                           "rowSkip",
-                           value = 0
-        )
         
         updateCheckboxInput(session,
                             "checkboxRepvar",

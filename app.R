@@ -184,7 +184,7 @@ ui <-
                          sidebarMenu(
                            menuItem(
                              "Boxplot", 
-                             tabName = "distribution", 
+                             tabName = "boxplot", 
                              icon = icon("chart-area")
                            )
                          )
@@ -195,11 +195,18 @@ ui <-
                          tabName = "plot", 
                          icon = icon("chart-line")
                        ),
-                       menuItem(
-                         "Scatterplot", 
-                         tabName = "scatterplot", 
-                         icon = icon("braille")
+                       
+                       conditionalPanel(
+                         "input.checkboxRepvar != 0",
+                         sidebarMenu(
+                           menuItem(
+                             "Scatterplot", 
+                             tabName = "scatterplot", 
+                             icon = icon("braille")
+                           )
+                         )
                        ),
+
                        menuItem("Help",
                                 tabName = "help",
                                 icon = icon("question")
@@ -245,7 +252,7 @@ ui <-
         
         ### BOXPLOT ----
         tabItem(
-          tabName = "distribution",
+          tabName = "boxplot",
           
           plotOutput("pBoxplot"),
           
@@ -1198,9 +1205,11 @@ server <- function(session, input, output){
   
   observe({
     if(input$checkboxRepvar){
-      showTab(inputId = "tabs", target = "distribution", select = FALSE, session = session)
-    } else {
-      hideTab(inputId = "tabs", target = "distribution",  session = session)
+      showTab(inputId = "tabs", target = "boxplot", select = FALSE, session = session)
+      showTab(inputId = "tabs", target = "scatterplot", select = FALSE, session = session)
+       } else {
+      hideTab(inputId = "tabs", target = "boxplot",  session = session)
+      hideTab(inputId = "tabs", target = "scatterplot", session = session)
     }
   })
   
@@ -1474,8 +1483,8 @@ server <- function(session, input, output){
     
     updateSelectizeInput(session,
                          "OC_scatter",
-                         choices = names_outputsR(),
-                         selected = names_outputsR()[c(1,2)])
+                         choices = names_outputsR_distribution(),
+                         selected = names_outputsR_distribution()[c(1,2)])
     
     
     
@@ -2270,7 +2279,7 @@ server <- function(session, input, output){
                         collapse = " & ")
     
     if(length(default_filter) != 0){
-      df_scatterplot <- subset(data_filteredR(), eval(parse(text = bedingung)))
+      df_scatterplot <- subset(data_prefiltered(), eval(parse(text = bedingung)))
     } else {
       df_scatterplot <- data_filteredR()
     }

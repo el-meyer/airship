@@ -883,7 +883,7 @@ ui <-
           br()
         ),
         
-        ## SCATTERPLOT ----
+        # SCATTERPLOT ----
         tabItem("scatterplot",
                 
                 fluidRow(
@@ -920,7 +920,7 @@ ui <-
                                 ##### OC to plot ----
                                 selectizeInput(
                                   "OC_scatter", 
-                                  "Choose variables to plot", 
+                                  "Choose variables to plot (only first two will be plotted)", 
                                   choices = NULL,
                                   multiple = TRUE
                                 ),
@@ -1537,6 +1537,11 @@ server <- function(session, input, output){
                         "boxplotOutputVar",
                         selected = "Duration"
       )
+      
+      updateSelectizeInput(session,
+                           "OC_scatter",
+                           choices = names_outputsR_distribution(),
+                           selected = c("X.Participants", "Duration"))
       
     }
     

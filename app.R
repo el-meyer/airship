@@ -1122,7 +1122,7 @@ server <- function(session, input, output){
       
       updateCheckboxInput(session,
                           "checkboxRepvar",
-                          value = FALSE
+                          value = TRUE
       )
       
       col_names_example_dat <- colnames(exampleData)
@@ -1396,19 +1396,25 @@ server <- function(session, input, output){
           input$deviationMethod
         )
       
-      
-      d <- tryCatch({
-        suppressMessages(group_by_at(d, vars(inputs)) %>%
+      d <- group_by_at(d, vars(inputs)) %>%
                            summarise(across(
                              everything(),
                              custom_list
-                           )))
-      }, warning = function(w) {
-        err_ <- ""
-        validate(
-          need(err_ != "", "Replication variable must be an integer variable")
-        )}
-      )
+                           ))
+      
+      
+      # d <- tryCatch({
+      #   suppressMessages(group_by_at(d, vars(inputs)) %>%
+      #                      summarise(across(
+      #                        everything(),
+      #                        custom_list
+      #                      )))
+      # }, warning = function(w) {
+      #   err_ <- ""
+      #   validate(
+      #     need(err_ != "", "Replication variable must be an integer variable")
+      #   )}
+      # )
       
       d <- d %>% select(-paste0(input$repvar, "_", input$repvarMethod))
       d <- d %>% select(-paste0(input$repvar, "_", input$deviationMethod))
@@ -2019,15 +2025,15 @@ server <- function(session, input, output){
       )
     }
   })
-  
-  ## checkboxRepvar ----
-  observe({
-    if(input$checkboxExampleData == FALSE){
-      updateCheckboxInput(session,
-                          "checkboxRepvar",
-                          value = FALSE)
-    }
-  })
+  # 
+  # ## checkboxRepvar ----
+  # observe({
+  #   if(input$checkboxExampleData == FALSE){
+  #     updateCheckboxInput(session,
+  #                         "checkboxRepvar",
+  #                         value = FALSE)
+  #   }
+  # })
   
   ## checkboxPalette_OC ----
   observe({

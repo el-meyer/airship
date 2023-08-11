@@ -910,13 +910,6 @@ ui <-
                                 
                                 hr(),
                                 
-                                ##### Variability Parameter ----
-                                selectInput(
-                                  "repvar_scatter",
-                                  "Choose variability parameter",
-                                  choices = NULL
-                                ),
-                                
                                 ##### OC to plot ----
                                 selectizeInput(
                                   "OC_scatter", 
@@ -1139,12 +1132,6 @@ server <- function(session, input, output){
       )
       
       updateSelectInput(session,
-                        "repvar_scatter",
-                        choices = col_names_example_dat,
-                        selected = "replications"
-      )
-      
-      updateSelectInput(session,
                         "colvar_scatter",
                         choices = col_names_example_dat,
                         selected = col_names_example_dat[2]
@@ -1181,12 +1168,6 @@ server <- function(session, input, output){
                           selected = "X.Sim"
         )
         
-        updateSelectInput(session,
-                          "repvar_scatter",
-                          choices = col_names_upload,
-                          selected = "X.Sim"
-        )
-        
         
       } else {
         
@@ -1204,11 +1185,6 @@ server <- function(session, input, output){
                           "repvar",
                           choices = col_names_upload,
                           selected = col_names_upload[1]
-        )
-        
-        updateSelectInput(session,
-                          "repvar_scatter",
-                          choices = col_names_upload
         )
         
       }
@@ -2381,7 +2357,7 @@ server <- function(session, input, output){
     
     ## sim_par ----
     # vector of names of simulation parameters
-    sim_par <- input$repvar_scatter
+    sim_par <- input$repvar
     
     if (input$checkboxColorScatter) {
       sim_par <- c(sim_par, input$colvar_scatter)

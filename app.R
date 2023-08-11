@@ -1240,7 +1240,7 @@ server <- function(session, input, output){
   })
   
   
-  # daata_full_norep ----
+  # data_full_norep ----
   # if there is replication variable 'data_full_norep' has one column less than 'data_full', otherwise they are identical
   data_full_norep <- reactive({
     
@@ -1343,6 +1343,11 @@ server <- function(session, input, output){
   # data_agg ----
   # aggregate data (if not aggregated yet)
   data_agg <- reactive({
+    
+    validate(
+      need(!is.integer(input$repvar), 
+           "Replication variable can't be input variable (Please alter last input variable or replication run variable)")
+    )
     
     validate(
       need(input$repvar != input$inputend, 

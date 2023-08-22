@@ -1,7 +1,5 @@
-# Libraries ----
-options(shiny.sanitize.errors = FALSE) 
-options(shiny.maxRequestSize = 50*1024^2)
 
+# Libraries ----
 library(shiny)
 library(DT)
 library(shinybusy)
@@ -10,286 +8,314 @@ library(tidyverse)
 library(shinyBS)
 library(colourpicker)
 library(shinyWidgets)
-
 library(bslib)
 library(shinydashboard)
 library(scales)
 library(Cairo)
 library(shinyAce)
-options(shiny.usecairo = TRUE)
-
 library(gganimate)
 library(ggplot2)
 library(gifski)
 library(png)
 
+# Global Options ----
+options(shiny.sanitize.errors = FALSE) 
+options(shiny.maxRequestSize = 50*1024^2)
+options(shiny.usecairo = TRUE)
+
 
 # CSS ----
 # css needed for scrollbar placement in DataTables to appear on top
-css <- HTML(
-  "#dataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
-  transform:rotateX(180deg);
-  }
-  #dataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
-  transform:rotateX(180deg);
-   }
-   #repDataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
-  transform:rotateX(180deg);
-  }
-  #repDataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
-  transform:rotateX(180deg);
-   }
-   #chooseDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
-  transform:rotateX(180deg);
-  }
-  #chooseDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
-  transform:rotateX(180deg);
-   }
-   #df_plot > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
-  transform:rotateX(180deg);
-  }
-  #df_plot > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
-  transform:rotateX(180deg);
-   }"
-)
+css <- 
+  shiny::HTML(
+    "#dataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
+    transform:rotateX(180deg);
+    }
+    #dataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
+    transform:rotateX(180deg);
+    }
+    #repDataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
+    transform:rotateX(180deg);
+    }
+    #repDataDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
+    transform:rotateX(180deg);
+    }
+    #chooseDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
+    transform:rotateX(180deg);
+    }
+    #chooseDT > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
+    transform:rotateX(180deg);
+    }
+    #df_plot > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody {
+    transform:rotateX(180deg);
+    }
+    #df_plot > .dataTables_wrapper.no-footer > .dataTables_scroll > .dataTables_scrollBody table{
+    transform:rotateX(180deg);
+    }"
+  )
 
 
 # UI ----
 ui <- 
-  dashboardPage(
-    
+  
+  shinydashboard::dashboardPage(
     # title in browser window tab
-    dashboardHeader(
+    shinydashboard::dashboardHeader(
       title = "AIRSHIP"
     ), 
     
     ## Sidebar -----
-    dashboardSidebar(width = 300,
-                     sidebarMenu(
-                       id = "sidebarMenu",
-                       menuItem(
-                         text = "Data Settings",
-                         
-                         
-                         checkboxInput(
-                           "checkboxExampleData", 
-                           "Use example dataset"
-                         ),
-                         
-                         
-                         conditionalPanel(
-                           "input.checkboxExampleData == 0",
-                           
-                           checkboxInput(
-                             "checkboxFactsData", 
-                             "Use FACTS aggregated simulations"
-                           ),
-                           
-                           fileInput(
-                             "file", 
-                             "Choose file to upload"
-                           ),
-                           
-                           conditionalPanel(
-                             "input.checkboxFactsData == 0",
-                             
-                             radioButtons(
-                               "sep", 
-                               "Csv-Separator", 
-                               choiceValues = c(",", ";", ""),
-                               choiceNames = c(",", ";", "whitespace")
-                             ),
-                             
-                             numericInput(
-                               "rowSkip",
-                               "Initial rows to skip",
-                               value = 0,
-                               min = 0, 
-                               step = 1
-                             ),
-                             
-                             selectInput(
-                               "inputend", 
-                               "Select last input variable", 
-                               choices = NULL
-                             ),
-                             
-                           ),
-                           
-                         ),
-                         
-                         conditionalPanel(
-                           "input.checkboxFactsData == 0",
-                           
-                           checkboxInput(
-                             "checkboxRepvar",
-                             "Aggregate over individual simulations?"
-                           )
-                         ),
-                         
-                         conditionalPanel(
-                           "input.checkboxRepvar != 0",
-                           
-                           conditionalPanel(
-                             "input.checkboxFactsData == 0",
-                             
-                             selectInput(
-                               "repvar",
-                               "Select the simulation run variable",
-                               choices = NULL
-                             ),
-                             
-                           ),
-                           
-                           selectInput(
-                             "repvarMethod",
-                             "Select the summary method you want to apply to your data",
-                             choices = c("mean", "median")
-                           ),
-                           
-                           selectInput(
-                             "deviationMethod",
-                             "Select the deviation you want to calculate",
-                             choices = c("sd", "sem")
-                           ),
-                           
-                           conditionalPanel(
-                             "input.deviationMethod == 'sem'",
-                             numericInput(
-                               "sem_mult",
-                               "multiply with",
-                               value = 1.96,
-                               step = 0.1,
-                               min = 0.001
-                             )
-                           )
-                         ),
-                         tabName = "data_settings", icon = icon("gear")
-                       ),
-                       
-                       menuItem(
-                         "Data",
-                         tabName = "data",
-                         icon = icon("database")
-                       ),
-                       
-                       menuItem(
-                         "Default values", 
-                         tabName = "default", 
-                         icon = icon("pen")
-                       ),
-                       
-                       conditionalPanel(
-                         "input.checkboxRepvar != 0",
-                         sidebarMenu(
-                           menuItem(
-                             "Boxplot", 
-                             tabName = "boxplot", 
-                             icon = icon("chart-area")
-                           )
-                         )
-                       ),
-                       
-                       menuItem(
-                         "Line/Dotplot", 
-                         tabName = "plot", 
-                         icon = icon("chart-line")
-                       ),
-                       
-                       conditionalPanel(
-                         "input.checkboxRepvar != 0",
-                         sidebarMenu(
-                           menuItem(
-                             "Scatterplot", 
-                             tabName = "scatterplot", 
-                             icon = icon("braille")
-                           )
-                         )
-                       ),
-
-                       menuItem("Help",
-                                tabName = "help",
-                                icon = icon("question")
-                       ),
-                       hr()
-                     )
-    ),
-    
-    
-    ## Body ----
-    dashboardBody(
-      ### Busy Spinner ----
-      tags$head(tags$style(css)),
-      add_busy_spinner(spin = "fading-circle"),
-      add_busy_bar(color = "red", height = "8px"),
+    shinydashboard::dashboardSidebar(
+      width = 300,
       
-      
-      tabItems(
+      shinydashboard::sidebarMenu(
+        id = "sidebarMenu",
         
-        ### DATA SETTINGS ----
-        tabItem(
-          tabName = "data_settings",
-        ),
-        
-        ### DATA ----
-        tabItem(
-          tabName = "data",
-          DT::dataTableOutput("dataDT"),
-          uiOutput("dataDT_summarized")
-        ),
-        
-        ### DEFAULT VALUES ----
-        tabItem(
-          tabName = "default",
-          br(),
-          actionButton("buttonDefault", "Take first row as default values"),
-          actionButton("buttonDefaultHighlighted", "Take highlighted row as default values"),
+        ### Data Settings ----
+        shinydashboard::menuItem(
+          text = "Data Settings",
+          tabName = "data_settings", 
+          icon = shiny::icon("gear"),
           
-          actionButton("buttonResetDefault", "Reset selections"),
+          shiny::checkboxInput(
+            inputId = "checkboxExampleData", 
+            label = "Use example dataset"
+          ),
           
-          DT::dataTableOutput("chooseDT")
-        ),
-        
-        ### BOXPLOT ----
-        tabItem(
-          tabName = "boxplot",
-          
-          plotOutput("pBoxplot"),
-          
-          hr(),
-          
-          fluidRow(
-            column(
-              4,
+          shiny::conditionalPanel(
+            condition = "input.checkboxExampleData == 0",
+            
+            shiny::checkboxInput(
+              inputId = "checkboxFactsData", 
+              label = "Use FACTS aggregated simulations"
+            ),
+            
+            shiny::fileInput(
+              inputId = "file", 
+              label = "Choose file to upload"
+            ),
+            
+            shiny::conditionalPanel(
+              condition = "input.checkboxFactsData == 0",
               
-              #### Default Value overview----
-              shinyWidgets::dropdown(
-                label = "Default value overview",
-                HTML("Current default value settings"),
-                
-                uiOutput("defaults_df_ui_box")
+              shiny::radioButtons(
+                inputId = "sep", 
+                label = "Csv-Separator", 
+                choiceValues = c(",", ";", ""),
+                choiceNames = c(",", ";", "whitespace")
               ),
               
-              hr(),
+              shiny::numericInput(
+                inputId = "rowSkip",
+                label = "Initial rows to skip",
+                value = 0,
+                min = 0, 
+                step = 1
+              ),
               
-              #### Grouping Var ----
-              selectInput(
-                "boxplotGroupVar",
-                "Select x-axis",
+              shiny::selectInput(
+                inputId = "inputend", 
+                label = "Select last input variable", 
                 choices = NULL
               ),
               
-              #### Distribution Var ----
-              selectInput(
-                "boxplotOutputVar",
-                "Select y-axis",
+            ),
+            
+          ),
+          
+          shiny::conditionalPanel(
+            condition = "input.checkboxFactsData == 0",
+            
+            shiny::checkboxInput(
+              inputId = "checkboxRepvar",
+              label = "Aggregate over individual simulations?"
+            )
+            
+          ),
+          
+          shiny::conditionalPanel(
+            condition = "input.checkboxRepvar != 0",
+            
+            shiny::conditionalPanel(
+              condition = "input.checkboxFactsData == 0",
+              
+              shiny::selectInput(
+                inputId = "repvar",
+                label = "Select the simulation run variable",
+                choices = NULL
+              ),
+              
+            ),
+            
+            shiny::selectInput(
+              inputId = "repvarMethod",
+              label = "Select the summary method you want to apply to your data",
+              choices = c("mean", "median")
+            ),
+            
+            shiny::selectInput(
+              inputId = "deviationMethod",
+              label = "Select the deviation you want to calculate",
+              choices = c("sd", "sem")
+            ),
+            
+            shiny::conditionalPanel(
+              condition = "input.deviationMethod == 'sem'",
+              
+              shiny::numericInput(
+                inputId = "sem_mult",
+                label = "multiply with",
+                value = 1.96,
+                step = 0.1,
+                min = 0.001
+              )
+              
+            )
+            
+          )
+          
+        ),
+        
+        ### Data ----               
+        shinydashboard::menuItem(
+          text = "Data",
+          tabName = "data",
+          icon = shiny::icon("database")
+        ),
+        
+        ### Default Values ----
+        shinydashboard::menuItem(
+          text = "Default values", 
+          tabName = "default", 
+          icon = shiny::icon("pen")
+        ),
+        
+        ### Boxplot ----
+        shiny::conditionalPanel(
+          condition = "input.checkboxRepvar != 0",
+          shinydashboard::sidebarMenu(
+            shinydashboard::menuItem(
+              text = "Boxplot", 
+              tabName = "boxplot", 
+              icon = shiny::icon("chart-area")
+            )
+          )
+        ),
+        
+        ### Line/Dotplot ----
+        shinydashboard::menuItem(
+          text = "Line/Dotplot", 
+          tabName = "plot", 
+          icon = shiny::icon("chart-line")
+        ),
+        
+        ### Scatterplot ----
+        shiny::conditionalPanel(
+          condition = "input.checkboxRepvar != 0",
+          shinydashboard::sidebarMenu(
+            shinydashboard::menuItem(
+              text = "Scatterplot", 
+              tabName = "scatterplot", 
+              icon = shiny::icon("braille")
+            )
+          )
+        ),
+        
+        ### Help ----
+        shinydashboard::menuItem(
+          text = "Help",
+          tabName = "help",
+          icon = shiny::icon("question")
+        ),
+        
+        shiny::hr()
+      )
+      
+    ),
+    
+    ## Body ----
+    shinydashboard::dashboardBody(
+      
+      ### Busy Spinner ----
+      tags$head(tags$style(css)),
+      shinybusy::add_busy_spinner(spin = "fading-circle"),
+      shinybusy::add_busy_bar(color = "red", height = "8px"),
+      
+      shinydashboard::tabItems(
+        
+        ### Data Settings ----
+        shinydashboard::tabItem(
+          tabName = "data_settings",
+        ),
+        
+        ### Data ----
+        shinydashboard::tabItem(
+          tabName = "data",
+          DT::dataTableOutput("dataDT"),
+          shiny::uiOutput("dataDT_summarized")
+        ),
+        
+        ### Default Values ----
+        shinydashboard::tabItem(
+          tabName = "default",
+          shiny::br(),
+          shiny::actionButton(
+            inputId = "buttonDefault", 
+            label = "Take first row as default values"
+          ),
+          shiny::actionButton(
+            inputId = "buttonDefaultHighlighted", 
+            label = "Take highlighted row as default values"
+          ),
+          shiny::actionButton(
+            inputId = "buttonResetDefault", 
+            label = "Reset selections"
+          ),
+          DT::dataTableOutput("chooseDT")
+        ),
+        
+        ### Boxplot ----
+        shinydashboard::tabItem(
+          tabName = "boxplot",
+          shiny::fluidRow(
+            shiny::column(
+              width = 12,
+              #### Scatterplot Output ----
+              shiny::uiOutput("boxplot_ui")
+            )
+          ),
+          shiny::hr(),
+          shiny::fluidRow(
+            shiny::column(
+              width = 4,
+              
+              #### DV overview ----
+              shinyWidgets::dropdown(
+                label = "Default value overview",
+                shiny::HTML("Current default value settings"),
+                shiny::uiOutput("defaults_df_ui_box")
+              ),
+              
+              shiny::hr(),
+              
+              #### x-axis ----
+              shiny::selectInput(
+                inputId = "boxplotGroupVar",
+                label = "Select x-axis",
+                choices = NULL
+              ),
+              
+              #### y-Axis ----
+              shiny::selectInput(
+                inputId = "boxplotOutputVar",
+                label = "Select y-axis",
                 choices = NULL
               ),
               
               #### Transparancy ----
-              sliderInput(
-                "alpha",
-                "Select transparency",
+              shiny::sliderInput(
+                inputId = "alpha",
+                label = "Select transparency",
                 min = 0,
                 max = 1,
                 value = 0.1,
@@ -298,379 +324,380 @@ ui <-
               
             ),
             
-            column(
-              4,
+            shiny::column(
+              width = 4,
               
               #### Facet Dimension ----
-              radioButtons(
-                "radioFacetDistribution",
-                "Add a facet dimension?",
+              shiny::radioButtons(
+                inputId = "radioFacetDistribution",
+                label = "Add a facet dimension?",
                 choices = c("no", "grid", "wrap")
               ),
               
               ##### Grid ----
-              conditionalPanel(
-                "input.radioFacetDistribution == 'grid'",
+              shiny::conditionalPanel(
+                condition = "input.radioFacetDistribution == 'grid'",
                 
-                selectInput(
-                  "facet_distribution_rows", 
-                  "Add row variable", 
+                shiny::selectInput(
+                  inputId = "facet_distribution_rows", 
+                  label = "Add row variable", 
                   choices = NULL,
                   multiple = TRUE
                 ),
                 
-                selectInput(
-                  "facet_distribution_cols", 
-                  "Add column variable", 
+                shiny::selectInput(
+                  inputId = "facet_distribution_cols", 
+                  label = "Add column variable", 
                   choices = NULL,
                   multiple = TRUE
                 )
+                
               ),
               
               ##### Wrap ----
-              conditionalPanel(
-                "input.radioFacetDistribution == 'wrap'",
-                
-                selectizeInput(
-                  "facet_distribution_wrap", 
-                  "Choose variables to facet wrap",
+              shiny::conditionalPanel(
+                condition = "input.radioFacetDistribution == 'wrap'",
+                shiny::selectizeInput(
+                  inputId = "facet_distribution_wrap", 
+                  label = "Choose variables to facet wrap",
                   choices = NULL,
                   multiple = TRUE
                 )
               ),
               
               #### Color Dimension ----
-              checkboxInput(
-                "checkboxColorDist",
-                "Add a color dimension?"
+              shiny::checkboxInput(
+                inputId = "checkboxColorDist",
+                label = "Add a color dimension?"
               ),
-              conditionalPanel(
-                "input.checkboxColorDist != 0",
-                
-                selectInput(
-                  "colvar_dist",
-                  "Choose color variable",
+              
+              shiny::conditionalPanel(
+                condition = "input.checkboxColorDist != 0",
+                shiny::selectInput(
+                  inputId = "colvar_dist",
+                  label = "Choose color variable",
                   choices = NULL
                 )
-                
               ),
               
               #### Plottype ----
-              HTML("<b>Choose plot type</b>"),
+              shiny::HTML("<b>Choose plot type</b>"),
               
-              radioButtons(
-                "boxplottype",
-                "Boxplot or Violinplot",
+              shiny::radioButtons(
+                inputId = "boxplottype",
+                label = "Boxplot or Violinplot",
                 choices =c("Boxplot", "Violinplot"),
                 selected = "Boxplot",
               )
               
-              ),
+            ),
+            
           ),
           
-          hr(),
-          hr(),
+          shiny::hr(),
+          shiny::hr(),
           
           #### Plotted Data ----
-          h2("Plotted Data"),
-          br(),
-          fluidRow(
-            DT::dataTableOutput("df_boxplot")
+          shiny::h2("Plotted Data"),
+          shiny::br(),
+          shiny::fluidRow(
+            DT::dataTableOutput(
+              outputId = "df_boxplot"
+            )
           ),
-          
-          hr(),
-          br(),
-          br(),
-          br()
+          shiny::hr(),
+          shiny::br(),
+          shiny::br(),
+          shiny::br()
           
         ),
         
         
-        ### LINEPLOT ----
-        tabItem(
+        ### Line/Dotplot ----
+        shinydashboard::tabItem(
           tabName = "plot",
           
-          fluidRow(
-            column(
-              12,
-              
+          shiny::fluidRow(
+            shiny::column(
+              width = 12,
               #### Plot Output ----
-              uiOutput("lineplot_ui"),
+              shiny::uiOutput("lineplot_ui"),
               # imageOutput("animationOutDynamic",
               #             inline = TRUE)
             )
           ),
           
-          hr(),
+          shiny::hr(),
           
-          fluidRow(
-            column(
-              3,
+          shiny::fluidRow(
+            shiny::column(
+              width = 3,
               
-              #### Default Value overview----
+              #### DV overview----
               shinyWidgets::dropdown(
                 label = "Default value overview",
-                HTML("Current default value settings"),
-
-                uiOutput("defaults_df_ui_line")
+                shiny::HTML("Current default value settings"),
+                shiny::uiOutput("defaults_df_ui_line")
               ),
               
-              hr(),
+              shiny::hr(),
               
-              #### X Var ----
-              selectInput(
-                "x", 
-                "x-axis", 
+              #### x-axis ----
+              shiny::selectInput(
+                inputId = "x", 
+                label = "x-axis", 
                 choices = NULL
               ),
               
-              #### Oc to Plot ----
-              selectizeInput(
-                "OC", 
-                "y-axis", 
+              #### y-axis ----
+              shiny::selectizeInput(
+                inputId = "OC", 
+                label = "y-axis", 
                 choices = NULL,
                 multiple = TRUE
               ),
               
-              #### add Errorbars ----
-              checkboxInput("checkboxErrorbar",
-                            "Add errorbars?"),
+              #### Errorbars ----
+              shiny::checkboxInput(
+                inputId = "checkboxErrorbar",
+                label = "Add errorbars?"
+              ),
               
-              conditionalPanel(
-                "input.checkboxErrorbar != 0",
+              shiny::conditionalPanel(
+                condition = "input.checkboxErrorbar != 0",
                 
-                radioButtons(
-                  "radioErrorsymmetry",
-                  "Are the errors symmetrical (1 error variable) or asymmetrical (2 error variables)",
+                shiny::radioButtons(
+                  inputId = "radioErrorsymmetry",
+                  label = "Are the errors symmetrical (1 error variable) or asymmetrical (2 error variables)",
                   choices = c("symmetrical", "asymmetrical")
                 ),
                 
-                conditionalPanel(
-                  "input.radioErrorsymmetry == 'asymmetrical'",
+                shiny::conditionalPanel(
+                  condition = "input.radioErrorsymmetry == 'asymmetrical'",
                   
-                  radioButtons(
-                    "radioErrorstructure",
-                    "Do the variables represent the upper and lower deviation from the estimate or the upper and lower bounds?",
+                  shiny::radioButtons(
+                    inputId = "radioErrorstructure",
+                    label = "Do the variables represent the upper and lower deviation from the estimate or the upper and lower bounds?",
                     choices = c("deviation", "bounds")
                   )
                 ),
-                HTML("Select the corresponding error variable (Sd) for every OC chosen."),
-                HTML("For a correct display, the error variables have to be in the same order as the OCs chosen above"),
-                uiOutput("errorbar_var")
+                shiny::HTML("Select the corresponding error variable (Sd) for every OC chosen."),
+                shiny::HTML("For a correct display, the error variables have to be in the same order as the OCs chosen above"),
+                shiny::uiOutput("errorbar_var")
               )
             ),
             
-            column(
-              3,
+            shiny::column(
+              width = 3,
               
               #### Facet Dimension ----
-              radioButtons(
-                "radioFacet",
-                "Add a facet dimension?",
+              shiny::radioButtons(
+                inputId = "radioFacet",
+                label = "Add a facet dimension?",
                 choices = c("no", "grid", "wrap")
               ),
               
               ##### Grid ----
-              conditionalPanel(
-                "input.radioFacet == 'grid'",
+              shiny::conditionalPanel(
+                condition = "input.radioFacet == 'grid'",
                 
-                selectInput(
-                  "facet_rows", 
-                  "Add row variable", 
+                shiny::selectInput(
+                  inputId = "facet_rows", 
+                  label = "Add row variable", 
                   choices = NULL,
                   multiple = TRUE
                 ),
                 
-                selectInput(
-                  "facet_cols", 
-                  "Add column variable", 
+                shiny::selectInput(
+                  inputId = "facet_cols", 
+                  label = "Add column variable", 
                   choices = NULL,
                   multiple = TRUE
                 )
               ),
               
               ##### Wrap ----
-              conditionalPanel(
-                "input.radioFacet == 'wrap'",
+              shiny::conditionalPanel(
+                condition = "input.radioFacet == 'wrap'",
                 
-                selectizeInput(
-                  "facet_wrap", 
-                  "Choose variables to facet wrap",
+                shiny::selectizeInput(
+                  inputId = "facet_wrap", 
+                  label = "Choose variables to facet wrap",
                   choices = NULL,
                   multiple = TRUE
                 )
               ),
               
               #### Linetype ----
-              checkboxInput(
-                "checkboxLinetype",
-                "Add a linetype dimension?"
+              shiny::checkboxInput(
+                inputId = "checkboxLinetype",
+                label = "Add a linetype dimension?"
               ),
-              conditionalPanel(
-                "input.checkboxLinetype != 0",
+              
+              shiny::conditionalPanel(
+                condition = "input.checkboxLinetype != 0",
                 
-                selectInput(
-                  "linetype",
-                  "Choose linetype variable",
+                shiny::selectInput(
+                  inputId = "linetype",
+                  label = "Choose linetype variable",
                   choices = NULL
                 )
               ),
               
               #### Color dimension ----
-              conditionalPanel(
-                "input.OC.length == 1",
+              shiny::conditionalPanel(
+                condition = "input.OC.length == 1",
                 
-                checkboxInput(
-                  "checkboxColor",
-                  "Add a color dimension?"
+                shiny::checkboxInput(
+                  inputId = "checkboxColor",
+                  label = "Add a color dimension?"
                 ),
-                conditionalPanel(
-                  "input.checkboxColor != 0",
+                
+                shiny::conditionalPanel(
+                  condition = "input.checkboxColor != 0",
                   
-                  selectInput(
-                    "color",
-                    "Choose color variable",
+                  shiny::selectInput(
+                    inputId = "color",
+                    label = "Choose color variable",
                     choices = NULL
                   )
                 )
               )
             ),
             
-            column(
-              3,
+            shiny::column(
+              width = 3,
               
               #### Interactive Plot ----
-              switchInput("plottype",
-                          "Interactive Plot?",
-                          value = FALSE,
-                          size = "small"),
+              shinyWidgets::switchInput(
+                inputId = "plottype",
+                label = "Interactive Plot?",
+                value = FALSE,
+                size = "small"
+              ),
               
               #### Style options ----
-              actionButton("change_style", label = "Style options"),
+              shiny::actionButton(
+                inputId = "change_style", 
+                label = "Style options"),
               
-              bsModal("modal_style", 
-                      "Change style and size of plot", 
-                      trigger = "change_style", 
-                      size = "large",
+              shinyBS::bsModal(
+                id = "modal_style", 
+                title = "Change style and size of plot", 
+                trigger = "change_style", 
+                size = "large",
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxLine",
+                  label = "Add lines?",
+                  value = TRUE
+                ),
                       
-                      checkboxInput(
-                        "checkboxLine",
-                        "Add lines?",
-                        value = TRUE
-                      ),
-                      
-                      checkboxInput(
-                        "checkboxPoint",
-                        "Add points?",
-                        value = TRUE
-                      ),
-                      
-                      conditionalPanel(
-                        "input.plottype",
+                shiny::checkboxInput(
+                  inputId = "checkboxPoint",
+                  label = "Add points?",
+                  value = TRUE
+                ),
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxSize", 
+                  label = "Change plot size"
+                ),
+                shiny::conditionalPanel(
+                  "input.checkboxSize != 0",
+                  
+                  shiny::numericInput(
+                    inputId = "resolution",
+                    label = "Resolution",
+                    value = 72
+                  ),
+                  
+                  shiny::sliderInput(
+                    inputId = "plotwidth",
+                    label = "Plot width (px)",
+                    value = 1000,
+                    min = 600,
+                    max = 1500
+                  ),
+                  
+                  shiny::sliderInput(
+                    inputId = "plotheight",
+                    label = "Plot height (px)",
+                    value = 600,
+                    min = 300,
+                    max = 1000
+                  ),
+                  
+                  shiny::sliderInput(
+                    inputId = "linesize",
+                    label = "Line and point size",
+                    value = 0.6,
+                    min = 0.1,
+                    max = 3,
+                    step = 0.1
+                  ),
+                  
+                  shiny::numericInput(
+                    inputId = "plotfontsize",
+                    label = "Font size",
+                    value = 11,
+                    min = 1,
+                    max = 30,
+                    step = 0.5
+                  ),
                         
-                        sliderInput("xLegend",
-                                    "x-coord legend",
-                                    min = -0.5,
-                                    max = 1.2,
-                                    value = 1.05, 
-                                    step = 0.05),
-                        
-                        
-                        
-                        sliderInput("yLegend",
-                                    "y-coord legend",
-                                    min = -0.5,
-                                    max = 1.2,
-                                    value = 0.5,
-                                    step = 0.05)
-                      ),
-                      
-                      checkboxInput(
-                        "checkboxSize", 
-                        "Change plot size"
-                      ),
-                      conditionalPanel(
-                        "input.checkboxSize != 0",
-                        
-                        numericInput(
-                          "resolution",
-                          "Resolution",
-                          value = 72
-                        ),
-                        
-                        sliderInput(
-                          "plotwidth",
-                          "Plot width (px)",
-                          value = 1000,
-                          min = 600,
-                          max = 1500
-                        ),
-                        
-                        sliderInput(
-                          "plotheight",
-                          "Plot height (px)",
-                          value = 600,
-                          min = 300,
-                          max = 1000
-                        ),
-                        
-                        sliderInput(
-                          "linesize",
-                          "Line and point size",
-                          value = 0.6,
-                          min = 0.1,
-                          max = 3,
-                          step = 0.1
-                        ),
-                        
-                        numericInput(
-                          "plotfontsize",
-                          "Font size",
-                          value = 11,
-                          min = 1,
-                          max = 30,
-                          step = 0.5
-                        ),
-                        
-                        selectInput(
-                          "plotfont",
-                          "Font",
-                          choices = c("sans", "Times", "Courier")
-                        )
-                      ),
-                      
-                      checkboxInput(
-                        "checkboxTheme",
-                        "Change the theme?"
-                      ),
-                      
-                      conditionalPanel(
-                        "input.checkboxTheme != 0",
-                        
-                        radioButtons(
-                          "plottheme",
-                          "Select the theme",
-                          choices = c(
-                            "Grey", "White", "Linedraw",
-                            "Light", "Minimal", "Classic"
-                          )
-                        )
-                        
+                  shiny::selectInput(
+                    inputId = "plotfont",
+                    label = "Font",
+                    choices = 
+                      c(
+                        "sans", 
+                        "Times", 
+                        "Courier"
                       )
+                  )
+                ),
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxTheme",
+                  label = "Change the theme?"
+                ),
+                
+                shiny::conditionalPanel(
+                  condition = "input.checkboxTheme != 0",
+                  
+                  shiny::radioButtons(
+                    inputId = "plottheme",
+                    label = "Select the theme",
+                    choices = c(
+                      "Grey", 
+                      "White", 
+                      "Linedraw",
+                      "Light", 
+                      "Minimal", 
+                      "Classic"
+                    )
+                  )
+                  
+                )
               ),
               
               #### Download Plot Button ----
-              actionButton("save_plot", label = "Download plot"),
+              shiny::actionButton(
+                inputId = "save_plot", 
+                label = "Download plot"
+              ),
               
               #### Color choice ----
-              conditionalPanel(
-                "input.checkboxColor == 0",
-                checkboxInput(
-                  "checkboxPalette_OC", 
-                  "Specify your own colors?"
+              shiny::conditionalPanel(
+                condition = "input.checkboxColor == 0",
+                shiny::checkboxInput(
+                  inputId = "checkboxPalette_OC", 
+                  label = "Specify your own colors?"
                 ),
+                
                 ##### Brush button ----
-                absolutePanel(
+                shiny::absolutePanel(
                   shinyWidgets::dropdownButton(
                     label = "Color Choices",
                     status = "primary",
@@ -678,28 +705,28 @@ ui <-
                     right = TRUE,
                     icon = icon("paintbrush"),
                     tooltip = TRUE,
-                    uiOutput("colors_ui"),
+                    shiny::uiOutput("colors_ui"),
                     inputId = "dropdown_colors"
                   ),
                   draggable = TRUE
                 )
               ),
               
-              conditionalPanel(
-                "input.checkboxColor != 0",
-                checkboxInput(
-                  "checkboxPalette_dim",
+              shiny::conditionalPanel(
+                condition = "input.checkboxColor != 0",
+                shiny::checkboxInput(
+                  inputId = "checkboxPalette_dim",
                   # TODO: Check if need Fix: This text wont change on checking checkboxColor
-                  "Specify your own colors?"
+                  label = "Specify your own colors?"
                 ),
-                absolutePanel(
+                shiny::absolutePanel(
                   shinyWidgets::dropdownButton(
                     label = "Color choices",
                     status = "primary",
                     circle = TRUE,
                     right = TRUE,
                     icon = icon("paintbrush"),
-                    uiOutput("colordim_ui"),
+                    shiny::uiOutput("colordim_ui"),
                     inputId = "dropdown_colordim"
                   ),
                   draggable = TRUE
@@ -708,136 +735,161 @@ ui <-
               
             ),
             
-            column(
-              3,
+            shiny::column(
+              width = 3,
               
               #### Add Titel ----
-              checkboxInput(
-                "checkboxTitle",
-                "Add title"
+              shiny::checkboxInput(
+                inputId = "checkboxTitle",
+                label = "Add title"
               ),
               
-              conditionalPanel(
-                "input.checkboxTitle != 0",
+              shiny::conditionalPanel(
+                condition = "input.checkboxTitle != 0",
                 
-                textInput(
-                  "plot_title",
-                  "Enter the plot title"
+                shiny::textInput(
+                  inputId = "plot_title",
+                  label = "Enter the plot title"
                 ),
                 
-                radioButtons(
-                  "plot_title_place",
-                  "Title alignment",
-                  choices = c("left" = 0, "center" = 0.5, "right" = 1)
+                shiny::radioButtons(
+                  inputId = "plot_title_place",
+                  label = "Title alignment",
+                  choices = c(
+                    "left" = 0, 
+                    "center" = 0.5, 
+                    "right" = 1
+                  )
                 ),
                 
-                numericInput(
-                  "plot_title_size",
-                  "Size",
+                shiny::numericInput(
+                  inputId = "plot_title_size",
+                  label = "Size",
                   value = 30,
                   min = 1,
                   max = 50,
                   step = 1
                 ),
                 
-                colourInput(
-                  inputId = "plot_title_colour", label = "Title colour:",
+                colourpicker::colourInput(
+                  inputId = "plot_title_colour", 
+                  label = "Title colour:",
                   showColour = "both",
                   value = "black",
-                  allowTransparent = FALSE)
-                
-              ),
-              
-              hr(),
-              
-              #### Change Axis Labels ----
-              checkboxInput(
-                "checkboxAxis",
-                "Change axis labels"
-              ),
-              
-              conditionalPanel(
-                "input.checkboxAxis != 0",
-                
-                textInput(
-                  "xLab",
-                  "X-axis label:"
-                ),
-                
-                textInput(
-                  "yLab",
-                  "Y-axis label:"
+                  allowTransparent = FALSE
                 )
                 
               ),
               
-              hr(),
+              shiny::hr(),
+              
+              #### Change Axis Labels ----
+              shiny::checkboxInput(
+                inputId = "checkboxAxis",
+                label = "Change axis labels"
+              ),
+              
+              shiny::conditionalPanel(
+                condition = "input.checkboxAxis != 0",
+                
+                shiny::textInput(
+                  inputId = "xLab",
+                  label = "X-axis label:"
+                ),
+                
+                shiny::textInput(
+                  inputId = "yLab",
+                  label = "Y-axis label:"
+                )
+                
+              ),
+              
+              shiny::hr(),
               
               #### Download Plot Window ----
-              bsModal("modal", "Download plot", trigger = "save_plot", size = "medium",
+              shinyBS::bsModal(
+                id = "modal", 
+                title = "Download plot", 
+                trigger = "save_plot", 
+                size = "medium",
                       
-                      selectInput("download_type", 
-                                  "Choose file type",
-                                  choices = c("png", "jpeg", "tiff")
-                      ),
+                shiny::selectInput(
+                  inputId = "download_type", 
+                  label = "Choose file type",
+                  choices = c(
+                    "png", 
+                    "jpeg", 
+                    "tiff"
+                  )
+                ),
+                
+                shiny::selectInput(
+                  inputId = "download_unit", 
+                  label = "Choose unit",
+                  choices = c(
+                    "px", 
+                    "in", 
+                    "cm", 
+                    "mm"
+                  )
+                ),
+                
+                shiny::numericInput(
+                  inputId = "download_plotwidth",
+                  label = "Plot width",
+                  value = 1000,
+                  min = 1,
+                  max = 2000
+                ),
                       
-                      selectInput("download_unit", 
-                                  "Choose unit",
-                                  choices = c("px", "in", "cm", "mm")
-                      ),
-                      
-                      numericInput(
-                        "download_plotwidth",
-                        "Plot width",
-                        value = 1000,
-                        min = 1,
-                        max = 2000
-                      ),
-                      
-                      numericInput(
-                        "download_plotheight",
-                        "Plot height",
-                        value = 600,
-                        min = 1,
-                        max = 2000
-                      ),
-                      
-                      numericInput(
-                        "download_resolution",
-                        "Resolution",
-                        value = 72,
-                        min = 1, 
-                        max = 1000
-                      ),
-                      
-                      textInput("download_name", "Specify file name"),
-                      
-                      downloadButton("download_plot", "Download")
+                shiny::numericInput(
+                  inputId = "download_plotheight",
+                  label = "Plot height",
+                  value = 600,
+                  min = 1,
+                  max = 2000
+                ),
+                
+                shiny::numericInput(
+                  inputId = "download_resolution",
+                  label = "Resolution",
+                  value = 72,
+                  min = 1, 
+                  max = 1000
+                ),
+                
+                shiny::textInput(
+                  inputId = "download_name", 
+                  label = "Specify file name"),
+                
+                shiny::downloadButton(
+                  outputId = "download_plot", 
+                  label = "Download")
               )
             ),
             
-            # #### Animation Input ----
-            # column(3,
-            #        ##### animateIteratorSelect ----
-            #        selectInput(
+            #### Animation Input ----
+            # shiny::column(3,
+                   ##### animateIteratorSelect ----
+            #        shiny::selectInput(
             #          "animateIteratorSelect", 
             #          "Choose variable to animate over:", 
             #          choices = NULL
             #        ),
-            #        actionButton(
+            #        shiny::actionButton(
             #          "animationRenderButton",
             #          "Render animation"
             #        ),
             #        
-            #        ##### render options ----
-            #        actionButton("changeRender", label = "Render options"),
+                    ##### render options ----
+            #        shiny::actionButton("changeRender", label = "Render options"),
             #        
-            #        bsModal("modal_render",
+            #        shinyBS::bsModal("modal_render",
             #                "Change render options",
             #                trigger = "changeRender",
             #                size = "large",
             #                
-            #                sliderInput(
+            #                shiny::sliderInput(
             #                  "frameAmount",
             #                  "number of frames to render",
             #                  value = 100,
@@ -845,7 +897,7 @@ ui <-
             #                  max = 1000
             #                ),
             #                
-            #                sliderInput(
+            #                shiny::sliderInput(
             #                  "renderFPS",
             #                  "frames per second",
             #                  value = 10,
@@ -853,7 +905,7 @@ ui <-
             #                  max = 120
             #                ),
             #                
-            #                numericInput(
+            #                shiny::numericInput(
             #                  "durationAnimation",
             #                  "length of animation in seconds",
             #                  value = 10,
@@ -862,189 +914,187 @@ ui <-
             #                  step = 1
             #                )
             #        ),
-            #        actionButton(
+            #        shiny::actionButton(
             #          "animationCloseButton",
             #          "Close animation"
             #        )
             # )
           ),
-          hr(),
+          shiny::hr(),
           
           #### Plotted Data ----
-          h2("Plotted Data"),
-          br(),
-          fluidRow(
+          shiny::h2("Plotted Data"),
+          shiny::br(),
+          shiny::fluidRow(
             DT::dataTableOutput("df_plot")
           ),
           
-          hr(),
-          br(),
-          br(),
-          br()
+          shiny::hr(),
+          shiny::br(),
+          shiny::br(),
+          shiny::br()
         ),
         
-        # SCATTERPLOT ----
-        tabItem("scatterplot",
+        ### Scatterplot ----
+        shinydashboard::tabItem(
+          tabName = "scatterplot",
+          shiny::fluidRow(
+            shiny::column(
+              width = 12,
+              #### Scatterplot Output ----
+              shiny::uiOutput("scatter_ui")
+            )
+          ),
+          shiny::hr(),
+          shiny::fluidRow(
+            shiny::column(
+              width = 3,
+              
+              #### DV overview----
+              shinyWidgets::dropdown(
+                label = "Default value overview",
+                shiny::HTML("Current default value settings"),
+                shiny::uiOutput("defaults_df_ui_scatter")
+              ),
+              
+              shiny::hr(),
+              
+              ##### OC to plot ----
+              shiny::selectizeInput(
+                inputId = "OC_scatter", 
+                label = "Choose variables to plot (only first two will be plotted)", 
+                choices = NULL,
+                multiple = TRUE
+              ),
+              
+            ),
+            
+            shiny::column(
+              width = 3,
+              
+              ##### Facet dimension ----
+              shiny::radioButtons(
+                inputId = "radioFacet_scatter",
+                label = "Add a facet dimension?",
+                choices = c("no", "grid", "wrap")
+              ),
+              
+              ###### Grid ----
+              shiny::conditionalPanel(
+                condition = "input.radioFacet_scatter == 'grid'",
                 
-                fluidRow(
-                  
-                  column(12,
-                         
-                         ##### Scatterplot Output ----
-                         uiOutput("scatter_ui")
-                  )
+                shiny::selectInput(
+                  inputId = "facet_rows_scatter", 
+                  label = "Add row variable", 
+                  choices = NULL,
+                  multiple = TRUE
                 ),
                 
-                hr(),
-                       
-                       fluidRow(
-                         column(3,
-                                
-                                #### Default Value overview----
-                                shinyWidgets::dropdown(
-                                  label = "Default value overview",
-                                  HTML("Current default value settings"),
-                                  
-                                  uiOutput("defaults_df_ui_scatter")
-                                ),
-                                
-                                hr(),
-                                
-                                ##### OC to plot ----
-                                selectizeInput(
-                                  "OC_scatter", 
-                                  "Choose variables to plot (only first two will be plotted)", 
-                                  choices = NULL,
-                                  multiple = TRUE
-                                ),
-                                
-                         ),
-                         
-                         column(3,
-                                
-                                ##### Facet dimension ----
-                                radioButtons(
-                                  "radioFacet_scatter",
-                                  "Add a facet dimension?",
-                                  choices = c("no", "grid", "wrap")
-                                ),
-                                
-                                ###### Grid ----
-                                conditionalPanel(
-                                  "input.radioFacet_scatter == 'grid'",
-                                  
-                                  selectInput(
-                                    "facet_rows_scatter", 
-                                    "Add row variable", 
-                                    choices = NULL,
-                                    multiple = TRUE
-                                  ),
-                                  
-                                  selectInput(
-                                    "facet_cols_scatter", 
-                                    "Add column variable", 
-                                    choices = NULL,
-                                    multiple = TRUE
-                                  )
-                                ),
-                                
-                                ###### Wrap ----
-                                conditionalPanel(
-                                  "input.radioFacet_scatter == 'wrap'",
-                                  
-                                  selectizeInput(
-                                    "facet_wrap_scatter", 
-                                    "Choose variables to facet wrap",
-                                    choices = NULL,
-                                    multiple = TRUE
-                                  )
-                                ),
-                                
-                                ###### Color param ----
-                                checkboxInput(
-                                  "checkboxColorScatter",
-                                  "Add a color dimension?"
-                                ),
-                                conditionalPanel(
-                                  "input.checkboxColorScatter != 0",
-                                  
-                                  selectInput(
-                                    "colvar_scatter",
-                                    "Choose color variable",
-                                    choices = NULL
-                                  ),
-                                  
-                                  
-                                  
-                                  #### Color Button ----
-                                  checkboxInput(
-                                    "checkboxPalette_scatter",
-                                    "Specify your own colors?"
-                                  ),
-                                  absolutePanel(
-                                    shinyWidgets::dropdownButton(
-                                      label = "Color choices",
-                                      status = "primary",
-                                      circle = TRUE,
-                                      right = TRUE,
-                                      icon = icon("paintbrush"),
-                                      uiOutput("colors_scatter_ui"),
-                                      inputId = "dropdown_colors_scatter"
-                                    ),
-                                    draggable = TRUE
-                                  )
-                                  
-                                )
-
-                         )
-                       ),
+                shiny::selectInput(
+                  inputId = "facet_cols_scatter", 
+                  label = "Add column variable", 
+                  choices = NULL,
+                  multiple = TRUE
+                )
+              ),
+              
+              ###### Wrap ----
+              shiny::conditionalPanel(
+                condition = "input.radioFacet_scatter == 'wrap'",
                 
-                hr(),
-                hr(),
+                shiny::selectizeInput(
+                  inputId = "facet_wrap_scatter", 
+                  label = "Choose variables to facet wrap",
+                  choices = NULL,
+                  multiple = TRUE
+                )
+              ),
+              
+              ###### Color param ----
+              shiny::checkboxInput(
+                inputId = "checkboxColorScatter",
+                label = "Add a color dimension?"
+              ),
+              shiny::conditionalPanel(
+                condition = "input.checkboxColorScatter != 0",
                 
-                #### Plotted Data ----
-                h2("Plotted Data"),
-                br(),
-                fluidRow(
-                  DT::dataTableOutput("df_scatterplot")
+                shiny::selectInput(
+                  inputId = "colvar_scatter",
+                  label = "Choose color variable",
+                  choices = NULL
                 ),
                 
-                hr(),
-                br(),
-                br(),
-                br()
+                #### Color Button ----
+                shiny::checkboxInput(
+                  inputId = "checkboxPalette_scatter",
+                  label = "Specify your own colors?"
+                ),
+                
+                shiny::absolutePanel(
+                  shinyWidgets::dropdownButton(
+                    label = "Color choices",
+                    status = "primary",
+                    circle = TRUE,
+                    right = TRUE,
+                    icon = icon("paintbrush"),
+                    shiny::uiOutput("colors_scatter_ui"),
+                    inputId = "dropdown_colors_scatter"
+                  ),
+                  draggable = TRUE
+                )
+                
+              )
+              
+            )
+          ),
+          
+          shiny::hr(),
+          shiny::hr(),
+          
+          #### Plotted Data ----
+          shiny::h2("Plotted Data"),
+          shiny::br(),
+          shiny::fluidRow(
+            DT::dataTableOutput("df_scatterplot")
+          ),
+          
+          shiny::hr(),
+          shiny::br(),
+          shiny::br(),
+          shiny::br()
         ),
         
         
         ### HELP ----
-        tabItem("help",
-                
-                h4("Info"),
-                HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus, Michal Majka and Franz König.
+        shinydashboard::tabItem(
+          tabName = "help",
+          
+          shiny::h1("Info"),
+          shiny::HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus, Michal Majka and Franz König.
                      It has been published in <a href='https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext'>SoftwareX</a>."),
-                
-                h2("User Manual"),
-                HTML("Following you will find details on every part of the app and how they are to be used."),
-                
-                h4("Data Settings"),
-                HTML("There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the input variables/design parameters precede the output variables/operating characteristics. Each row represents one simulation run with a different combination of input/design parameters. "),
-                HTML("If your data is not aggregated yet i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index variable' you can click the checkbox and choose which of your variables is the 'replication run index'. The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
-                
-                
-                h3("Data"),
-                HTML("In the Data tab you find an overview of your data. Already here you can set filters for your input parameters, if you are not interested in some observations."),
-                
-                h3("Default values"),
-                HTML("The default value tab is a key tab in this App. Please choose one default value for every input variable that can take on more than one unique value. Later in the plot tab the dataset is filtered for these values, unless the respective variable is chosen to be one of the dimensions in the graph (See 'plot' tab)."),
-                h3("Distribution"),
-                HTML("This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots for your output variables to get an overview of the distribution behaviour."),
-                
-                h3("Plot"),
-                HTML("After uploading the data and establishing the settings, you can visualize your simulation results on up to 4 dimensions. An x-axis variable as well as at least one OC have to be specified in order for the plot to show up: You can opt to add further design parameters on the 'facet' dimensions (row and column), which splits the plot into a grid as well as the 'shape' dimension, which adds lines/points in different shapes according to the value of the respective input parameter."),
-                HTML("Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clicking the 'Download plot' button"),
-                
-                h3("Scatterplot"),
-                HTML("If you are interested in the variability of certain operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.")
+          
+          shiny::h2("User Manual"),
+          shiny::HTML("Following you will find details on every part of the app and how they are to be used."),
+          
+          shiny::h3("Data Settings"),
+          shiny::HTML("There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the input variables/design parameters precede the output variables/operating characteristics. Each row represents one simulation run with a different combination of input/design parameters. "),
+          shiny::HTML("If your data is not aggregated yet i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index variable' you can click the checkbox and choose which of your variables is the 'replication run index'. The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
+          
+          
+          shiny::h3("Data"),
+          shiny::HTML("In the Data tab you find an overview of your data. Already here you can set filters for your input parameters, if you are not interested in some observations."),
+          
+          shiny::h3("Default values"),
+          shiny::HTML("The default value tab is a key tab in this App. Please choose one default value for every input variable that can take on more than one unique value. Later in the plot tab the dataset is filtered for these values, unless the respective variable is chosen to be one of the dimensions in the graph (See 'plot' tab)."),
+          shiny::h3("Distribution"),
+          shiny::HTML("This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots for your output variables to get an overview of the distribution behaviour."),
+          
+          shiny::h3("Plot"),
+          shiny::HTML("After uploading the data and establishing the settings, you can visualize your simulation results on up to 4 dimensions. An x-axis variable as well as at least one OC have to be specified in order for the plot to show up: You can opt to add further design parameters on the 'facet' dimensions (row and column), which splits the plot into a grid as well as the 'shape' dimension, which adds lines/points in different shapes according to the value of the respective input parameter."),
+          shiny::HTML("Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clicking the 'Download plot' button"),
+          
+          shiny::h3("Scatterplot"),
+          shiny::HTML("If you are interested in the variability of certain operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.")
         )
       )
     )
@@ -1427,7 +1477,7 @@ server <- function(session, input, output){
     renderUI({
       if(input$checkboxRepvar){
         tagList(
-          h3("Aggregated Data"),
+          shiny::h3("Aggregated Data"),
           DT::dataTableOutput("repDataDT")
         )
       }
@@ -1691,7 +1741,7 @@ server <- function(session, input, output){
   output$colors_ui <- renderUI({
     
     lapply(1:nOCR(), function(i) {
-      colourInput(
+      colourpicker::colourInput(
         inputId = paste0("col_", names_outputsR()[i]),
         label = names_outputsR()[i],
         showColour = "both",
@@ -1716,7 +1766,7 @@ server <- function(session, input, output){
   output$colordim_ui <- renderUI({
     
     lapply(1:nValColvarR(), function(i) {
-      colourInput(
+      colourpicker::colourInput(
         inputId = paste0("col_", valColvarR()[i]),
         label = valColvarR()[i],
         showColour = "both",
@@ -1740,7 +1790,7 @@ server <- function(session, input, output){
   output$colordim_ui <- renderUI({
     
     lapply(1:nValColvarR(), function(i) {
-      colourInput(
+      colourpicker::colourInput(
         inputId = paste0("col_", valColvarR()[i]),
         label = valColvarR()[i],
         showColour = "both",
@@ -1777,7 +1827,7 @@ server <- function(session, input, output){
   output$colors_scatter_ui <- renderUI({
     
     lapply(1:nValColvar_scatterR(), function(i) {
-      colourInput(
+      colourpicker::colourInput(
         inputId = paste0("col_", valColvar_scatterR()[i], "_sc"),
         label = valColvar_scatterR()[i],
         showColour = "both",
@@ -1821,7 +1871,7 @@ server <- function(session, input, output){
   output$colors_scatter_ui <- renderUI({
     
     lapply(1:nValColvar_scatterR(), function(i) {
-      colourInput(
+      colourpicker::colourInput(
         inputId = paste0("col_", valColvar_scatterR()[i], "_sc"),
         label = valColvar_scatterR()[i],
         showColour = "both",
@@ -1884,7 +1934,7 @@ server <- function(session, input, output){
     
     if(input$radioErrorsymmetry == "symmetrical"){
       
-      selectizeInput(
+      shiny::selectizeInput(
         inputId = "errorvars",
         label = "Choose all the error variables (sd)",
         choices = names_outputsR(),
@@ -1893,14 +1943,14 @@ server <- function(session, input, output){
       
     } else{
       tagList(
-        selectizeInput(
+        shiny::selectizeInput(
           inputId = "errorvars_upper",
           label = "Choose error variables for the upper KI",
           choices = names_outputsR(),
           multiple = TRUE
         ),
         
-        selectizeInput(
+        shiny::selectizeInput(
           inputId = "errorvars_lower",
           label = "Choose error variables for the lower KI",
           choices = names_outputsR(),
@@ -2345,6 +2395,11 @@ server <- function(session, input, output){
     
     boxplot
     
+  })
+  
+  ## scatter_ui output ----
+  output$boxplot_ui <- renderUI({
+    plotOutput("pBoxplot")
   })
   
   ## Scatterplot ----

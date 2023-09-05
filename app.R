@@ -4,19 +4,23 @@ library(shiny)
 library(DT)
 library(shinybusy)
 library(plotly)
-library(tidyverse)
+library(dplyr)
+library(tidyselect)
+library(tidyr)
+library(stringr)
 library(shinyBS)
 library(colourpicker)
 library(shinyWidgets)
-library(bslib)
 library(shinydashboard)
 library(scales)
 library(Cairo)
-library(shinyAce)
-library(gganimate)
 library(ggplot2)
-library(gifski)
-library(png)
+
+# library(bslib)
+# library(shinyAce)
+# library(gganimate)
+# library(gifski)
+# library(png)
 
 # Global Options ----
 options(shiny.sanitize.errors = FALSE) 
@@ -1103,12 +1107,16 @@ ui <-
 
 
 # Server ----
-server <- function(session, input, output){
+server <- function(
+  session, 
+  input, 
+  output
+){
   
   
-  # Example Data read ----
+  ## Example Data Input ----
   # read in Example data and convert some variables for correct display
-  exampleData <- read.csv(
+  exampleData <- utils::read.csv(
     "ExampleData.csv",
     header = TRUE,
     sep = ",",
@@ -1116,203 +1124,250 @@ server <- function(session, input, output){
   )
   
   
-  # Upload Data ----
+  ## Upload Data Input ----
   # widget for user data upload
-  upload <- reactive({
+  upload <- shiny::reactive({
     
-    validate(
+    shiny::validate(
       # if no file is uploaded yet "no file" appears everywhere upload() is called
-      need(input$file, "No file")
+      shiny::need(input$file, "No file")
     ) 
     
     # file = user uploaded file in tab Data Settings
     inFile <- input$file 
     
     df_candidate <- 
-      try(read.csv(inFile$datapath,
-                   header = TRUE,
-                   sep = input$sep,
-                   skip = input$rowSkip,
-                   stringsAsFactors = TRUE))
+      try(
+        utils::read.csv(
+          inFile$datapath,
+          header = TRUE,
+          sep = input$sep,
+          skip = input$rowSkip,
+          stringsAsFactors = TRUE
+        )
+      )
     
     # Get rid of empty columns?
     if ("X" %in% colnames(df_candidate)) {
-      df_candidate <- df_candidate[, -which(colnames(df_candidate) == "X")]
+      df_candidate <- 
+        df_candidate[, -which(colnames(df_candidate) == "X")]
     }
     
+    # Return df_candidate
     df_candidate
     
   })
   
   
-  # data_full ----
+  ## Create Dataset ----
+  # Dataset to be used (before possible aggregation)
   # Use example data if checkbox is checked, otherwise use uploaded dataset
   # Update Input choices
-  data_full <- reactive({
+  data_full <- shiny::reactive({
     
     reacVals$first_row_filters_string <- "NULL"
-    updateTabItems(session, "sidebarMenu", "default")
-    Sys.sleep(0.05)
-    updateTabItems(session, "sidebarMenu", "data")
+    
+    # Force users to go back to data tab after modifying the data
+    shinydashboard::updateTabItems(
+      session = session,
+      inputId = "sidebarMenu",
+      selected ="data"
+    )
+    
+    # If example data is chosen, update other input options
+    # as they are hidden automatically in GUI
     
     if(input$checkboxExampleData){
       
-      updateCheckboxInput(
-        session,
-        "checkboxFactsData",
+      # Get column names
+      col_names_example_dat <- colnames(exampleData)
+      
+      # Update inputs
+      shiny::updateCheckboxInput(
+        session = session,
+        inputId = "checkboxFactsData",
         value = FALSE
       )
       
-      updateCheckboxInput(session,
-                          "checkboxRepvar",
-                          value = TRUE
+      shiny::updateCheckboxInput(
+        session = session,
+        inputId = "checkboxRepvar",
+        value = TRUE
       )
       
-      col_names_example_dat <- colnames(exampleData)
-      updateSelectInput(session, 
-                        "inputend", 
-                        choices = col_names_example_dat,
-                        selected = "input4"
+      shiny::updateSelectInput(
+        session = session, 
+        inputId = "inputend", 
+        choices = col_names_example_dat,
+        selected = "input4"
       )
       
-      updateSelectInput(session,
-                        "repvar",
-                        choices = col_names_example_dat,
-                        selected = "replications"
-      )
-      
-      updateSelectInput(session,
-                        "colvar_scatter",
-                        choices = col_names_example_dat,
-                        selected = col_names_example_dat[2]
+      shiny::updateSelectInput(
+        session = session,
+        inputId = "repvar",
+        choices = col_names_example_dat,
+        selected = "replications"
       )
       
       return(exampleData)
       
       
     } else {
+      # If not using default data, differentiate between behviour when 
+      # FACTS data is used vs. custom uploaded data
       
+      # Get column names
       col_names_upload <- colnames(upload())
       
+      # FACTS Data
       if (input$checkboxFactsData == 1) {
         
-        updateNumericInput(session,
-                           "rowSkip",
-                           value = 2
+        # Update inputs
+        shiny::updateNumericInput(
+          session = session,
+          inputId = "rowSkip",
+          value = 2
         )
         
-        updateCheckboxInput(session,
-                            "checkboxRepvar",
-                            value = TRUE
+        shiny::updateCheckboxInput(
+          session = session,
+          inputId = "checkboxRepvar",
+          value = TRUE
         )
         
-        updateSelectInput(session,
-                          "inputend",
-                          choices = col_names_upload,
-                          selected = "Agg.Timestamp"
+        shiny::updateSelectInput(
+          session = session,
+          inputId = "inputend",
+          choices = col_names_upload,
+          selected = "Agg.Timestamp"
         )
         
-        updateSelectInput(session,
-                          "repvar",
-                          choices = col_names_upload,
-                          selected = "X.Sim"
+        shiny::updateSelectInput(
+          session = session,
+          inputId = "repvar",
+          choices = col_names_upload,
+          selected = "X.Sim"
         )
         
         
       } else {
+        # Custom Data
         
-        updateCheckboxInput(session,
-                            "checkboxRepvar",
-                            value = FALSE
+        # Update inputs
+        shiny::updateNumericInput(
+          session = session,
+          inputId = "rowSkip",
+          value = 0
         )
         
-        updateSelectInput(session,
-                          "inputend",
-                          choices = col_names_upload
+        shiny::updateCheckboxInput(
+          session = session,
+          inputId = "checkboxRepvar",
+          value = FALSE
         )
         
-        updateSelectInput(session,
-                          "repvar",
-                          choices = col_names_upload,
-                          selected = col_names_upload[1]
+        shiny::updateSelectInput(
+          session = session,
+          inputId = "inputend",
+          choices = col_names_upload
+        )
+        
+        shiny::updateSelectInput(
+          session = session,
+          inputId = "repvar",
+          choices = col_names_upload,
+          selected = col_names_upload[1]
         )
         
       }
-      
-      
-      updateSelectInput(session,
-                        "colvar_scatter",
-                        choices = col_names_upload,
-                        selected = col_names_upload[2]
-      )
       
       return(upload())
     }
     
   })
   
+  ## Aggregation ----
   
-  # hide/show Tabs (aggregation) ----
-  # Show aggregated datatable and distribution tab only if replication is chosen above
-  
-  observe({
+  # Show Boxplot and Scatterplot tab only if replication is chosen above
+  shiny::observe({
     if(input$checkboxRepvar){
-      showTab(inputId = "tabs", target = "boxplot", select = FALSE, session = session)
-      showTab(inputId = "tabs", target = "scatterplot", select = FALSE, session = session)
-       } else {
-      hideTab(inputId = "tabs", target = "boxplot",  session = session)
-      hideTab(inputId = "tabs", target = "scatterplot", session = session)
+      
+      shiny::showTab(
+        inputId = "tabs", 
+        target = "boxplot", 
+        select = FALSE, 
+        session = session
+      )
+      shiny::showTab(
+        inputId = "tabs", 
+        target = "scatterplot", 
+        select = FALSE, 
+        session = session
+      )
+      
+    } else {
+      
+      shiny::hideTab(
+        inputId = "tabs", 
+        target = "boxplot",  
+        session = session
+      )
+      shiny::hideTab(
+        inputId = "tabs", 
+        target = "scatterplot", 
+        session = session
+      )
     }
   })
   
-  
-  # data_full_norep ----
+  ## Final unmodified Dataset -----
   # if there is replication variable 'data_full_norep' has one column less than 'data_full', otherwise they are identical
-  data_full_norep <- reactive({
+  data_full_norep <- shiny::reactive({
     
-    validate(
-      need(input$repvar != input$inputend, "Replication variable can't be input variable (Please alter last input variable or replication variable)")
+    shiny::validate(
+      shiny::need(input$repvar != input$inputend, "Replication variable can't be input variable (Please alter last input variable or replication variable)")
     )
     
     tryCatch({
-      ## data adapting ----
       if(input$checkboxRepvar){
-        data_full() %>% select(-input$repvar)
+        data_full() %>% dplyr::select(-input$repvar)
       } else {
         data_full()
       }  
     }, error = function(e) {
       err_ <- ""
-      validate(
-        need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+      shiny::validate(
+        shiny::need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
       ) 
     })
     
   })
   
   
-  # Pre-filter data Tab ----------------------------------------------
+  ## Pre-DV data Tab ----------------------------------------------
   
   # display dataset as DT
   # Table in tab 'Pre-filter data'
   output$dataDT <- DT::renderDataTable({
-    req(data_full())
+    shiny::req(data_full())
     data_full()},
     filter = "top",
-    options = list(lengthChange = FALSE, 
-                   autoWidth = TRUE,
-                   scrollX = TRUE
+    options = list(
+      lengthChange = FALSE, 
+      autoWidth = TRUE,
+      scrollX = TRUE
     )
   )
   
   
-  # reacVals ----
+  # reacVals 
   # add first_row_filters_string
-  reacVals <- reactiveValues(first_row_filters_string = "NULL")
+  reacVals <- shiny::reactiveValues(
+    first_row_filters_string = "NULL"
+  )
   
-  # ind_inputendR ----
   # index of last input variable
-  ind_inputendR  <- reactive({
+  ind_inputendR  <- shiny::reactive({
     which(
       colnames(
         data_full_norep()
@@ -1320,12 +1375,11 @@ server <- function(session, input, output){
     )
   })
   
-  
-  # ind_outputstartR ----
   # index of first output variable
-  ind_outputstartR <- reactive({
-    validate(
-      need(
+  # Make sure that such a variable exists
+  ind_outputstartR <- shiny::reactive({
+    shiny::validate(
+      shiny::need(
         ncol(
           data_full_norep()
         ) != ind_inputendR(),
@@ -1335,17 +1389,17 @@ server <- function(session, input, output){
   })
   
   
-  # data_prefiltered ----
-  # Table with all chosen filters in 'Pre-filter data' (for no-repvar scenario)
-  data_prefiltered <- reactive({
-    req(ind_outputstartR())
-    req(data_full())
-    validate(
-      need(input$repvar != input$inputend, "Replication variable can't be input variable (Please alter last input variable or replication variable)")
+  # Table with all chosen filters in 'Pre-filter data'
+  # I.e. Data pre DV tab
+  data_prefiltered <- shiny::reactive({
+    shiny::req(ind_outputstartR())
+    shiny::req(data_full())
+    shiny::validate(
+      shiny::need(input$repvar != input$inputend, "Replication variable can't be input variable (Please alter last input variable or replication variable)")
     )
-    req(input$dataDT_rows_all)
+    shiny::req(input$dataDT_rows_all)
     d <- data_full()
-    #ind_outputstart <<- isolate(which(colnames(d) == input$inputend)+1) # which column is the last input column?
+    # ind_outputstart <<- isolate(which(colnames(d) == input$inputend)+1) # which column is the last input column?
     
     # Convert output parameters to numeric values
     for(i in ind_outputstartR():ncol(d)){
@@ -1364,54 +1418,78 @@ server <- function(session, input, output){
   
   
   # Define sem function to calculate sem used in deviation method when using replication variable
-  sem <- function(x) {sd(x)/sqrt(length(x))}
+  sem <- function(x) {
+    sd(x) / sqrt(length(x))
+    }
   
   # data_agg ----
   # aggregate data (if not aggregated yet)
-  data_agg <- reactive({
+  data_agg <- shiny::reactive({
     
-    validate(
-      need(!is.integer(input$repvar), 
+    shiny::validate(
+      shiny::need(!is.integer(input$repvar), 
            "Replication variable can't be input variable (Please alter last input variable or replication run variable)")
     )
     
-    validate(
-      need(input$repvar != input$inputend, 
+    shiny::validate(
+      shiny::need(input$repvar != input$inputend, 
            "Replication variable can't be input variable (Please alter last input variable or replication run variable)")
     )
     
     # summarize DT with replication runs by averaging outputs for every setting
-    req(input$dataDT_rows_all)
-    # req(data_full())
+    shiny::req(input$dataDT_rows_all)
+    shiny::req(data_full())
+    # This makes sure that only the rows that the user selected in the DT
+    # interface of the uploaded dataset get passed to the aggregated data
     d <- data_full()[input$dataDT_rows_all,]
+    # d <- data_full()
+    # print(input$dataDT_rows_all)
     
     if(input$checkboxRepvar){
       
-      req(data_full_norep())
-      req(ind_inputendR())
-      req(ind_outputstartR())      
+      shiny::req(data_full_norep())
+      shiny::req(ind_inputendR())
+      shiny::req(ind_outputstartR())      
       
-      inputs <<- colnames(data_full_norep())[1:ind_inputendR()]
-      outputs <<- colnames(data_full_norep())[ind_outputstartR():ncol(data_full_norep())]
+      inputs <<- colnames(
+        data_full_norep()
+      )[1:ind_inputendR()]
       
-      output_class <- sapply(d[outputs], class)
+      outputs <<- colnames(
+        data_full_norep()
+      )[ind_outputstartR():ncol(data_full_norep())]
+      
+      output_class <- sapply(
+        d[outputs], 
+        class
+      )
+      
       if (any(output_class != "numeric" & output_class != "integer")) {
         
-        ind_not_num <- which(output_class != "numeric" & output_class != "integer")
+        ind_not_num <- which(
+          output_class != "numeric" & output_class != "integer"
+        )
+        
         vars_not_num <- outputs[ind_not_num]
         n_vars <- length(vars_not_num)
-        xx <- paste0("Currently `", paste0(vars_not_num, collapse = "`, "), "`", 
-                     ifelse(n_vars == 1, " variable is", " variables are"),
-                     " defined as output ",
-                     ifelse(n_vars == 1, "variable", "variables"),
-                     ifelse(n_vars == 1, 
-                            " but is not of class numeric",
-                            " but are not of class numeric")
-        ) 
-        text_err <- paste0("All defined output variables must be of class numeric. ", xx)
         
-        validate(
-          need(all(output_class == "numeric"), text_err)
+        xx <- paste0(
+          "Currently `", 
+          paste0(vars_not_num, collapse = "`, "), 
+          "`",
+          ifelse(n_vars == 1, " variable is", " variables are"),
+          " defined as output ",
+          ifelse(n_vars == 1, "variable", "variables"),
+          ifelse(n_vars == 1, " but is not of class numeric", " but are not of class numeric")
+        ) 
+        
+        text_err <- paste0(
+          "All defined output variables must be of class numeric. ", 
+          xx
+        )
+        
+        shiny::validate(
+          shiny::need(all(output_class == "numeric"), text_err)
         )
       }
       
@@ -1427,38 +1505,71 @@ server <- function(session, input, output){
           input$deviationMethod
         )
       
-      d <- group_by_at(d, vars(inputs)) %>%
-                           summarise(across(
-                             everything(),
-                             custom_list
-                           ))
-      
+      d <- 
+        dplyr::group_by_at(
+        d, 
+        dplyr::vars(inputs)
+        ) %>%
+        dplyr::summarise(
+          dplyr::across(
+            tidyselect::everything(),
+            custom_list
+            )
+          )
       
       # d <- tryCatch({
-      #   suppressMessages(group_by_at(d, vars(inputs)) %>%
+      #   suppressMessages(group_by_at(d, ggplot2::vars(inputs)) %>%
       #                      summarise(across(
       #                        everything(),
       #                        custom_list
       #                      )))
       # }, warning = function(w) {
       #   err_ <- ""
-      #   validate(
-      #     need(err_ != "", "Replication variable must be an integer variable")
+      #   shiny::validate(
+      #     shiny::need(err_ != "", "Replication variable must be an integer variable")
       #   )}
       # )
       
-      d <- d %>% select(-paste0(input$repvar, "_", input$repvarMethod))
-      d <- d %>% select(-paste0(input$repvar, "_", input$deviationMethod))
+      d <- 
+        d %>% 
+        dplyr::select(
+          -paste0(
+            input$repvar, 
+            "_", 
+            input$repvarMethod
+          )
+        )
       
-      d <- d %>% mutate(
-        across(.cols = contains(paste0("_", input$deviationMethod)), ~ .x * input$sem_mult)
-      )
+      d <- 
+        d %>% 
+        dplyr::select(
+          -paste0(
+            input$repvar, 
+            "_", 
+            input$deviationMethod
+          )
+        )
+      
+      d <- 
+        d %>% 
+        dplyr::mutate(
+          dplyr::across(
+            .cols = tidyselect::contains(
+              paste0(
+                "_", 
+                input$deviationMethod
+              )
+            ), 
+            ~ .x * input$sem_mult
+          )
+        )
     }
+    
     as.data.frame(d)
   })
   
   
-  # render Data Table ----
+  ## render Data Table ----
   output$repDataDT <- 
     DT::renderDataTable({
       d <- data_agg()
@@ -1466,123 +1577,153 @@ server <- function(session, input, output){
     },
     
     filter = "top",
-    options = list(lengthChange = FALSE, 
-                   autoWidth = TRUE,
-                   scrollX = TRUE
-    ))
+    options = list(
+      lengthChange = FALSE, 
+      autoWidth = TRUE,
+      scrollX = TRUE
+    )
+  )
   
   
-  # Aggregated Datatable in 'Data' Tab ----
+  ## Aggregated Datatable ----
   output$dataDT_summarized <- 
-    renderUI({
+    shiny::renderUI({
       if(input$checkboxRepvar){
-        tagList(
+        shiny::tagList(
           shiny::h3("Aggregated Data"),
           DT::dataTableOutput("repDataDT")
         )
       }
     })
   
-  # data_filteredR ----
-  data_filteredR <- reactive({
-    req(data_prefiltered())
+  ## data_filteredR ----
+  data_filteredR <- shiny::reactive({
+    shiny::req(data_prefiltered())
     if(input$checkboxRepvar){
-      #req(data_agg)
+      #shiny::req(data_agg)
       data_agg()
     } else {
-      #req(data_prefiltered)
+      #shiny::req(data_prefiltered)
       data_prefiltered()
     }
   })
   
   
-  # names_inputsR ----
+  ## names_inputsR ----
   # inputvariables
-  names_inputsR <- reactive({
-    #req(data_filteredR, ind_inputendR)
-    nm <- names(data_filteredR())[1:ind_inputendR()]
+  names_inputsR <- shiny::reactive({
+    #shiny::req(data_filteredR, ind_inputendR)
+    nm <- names(
+      data_filteredR()
+    )[1:ind_inputendR()]
     nm
   })
   
   
-  # names_outputsR ----
+  ## names_outputsR ----
   # outputvariables
-  names_outputsR <- reactive({
-    colnames(data_filteredR())[ind_outputstartR():ncol(data_filteredR())]
+  names_outputsR <- shiny::reactive({
+    colnames(
+      data_filteredR()
+    )[ind_outputstartR():ncol(data_filteredR())]
   })
   
   
-  # names_outputsR_distribution ----
-  names_outputsR_distribution <-  reactive({
+  ## names_outputsR_distribution ----
+  names_outputsR_distribution <-  shiny::reactive({
     
-    #req(data_filteredR, ind_inputendR)
-    nm <- names(data_prefiltered() %>% select(-input$repvar))
+    #shiny::req(data_filteredR, ind_inputendR)
+    nm <- names(
+      data_prefiltered() %>% 
+        dplyr::select(-input$repvar)
+    )
     nm <- nm[!(nm %in% names_inputsR())]
     nm
   })
   
   
-  # data_choose_defaultR ----
+  ## data_choose_defaultR ----
   # initialize default value object with all input variables
-  data_choose_defaultR <- reactive({
+  data_choose_defaultR <- shiny::reactive({
     data_filteredR()[names_inputsR()]
   })
   
-  # Default values Tab ----
-  ## chooseDT ----
+  
+  ## Default values Tab ----
+  
+  ### chooseDT ----
   # Choose default values Tab 
   output$chooseDT <- DT::renderDataTable({
     
-    validate(
-      need(data_full(), "No file")
+    shiny::validate(
+      shiny::need(
+        data_full(), 
+        "No file"
+      )
     )
     
-    ### choice-updates for inputs ----
-    updateSelectizeInput(session,
-                         "OC",
-                         choices = names_outputsR(),
-                         selected = names_outputsR()[1]
+    # choice-updates for inputs 
+    shiny::updateSelectizeInput(
+      session = session,
+      inputId = "OC",
+      choices = names_outputsR(),
+      selected = names_outputsR()[1]
     )
     
-    updateSelectizeInput(session,
-                         "OC_scatter",
-                         choices = names_outputsR_distribution(),
-                         selected = names_outputsR_distribution()[c(1,2)])
+    shiny::updateSelectizeInput(
+      session = session,
+      inputId = "OC_scatter",
+      choices = names_outputsR_distribution(),
+      selected = names_outputsR_distribution()[c(1,2)]
+    )
     
-    
-    
-    updateSelectInput(session,
-                      "boxplotOutputVar",
-                      # choices = names_outputsR()
-                      choices = names_outputsR_distribution()
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "boxplotOutputVar",
+      choices = names_outputsR_distribution()
     )
     
     if (input$checkboxFactsData == 1) {
       
-      updateSelectInput(session,
-                        "boxplotOutputVar",
-                        selected = "Duration"
+      shiny::updateSelectInput(
+        session = session,
+        inputId = "boxplotOutputVar",
+        selected = "Duration"
       )
       
-      updateSelectizeInput(session,
-                           "OC_scatter",
-                           choices = names_outputsR_distribution(),
-                           selected = c("X.Participants", "Duration"))
+      shiny::updateSelectizeInput(
+        session = session,
+        inputId = "OC_scatter",
+        choices = names_outputsR_distribution(),
+        selected = c("X.Participants", "Duration")
+      )
       
     }
     
     
-    ### display only columns with more than 1 unique entry ----
-    uniques <- lapply(data_choose_defaultR(), unique)
-    bUniques <- sapply(uniques, function(x) {length(x) == 1})
-    data_filtered <<- data_choose_defaultR()[,which(!bUniques), drop = FALSE]
+    # display only columns with more than 1 unique entry 
+    uniques <- lapply(
+      data_choose_defaultR(), 
+      unique
+    )
+    
+    bUniques <- sapply(
+      uniques, 
+      function(x) {length(x) == 1}
+    )
+    
+    data_filtered <<- 
+      data_choose_defaultR()[,which(!bUniques), drop = FALSE]
     
     input$buttonDefault
     input$buttonResetDefault # reset selection 
     
     for(i in colnames(data_filtered)){
       # transforms variables to factors to be able to choose 1 factor level as default value
-      data_filtered[,i] <<- factor(as.factor(data_filtered[,i]))  #factor(...) drops unused factor levels from prefiltering
+      data_filtered[,i] <<- 
+        factor(
+          as.factor(data_filtered[,i])
+        )  #factor(...) drops unused factor levels from prefiltering
     }
     
     data_filtered
@@ -1592,42 +1733,73 @@ server <- function(session, input, output){
   filter = "top",
   selection = "single",
   
-  options = list(lengthChange = FALSE, 
-                 autoWidth = TRUE, 
-                 scrollX = TRUE, 
-                 scrollY = TRUE,
-                 pageLength = 5,
-                 searchCols = eval(parse(text = reacVals$first_row_filters_string))
+  options = list(
+    lengthChange = FALSE, 
+    autoWidth = TRUE, 
+    scrollX = TRUE, 
+    scrollY = TRUE,
+    pageLength = 5,
+    searchCols = eval(parse(text = reacVals$first_row_filters_string))
   )
+  
   )
   
   
   
-  ## Buttons ----
+  ### Buttons ----
   # Update Default value filters in Tab based on pre-defined buttons
   
-  ### Filter for first row ----
-  observeEvent(input$buttonDefault,{
+  #### Filter for first row ----
+  shiny::observeEvent(input$buttonDefault, {
     
     # Let first row be standard default value combination
-    data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactor = FALSE)
+    data_filtered_helper <- 
+      data.frame(
+        lapply(
+          data_filtered, 
+          as.character
+        ), 
+      stringsAsFactor = FALSE
+    )
     
-    first_row_filters <- paste0("'[\"", data_filtered_helper[1,], "\"]'")
+    first_row_filters <- paste0(
+      "'[\"", 
+      data_filtered_helper[1,], 
+      "\"]'"
+    )
+    
     reacVals$first_row_filters_string <- paste0( 
       "list(NULL, ",
-      paste0("list(search = ", first_row_filters, ")", collapse = ", "),
+      paste0(
+        "list(search = ", 
+        first_row_filters, 
+        ")", 
+        collapse = ", "
+      ),
       ")"
     )
   })
   
-  observeEvent(input$buttonDefaultHighlighted, {
+  shiny::observeEvent(input$buttonDefaultHighlighted, {
     
-    req(input$chooseDT_rows_selected)
+    shiny::req(input$chooseDT_rows_selected)
     ith_row <- input$chooseDT_rows_selected
     
-    data_filtered_helper <- data.frame(lapply(data_filtered, as.character), stringsAsFactor = FALSE)
+    data_filtered_helper <- 
+      data.frame(
+        lapply(
+          data_filtered, 
+          as.character
+        ), 
+      stringsAsFactor = FALSE
+    )
     
-    first_row_filters <- paste0("'[\"", data_filtered_helper[ith_row,], "\"]'")
+    first_row_filters <- paste0(
+      "'[\"", 
+      data_filtered_helper[ith_row,], 
+      "\"]'"
+    )
+    
     reacVals$first_row_filters_string <- paste0( 
       "list(NULL, ",
       paste0("list(search = ", first_row_filters, ")", collapse = ", "),
@@ -1636,34 +1808,34 @@ server <- function(session, input, output){
   })
   
   
-  ### Reset filters----
-  observeEvent(input$buttonResetDefault ,{
+  #### Reset filters----
+  shiny::observeEvent(input$buttonResetDefault ,{
     reacVals$first_row_filters_string <- "NULL"
   })
   
   
-  ## Vector column filter choices ----
-  search_vector <- reactive({
-    req(input$chooseDT_search_columns)
+  #### Vector column filter choices ----
+  search_vector <- shiny::reactive({
+    shiny::req(input$chooseDT_search_columns)
     
     vNamedSearch <- input$chooseDT_search_columns
     names(vNamedSearch) <- colnames(data_filtered)
     vNamedSearch
   })
   
-  ## searchbar ----
+  ### searchbar ----
   # named vector with names of input variables
   # filled successively after default values are chosen from DT
-  output$search <- renderPrint({
+  output$search <- shiny::renderPrint({
     search_vector()
   })
   
   
-  # Default values Tab----
+  ## Default values Tab----
   
   ## defaults_input ----
   # subsetting above vector only with variables that have been assigned default value
-  defaults_input <- reactive({
+  defaults_input <- shiny::reactive({
     defaults_input <- search_vector()[search_vector() != ""]
     defaults_input
   })
@@ -1671,75 +1843,92 @@ server <- function(session, input, output){
   
   ### output ----
   # print subsetted data frame with filled default values
-  output$defaultsInput <- renderPrint({
-    as.data.frame(t(defaults_input()))
+  output$defaultsInput <- shiny::renderPrint({
+    as.data.frame(
+      t(
+        defaults_input()
+      )
+    )
   })
   
-  ## defaults_df ----
+  ### defaults_df ----
   # table output in dropdown within plot tab, displaying chosen default values
-  output$defaults_df_line <- renderTable({
-    
-    Values <- data.frame("Variable" = names(defaults_input()),
-                         "Default value" = defaults_input(),
-                         check.names = FALSE) # makes whitespace in header names possible
+  output$defaults_df_line <- shiny::renderTable({
+    Values <- data.frame(
+      "Variable" = names(defaults_input()),
+      "Default value" = defaults_input(),
+      check.names = FALSE
+    ) # makes whitespace in header names possible
     Values
   })
   
-  output$defaults_df_box <- renderTable({
-    
-    Values <- data.frame("Variable" = names(defaults_input()),
-                         "Default value" = defaults_input(),
-                         check.names = FALSE) # makes whitespace in header names possible
+  output$defaults_df_box <- shiny::renderTable({
+    Values <- data.frame(
+      "Variable" = names(defaults_input()),
+      "Default value" = defaults_input(),
+      check.names = FALSE
+    ) # makes whitespace in header names possible
     Values
   })
   
-  output$defaults_df_scatter <- renderTable({
-    
-    Values <- data.frame("Variable" = names(defaults_input()),
-                         "Default value" = defaults_input(),
-                         check.names = FALSE) # makes whitespace in header names possible
+  output$defaults_df_scatter <- shiny::renderTable({
+    Values <- data.frame(
+      "Variable" = names(defaults_input()),
+      "Default value" = defaults_input(),
+      check.names = FALSE
+    ) # makes whitespace in header names possible
     Values
   })
   
   
-  ## defaults_df_ui ----
-  output$defaults_df_ui_box <- renderUI({
-    
-    tableOutput("defaults_df_box")
+  ### defaults_df_ui ----
+  output$defaults_df_ui_box <- shiny::renderUI({
+    shiny::tableOutput("defaults_df_box")
   })
   
-  ## defaults_df_ui ----
-  output$defaults_df_ui_line <- renderUI({
-    
-    tableOutput("defaults_df_line")
+  ### defaults_df_ui ----
+  output$defaults_df_ui_line <- shiny::renderUI({
+    shiny::tableOutput("defaults_df_line")
   })
   
-  ## defaults_df_ui ----
-  output$defaults_df_ui_scatter <- renderUI({
-    
-    tableOutput("defaults_df_scatter")
+  ### defaults_df_ui ----
+  output$defaults_df_ui_scatter <- shiny::renderUI({
+    shiny::tableOutput("defaults_df_scatter")
   })
   
-  outputOptions(output, "defaults_df_ui_box", suspendWhenHidden=FALSE)
-  outputOptions(output, "defaults_df_ui_line", suspendWhenHidden=FALSE)
-  outputOptions(output, "defaults_df_ui_scatter", suspendWhenHidden=FALSE)
+  shiny::outputOptions(
+    x = output, 
+    name = "defaults_df_ui_box", 
+    suspendWhenHidden = FALSE
+  )
+  
+  shiny::outputOptions(
+    x = output, 
+    name = "defaults_df_ui_line", 
+    suspendWhenHidden = FALSE
+  )
+  
+  shiny::outputOptions(
+    x = output,
+    name = "defaults_df_ui_scatter", 
+    suspendWhenHidden = FALSE
+  )
   
   
-  # Color vector specification ------------------------------------
+  ## Color vector specification ------------------------------------
   
-  # dynamic number of color selectors (one for every OC) ---------------------
+  # dynamic number of color selectors (one for every OC) 
   
-  ## nOCR ----
+  ### nOCR 
   # number of Operating Characteristics
-  nOCR <- reactive({
-    req(data_filteredR())
+  nOCR <- shiny::reactive({
+    shiny::req(data_filteredR())
     ncol(data_filteredR()) - ind_inputendR()
   })
   
-  ## colors_ui ----
+  ### colors_ui 
   # Create colorInput field for every OC
-  output$colors_ui <- renderUI({
-    
+  output$colors_ui <- shiny::renderUI({
     lapply(1:nOCR(), function(i) {
       colourpicker::colourInput(
         inputId = paste0("col_", names_outputsR()[i]),
@@ -1750,190 +1939,124 @@ server <- function(session, input, output){
     })
   })
   
-  ## valColvarR ----
-  valColvarR <- reactive({
-    req(data_filteredR())
+  ### valColvarR 
+  valColvarR <- shiny::reactive({
+    shiny::req(data_filteredR())
     unique(data_filteredR()[[input$color]])
   })
   
-  ## nValColvarR ----
-  nValColvarR <- reactive({
-    req(valColvarR())
+  ### nValColvarR 
+  nValColvarR <- shiny::reactive({
+    shiny::req(valColvarR())
     length(valColvarR())
   })
   
-  ## colordim_ui ----
-  output$colordim_ui <- renderUI({
-    
+  ### colordim_ui 
+  output$colordim_ui <- shiny::renderUI({
     lapply(1:nValColvarR(), function(i) {
       colourpicker::colourInput(
         inputId = paste0("col_", valColvarR()[i]),
         label = valColvarR()[i],
         showColour = "both",
-        
         value = scales::hue_pal()(nValColvarR())[i]
       )
     })
   })
   
-  
-  ## nValColvarR ----
-  # TODO: check: is this function repetition neccessery?
-  nValColvarR <- reactive({
-    req(valColvarR())
-    length(valColvarR())
-  })
-  
-  
-  ## colordim_ui ----
-  # TODO: check: is this function repetition neccessery?
-  output$colordim_ui <- renderUI({
-    
-    lapply(1:nValColvarR(), function(i) {
-      colourpicker::colourInput(
-        inputId = paste0("col_", valColvarR()[i]),
-        label = valColvarR()[i],
-        showColour = "both",
-        
-        value = scales::hue_pal()(nValColvarR())[i]
-      )
-    })
-  })
-  
-  ## valColvar_scatterR ----
-  valColvar_scatterR <- reactive({
-    
-    req(data_filteredR())
+  ### valColvar_scatterR 
+  valColvar_scatterR <- shiny::reactive({
+    shiny::req(data_filteredR())
     tryCatch({
       unique(data_filteredR()[[input$colvar_scatter]])  
     }, error = function(e) {
       err_ <- ""
-      validate(
-        need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+      shiny::validate(
+        shiny::need(
+          err_ != "", 
+          "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+        )
       )}
     )
-    
   })
   
-  
-  ## nValColvar_scatterR ----
-  nValColvar_scatterR <- reactive({
-    req(valColvar_scatterR())
+  ### nValColvar_scatterR 
+  nValColvar_scatterR <- shiny::reactive({
+    shiny::req(valColvar_scatterR())
     length(valColvar_scatterR())
   })
   
   
-  ## colors_scatter_ui ----
-  output$colors_scatter_ui <- renderUI({
-    
+  ### colors_scatter_ui 
+  output$colors_scatter_ui <- shiny::renderUI({
     lapply(1:nValColvar_scatterR(), function(i) {
       colourpicker::colourInput(
         inputId = paste0("col_", valColvar_scatterR()[i], "_sc"),
         label = valColvar_scatterR()[i],
         showColour = "both",
-        
         value = scales::hue_pal()(nValColvar_scatterR())[i]
       )
     })
   })
   
-  outputOptions(output, "colors_ui", suspendWhenHidden =FALSE)
-  outputOptions(output, "colordim_ui", suspendWhenHidden = FALSE)
-  outputOptions(output, "colors_scatter_ui", suspendWhenHidden = FALSE)
+  shiny::outputOptions(
+    x = output, 
+    name = "colors_ui", 
+    suspendWhenHidden = FALSE
+  )
   
+  shiny::outputOptions(
+    x = output, 
+    name = "colordim_ui", 
+    suspendWhenHidden = FALSE
+  )
   
-  ## valColvar_scatterR ----
-  # TODO: check: is this function repetition neccessery?
-  valColvar_scatterR <- reactive({
-    
-    req(data_filteredR())
-    tryCatch({
-      unique(data_filteredR()[[input$colvar_scatter]])
-    }, error = function(e) {
-      err_ <- ""
-      validate(
-        need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
-      )}
-    )
-  })
+  shiny::outputOptions(
+    x = output, 
+    name = "colors_scatter_ui", 
+    suspendWhenHidden = FALSE
+  )
   
-  
-  ## nValColvar_scatterR ----
-  # TODO: check: is this function repetition neccessery?
-  nValColvar_scatterR <- reactive({
-    req(valColvar_scatterR())
-    length(valColvar_scatterR())
-  })
-  
-  
-  ## colors_scatter_ui ----
-  # TODO: check: is this function repetition neccessery?
-  output$colors_scatter_ui <- renderUI({
-    
-    lapply(1:nValColvar_scatterR(), function(i) {
-      colourpicker::colourInput(
-        inputId = paste0("col_", valColvar_scatterR()[i], "_sc"),
-        label = valColvar_scatterR()[i],
-        showColour = "both",
-        
-        value = scales::hue_pal()(nValColvar_scatterR())[i]
-      )
-    })
-  })
-  
-  outputOptions(output, "colors_ui", suspendWhenHidden =FALSE)
-  outputOptions(output, "colordim_ui", suspendWhenHidden = FALSE)
-  outputOptions(output, "colors_scatter_ui", suspendWhenHidden = FALSE)
-  
-  
-  ## lUiColors ----
-  lUiColors <- reactive({
-    
-    req(input$OC)
+  ### lUiColors 
+  lUiColors <- shiny::reactive({
+    shiny::req(input$OC)
     df_colors <- data.frame(lapply(input$OC, function(i) {
       input[[paste0("col_", i)]]
     }))
-    
     vColors <- as.vector(t(df_colors))
     # names(vColors) <- names_outputsR()
     names(vColors) <- input$OC
     vColors
   })
   
-  ## lUiColordim ----
-  lUiColordim <- reactive({
-    
+  ### lUiColordim 
+  lUiColordim <- shiny::reactive({
     df_colors <- data.frame(lapply(valColvarR(), function(i) {
       input[[paste0("col_", i)]]
     }))
-    
     vColors <- as.vector(t(df_colors))
     names(vColors) <- valColvarR()
     vColors
   })
   
-  ## lUiColors_scatter ----
-  lUiColors_scatter <- reactive({
-    req(valColvar_scatterR)
+  ### lUiColors_scatter 
+  lUiColors_scatter <- shiny::reactive({
+    shiny::req(valColvar_scatterR)
     df_colors <- data.frame(lapply(valColvar_scatterR(), function(i) {
       input[[paste0("col_", i, "_sc")]]
     }))
-    
     vColors <- as.vector(t(df_colors))
-    req(vColors)
+    shiny::req(vColors)
     names(vColors) <- valColvar_scatterR()
-    
     vColors
   })
   
   
-  # Plot Tab ----
+  ## Plot Tab ----
   
-  ## Errorbar Selection ----
-  output$errorbar_var <- renderUI({
+  ### Errorbar Selection ----
+  output$errorbar_var <- shiny::renderUI({
     
-    if(input$radioErrorsymmetry == "symmetrical"){
-      
+    if(input$radioErrorsymmetry == "symmetrical") {
       shiny::selectizeInput(
         inputId = "errorvars",
         label = "Choose all the error variables (sd)",
@@ -1942,7 +2065,8 @@ server <- function(session, input, output){
       )
       
     } else{
-      tagList(
+      
+      shiny::tagList(
         shiny::selectizeInput(
           inputId = "errorvars_upper",
           label = "Choose error variables for the upper KI",
@@ -1961,250 +2085,271 @@ server <- function(session, input, output){
   })
   
   
-  # observes ----
+  ## observes ----
   
-  ## boxplotGroupVar ----
+  ### boxplotGroupVar ----
   # only make variables with default values available for simulation parameter choice
-  observe({
-    updateSelectInput(session,
-                      "boxplotGroupVar",
-                      choices = names_inputsR()
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "boxplotGroupVar",
+      choices = names_inputsR()
     )
   })
   
-  ## facet_distribution_rows ----
-  observe({
-    updateSelectInput(session,
-                      "facet_distribution_rows",
-                      choices = names_inputsR()
+  ### facet_distribution_rows ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_distribution_rows",
+      choices = names_inputsR()
     )
   })
   
-  ## facet_distribution_cols ----
-  observe({
-    updateSelectInput(session,
-                      "facet_distribution_cols",
-                      choices = names_inputsR()
+  ### facet_distribution_cols ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_distribution_cols",
+      choices = names_inputsR()
     )
   })
   
-  ## facet_distribution_wrap ----
-  observe({
-    updateSelectizeInput(session,
-                         "facet_distribution_wrap",
-                         choices = names_inputsR()
+  ### facet_distribution_wrap ----
+  shiny::observe({
+    shiny::updateSelectizeInput(
+      session = session,
+      inputId = "facet_distribution_wrap",
+      choices = names_inputsR()
     )
   })
   
-  ## x ----
-  observe({
-    updateSelectInput(session,
-                      "x",
-                      choices = names(defaults_input())
+  ### x ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "x",
+      choices = names(defaults_input())
     )
   })
   
-  ## facet_rows ----
-  observe({
-    updateSelectInput(session,
-                      "facet_rows",
-                      choices = names(defaults_input())
+  ### facet_rows ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_rows",
+      choices = names(defaults_input())
     )
   })
   
-  ## facet_cols ----
-  observe({
-    updateSelectInput(session,
-                      "facet_cols",
-                      choices = names(defaults_input())
+  ### facet_cols ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_cols",
+      choices = names(defaults_input())
     )
   })
   
-  ## facet_wrap ----
-  observe({
-    updateSelectizeInput(session,
-                         "facet_wrap",
-                         choices = names(defaults_input())
+  ### facet_wrap ----
+  shiny::observe({
+    shiny::updateSelectizeInput(
+      session = session,
+      inputId = "facet_wrap",
+      choices = names(defaults_input())
     )
   })
   
-  ## shape ----
-  observe({
-    updateSelectInput(session,
-                      "shape",
-                      choices = names(defaults_input())
+  ### shape ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "shape",
+      choices = names(defaults_input())
     )
   })
   
-  ## linetype ----
-  observe({
-    updateSelectInput(session,
-                      "linetype",
-                      choices = names(defaults_input())
+  ### linetype ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "linetype",
+      choices = names(defaults_input())
     )
   })
   
-  ## color ----
-  observe({
-    updateSelectInput(session,
-                      "color",
-                      choices = names(defaults_input())
+  ### color ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "color",
+      choices = names(defaults_input())
     )
   })
   
-  ## checkboxColor ----
-  observe({
+  ### checkboxColor ----
+  shiny::observe({
     if(length(input$OC) != 1){
-      updateCheckboxInput(session,
-                          "checkboxColor",
-                          value = FALSE
+      shiny::updateCheckboxInput(
+        session = session,
+        inputId = "checkboxColor",
+        value = FALSE
       )
     }
   })
-  # 
-  # ## checkboxRepvar ----
-  # observe({
-  #   if(input$checkboxExampleData == FALSE){
-  #     updateCheckboxInput(session,
-  #                         "checkboxRepvar",
-  #                         value = FALSE)
-  #   }
-  # })
   
-  ## checkboxPalette_OC ----
-  observe({
+  ### checkboxPalette_OC ----
+  shiny::observe({
     if(input$checkboxColor == TRUE){
-      updateCheckboxInput(session,
-                          "checkboxPalette_OC",
-                          value = FALSE)
+      shiny::updateCheckboxInput(
+        session = session,
+        inputId = "checkboxPalette_OC",
+        value = FALSE)
     }
   })
   
-  ## facet_rows_scatter ----
-  observe({
-    updateSelectInput(session,
-                      "facet_rows_scatter",
-                      choices = names(defaults_input()))
+  ### facet_rows_scatter ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_rows_scatter",
+      choices = names(defaults_input()))
   })
   
-  ## facet_cols_scatter ----
-  observe({
-    updateSelectInput(session,
-                      "facet_cols_scatter",
-                      choices = names(defaults_input()))
+  ### facet_cols_scatter ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_cols_scatter",
+      choices = names(defaults_input()))
   })
   
-  ## facet_wrap_scatter ----
-  observe({
-    updateSelectInput(session,
-                      "facet_wrap_scatter",
-                      choices = names(defaults_input()))
+  ### facet_wrap_scatter ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_wrap_scatter",
+      choices = names(defaults_input()))
   })
   
-  ## shape_scatter ----
-  observe({
-    updateSelectInput(session,
-                      "shape_scatter",
-                      choices = names(defaults_input()))
+  ### shape_scatter ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "shape_scatter",
+      choices = names(defaults_input()))
   })
   
-  ## color_scatter -----
-  observe({
-    updateSelectInput(session,
-                      "colvar_scatter",
-                      choices = names(defaults_input())
+  ### color_scatter -----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "colvar_scatter",
+      choices = names(defaults_input())
     )
   })
   
-  ## color_boxplot -----
-  observe({
-    updateSelectInput(session,
-                      "colvar_dist",
-                      choices = names(defaults_input())
+  ### color_boxplot -----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "colvar_dist",
+      choices = names(defaults_input())
     )
   })
   
-  ## xaxis_boxplot -----
-  observe({
-    updateSelectInput(session,
-                      "boxplotGroupVar",
-                      choices = names(defaults_input())
+  ### xaxis_boxplot -----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "boxplotGroupVar",
+      choices = names(defaults_input())
     )
   })
   
   
-  # save default values in a list upon clicking action button
+  ## Plots -------------------------------------------------------------------
   
-  # deactivated in ui -------------------------------------------
+  ### Boxplot -------------------------------------------------------------
   
-  # lDefault ----
-  # variant with automatic input of chosen filters as default values
-  lDefault <- eventReactive(input$updateDefaultList,  { as.list(defaults_input()) } )
-  ## output ----
-  # Output of list with default values
-  output$lDefault <- renderPrint({
-    req(lDefault)
-    print(lDefault())
-  })
-  
-  
-  # Plots -------------------------------------------------------------------
-  
-  ## Boxplot -------------------------------------------------------------
-  
-  df_boxplot <- reactive({
+  df_boxplot <- shiny::reactive({
     
     # 1 line df with default values for variables that are checked
     
-    ### default_df ----
     default_df <- defaults_input()
     
-    ## sim_par ----
     # vector of names of simulation parameters
-    sim_par <- c(input$repvar, input$boxplotGroupVar)
+    sim_par <- c(
+      input$repvar, 
+      input$boxplotGroupVar
+    )
     
     if (input$checkboxColorDist) {
-      sim_par <- c(sim_par, input$colvar_dist)
+      sim_par <- c(
+        sim_par, 
+        input$colvar_dist
+      )
     }
     
     if(input$radioFacetDistribution == "grid"){
-      sim_par <- c(sim_par, input$facet_distribution_rows, input$facet_distribution_cols)
+      sim_par <- c(
+        sim_par, 
+        input$facet_distribution_rows, 
+        input$facet_distribution_cols
+      )
     }
     
     if(input$radioFacetDistribution == "wrap"){
-      sim_par <- c(sim_par, input$facet_distribution_wrap)
+      sim_par <- c(
+        sim_par, 
+        input$facet_distribution_wrap
+      )
     }
     
-    ## default_filter ----
     # exclude simulation parameters from df with default values
     default_filter <- default_df[!(names(default_df) %in% sim_par)]
     
-    # default_filter <- gsub('\\[', "", default_filter)
-    # default_filter <- gsub('\\]', "", default_filter)
+    default_filter <- gsub(
+      '\\[\\"', 
+      "", 
+      default_filter
+    )
     
-    default_filter <- gsub('\\[\\"', "", default_filter)
-    default_filter <- gsub('\\"\\]', "", default_filter)
+    default_filter <- gsub(
+      '\\"\\]', 
+      "", 
+      default_filter
+    )
     
-    ## bedingung ----
-    bedingung <- paste0(paste0("`", names(default_filter), "`"),
-                        " == ",
-                        paste0("'", default_filter, "'"),
-                        # default_filter,
-                        collapse = " & ")
+    # create condition
+    bedingung <- paste0(
+      paste0(
+        "`", 
+        names(default_filter), 
+        "`"
+      ),
+      " == ",
+      paste0(
+        "'", 
+        default_filter, 
+        "'"
+      ),
+      collapse = " & "
+    )
     
     if(length(default_filter) != 0){
-      df_boxplot <- subset(data_prefiltered(), eval(parse(text = bedingung)))
+      df_boxplot <- subset(
+        data_prefiltered(), 
+        eval(parse(text = bedingung))
+      )
     } else {
       df_boxplot <- data_prefiltered()
     }
     
     df_boxplot # return data frame
-    
   })
   
-  ## df_scatterplot output ----
   output$df_boxplot <- DT::renderDataTable({
-    
     df_boxplot()
   },
   extensions = 'Buttons', 
@@ -2217,15 +2362,21 @@ server <- function(session, input, output){
   
   output$pBoxplot <- renderPlot({
     
-    validate(
-      need(input$repvar != input$inputend, "Replication variable can't be an input variable")
+    shiny::validate(
+      shiny::need(
+        input$repvar != input$inputend, 
+        "Replication variable can't be an input variable"
+      )
     )
     
-    validate(
-      need(isTruthy(input$boxplotOutputVar), "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+    shiny::validate(
+      shiny::need(
+        shiny::isTruthy(input$boxplotOutputVar), 
+        "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+      )
     )
     
-    req(input$boxplotGroupVar)
+    shiny::req(input$boxplotGroupVar)
     
     d <- df_boxplot()
     
@@ -2234,17 +2385,17 @@ server <- function(session, input, output){
     }
     
     boxplot <- tryCatch({
-      ggplot(
+      ggplot2::ggplot(
         d, 
-        aes_string(
+        ggplot2::aes_string(
           x = input$boxplotGroupVar,
           y = input$boxplotOutputVar
         )
       )
     }, error = function(e) {
       err_ <- ""
-      validate(
-        need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+      shiny::validate(
+        shiny::need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
       )
     }
     )
@@ -2252,55 +2403,65 @@ server <- function(session, input, output){
     if (input$checkboxColorDist) {
       boxplot <-
         boxplot +
-        aes_string(
+        ggplot2::aes_string(
           fill = input$colvar_dist,
           col = input$colvar_dist
         ) 
     }
     
     if (input$boxplottype == "Violinplot") {
-      
       boxplot <- 
         boxplot + 
-        geom_violin(alpha = input$alpha)
-      
+        ggplot2::geom_violin(alpha = input$alpha)
     } else if (input$boxplottype == "Boxplot") {
-      
       boxplot <- 
         boxplot + 
-        geom_boxplot(alpha = input$alpha)
-      
+        ggplot2::geom_boxplot(alpha = input$alpha)
     }
     
     if(input$radioFacetDistribution == "grid"){
       
-      if (any(input$facet_distribution_rows %in% input$facet_distribution_cols)) {
+      if (
+        any(
+          input$facet_distribution_rows %in% input$facet_distribution_cols
+        )
+      ) {
         err_ <- ""
-        validate(
-          need(err_ != "", "Faceting variables can only appear in row or cols, not both")
+        shiny::validate(
+          shiny::need(
+            err_ != "", 
+            "Faceting variables can only appear in row or cols, not both"
+          )
         )
       }
       
       boxplot <-
         tryCatch({
-          
-          frows_distribution <- input$facet_distribution_rows %>%
-            str_replace_all(",", "+") %>%
+
+          frows_distribution <- 
+            input$facet_distribution_rows %>%
+            stringr::str_replace_all(",", "+") %>%
             rlang::parse_exprs()
           
-          fcols_distribution <- input$facet_distribution_cols %>%
-            str_replace_all(",", "+") %>%
+          fcols_distribution <- 
+            input$facet_distribution_cols %>%
+            stringr::str_replace_all(",", "+") %>%
             rlang::parse_exprs()
           
           boxplot +
-            facet_grid(vars(!!!frows_distribution),
-                       vars(!!!fcols_distribution),
-                       labeller = "label_both"
+            ggplot2::facet_grid(
+              ggplot2::vars(!!!frows_distribution),
+              ggplot2::vars(!!!fcols_distribution),
+              labeller = "label_both"
             )}, error = function(e) {
               err_ <- ""
-              validate(
-                need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+              shiny::validate(
+                shiny::need(
+                  err_ != "", 
+                  "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+                )
               )
+              
             })
     }
     
@@ -2309,142 +2470,103 @@ server <- function(session, input, output){
       boxplot <-
         tryCatch({
           
-          facets_distribution <- input$facet_distribution_wrap %>%
-            str_replace_all(",", "+") %>%
+          facets_distribution <- 
+            input$facet_distribution_wrap %>%
+            stringr::str_replace_all(",", "+") %>%
             rlang::parse_exprs()
           
           boxplot +
-            facet_wrap(vars(!!!facets_distribution),
-                       labeller = "label_both"
+            ggplot2::facet_wrap(
+              ggplot2::vars(!!!facets_distribution),
+              labeller = "label_both"
             ) }, error = function(e) {
               err_ <- ""
-              validate(
-                need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+              shiny::validate(
+                shiny::need(
+                  err_ != "", 
+                  "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+                )
               )
             })
     }
-    
-    # 
-    # if(input$boxplottype == "Densityplot"){
-    #   if("Density" %in% input$densitytype){
-    #     boxplot <-
-    #       tryCatch({
-    #         boxplot + 
-    #           suppressWarnings(geom_density(aes(y = ..density..), 
-    #                                         alpha = input$alpha)
-    #           )}, error = function(e) {
-    #             err_ <- ""
-    #             validate(
-    #               need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
-    #             )
-    #           })
-    #   }
-    #   
-    #   if("Histogram" %in% input$densitytype){
-    #     boxplot <-
-    #       tryCatch({
-    #         boxplot + 
-    #           suppressWarnings(geom_histogram(aes(y = ..density..),
-    #                                           bins = input$bins,
-    #                                           alpha = input$alpha,
-    #                                           position = input$hist_position)  
-    #           )}, error = function(e) {
-    #             err_ <- ""
-    #             validate(
-    #               need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
-    #             )
-    #           })
-    #   }
-    #   
-    #   tryCatch({
-    #     suppressMessages(suppressWarnings(print(boxplot)))
-    #     
-    #   }, error = function(e) {
-    #     err_ <- ""
-    #     validate(
-    #       need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
-    #     )
-    #   })
-    #   
-    # } else {
-    #   
-    #   tryCatch({
-    #     
-    #     if(input$boxplottype == "Violinplot"){
-    #       suppressMessages(suppressWarnings(print(boxplot + geom_violin(aes_string(
-    #         x = input$boxplotGroupVar,
-    #         y = input$boxplotOutputVar,
-    #         color = input$boxplotGroupVar,
-    #         fill = input$boxplotGroupVar),
-    #         alpha = input$alpha))))
-    #     } else {
-    #       suppressMessages(suppressWarnings(print(boxplot + geom_boxplot(aes_string(
-    #         x = input$boxplotGroupVar,
-    #         y = input$boxplotOutputVar,
-    #         color = input$boxplotGroupVar,
-    #         fill = input$boxplotGroupVar),
-    #         alpha = input$alpha))))
-    #     }
-    #   }, error = function(e) {
-    #     err_ <- ""
-    #     validate(
-    #       need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
-    #     )
-    #   })
-    # }
     
     boxplot
     
   })
   
-  ## scatter_ui output ----
-  output$boxplot_ui <- renderUI({
-    plotOutput("pBoxplot")
+  # Render output
+  output$boxplot_ui <- shiny::renderUI({
+    shiny::plotOutput("pBoxplot")
   })
   
   ## Scatterplot ----
-  df_scatterplot <- reactive({
+  df_scatterplot <- shiny::reactive({
     
     # 1 line df with default values for variables that are checked
     
-    ### default_df ----
     default_df <- defaults_input()
     
-    ## sim_par ----
     # vector of names of simulation parameters
     sim_par <- input$repvar
     
     if (input$checkboxColorScatter) {
-      sim_par <- c(sim_par, input$colvar_scatter)
+      sim_par <- c(
+        sim_par, 
+        input$colvar_scatter
+      )
     }
     
     if(input$radioFacet_scatter == "grid"){
-      sim_par <- c(sim_par, input$facet_rows_scatter, input$facet_cols_scatter)
+      sim_par <- c(
+        sim_par, 
+        input$facet_rows_scatter, 
+        input$facet_cols_scatter
+      )
     }
     
     if(input$radioFacet_scatter == "wrap"){
-      sim_par <- c(sim_par, input$facet_wrap_scatter)
+      sim_par <- c(
+        sim_par, 
+        input$facet_wrap_scatter
+      )
     }
     
-    ## default_filter ----
     # exclude simulation parameters from df with default values
     default_filter <- default_df[!(names(default_df) %in% sim_par)]
     
-    # default_filter <- gsub('\\[', "", default_filter)
-    # default_filter <- gsub('\\]', "", default_filter)
+    default_filter <- gsub(
+      '\\[\\"', 
+      "", 
+      default_filter
+    )
     
-    default_filter <- gsub('\\[\\"', "", default_filter)
-    default_filter <- gsub('\\"\\]', "", default_filter)
+    default_filter <- gsub(
+      '\\"\\]', 
+      "", 
+      default_filter
+    )
     
-    ## bedingung ----
-    bedingung <- paste0(paste0("`", names(default_filter), "`"),
-                        " == ",
-                        paste0("'", default_filter, "'"),
-                        # default_filter,
-                        collapse = " & ")
+    # create condition
+    bedingung <- paste0(
+      paste0(
+        "`", 
+        names(default_filter), 
+        "`"
+      ),
+      " == ",
+      paste0(
+        "'", 
+        default_filter, 
+        "'"
+      ),
+      collapse = " & "
+    )
     
     if(length(default_filter) != 0){
-      df_scatterplot <- subset(data_prefiltered(), eval(parse(text = bedingung)))
+      df_scatterplot <- subset(
+        data_prefiltered(), 
+        eval(parse(text = bedingung))
+      )
     } else {
       df_scatterplot <- data_prefiltered()
     }
@@ -2453,9 +2575,7 @@ server <- function(session, input, output){
     
   })
   
-  ## df_scatterplot output ----
   output$df_scatterplot <- DT::renderDataTable({
-    
     df_scatterplot()
   },
   extensions = 'Buttons', 
@@ -2466,32 +2586,30 @@ server <- function(session, input, output){
   )
   )
   
-  # ## data_longer_scatter ----
-  # data_longer_scatter <- reactive({
-  #   req(input$OC_scatter)
-  #   
-  #   d <- df_scatterplot()
-  #   d <- d[input$chooseDT_rows_all,]
-  #   d
-  # })
-  
-  ## plot_object_scatter ----
-  plot_object_scatter <- reactive({
+  plot_object_scatter <- shiny::reactive({
     
-    req(lUiColors_scatter())
+    shiny::req(lUiColors_scatter())
     
-    colScale_scatter <- scale_colour_manual(values = lUiColors_scatter())
+    colScale_scatter <- 
+      ggplot2::scale_colour_manual(values = lUiColors_scatter())
     
     p1 <- tryCatch({
-      p1 <- ggplot(
+      p1 <- 
+        ggplot2::ggplot(
         df_scatterplot(), 
-        aes_string(x = input$OC_scatter[1], y = input$OC_scatter[2])
+        ggplot2::aes_string(
+          x = input$OC_scatter[1], 
+          y = input$OC_scatter[2]
+        )
       ) + 
-        geom_point()
+        ggplot2::geom_point()
     }, error = function(e) {
       err_ <- ""
-      validate(
-        need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+      shiny::validate(
+        shiny::need(
+          err_ != "", 
+          "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+        )
       )
     }
     )
@@ -2500,8 +2618,12 @@ server <- function(session, input, output){
       
       p1 <-
         p1 +
-        aes_string(color = input$colvar_scatter) + 
-        labs(colour = input$colvar_scatter)
+        ggplot2::aes_string(
+          color = input$colvar_scatter
+        ) + 
+        ggplot2::labs(
+          colour = input$colvar_scatter
+        )
     }
     
     if(input$checkboxPalette_scatter){
@@ -2509,25 +2631,29 @@ server <- function(session, input, output){
     }
     
     
-    facets <- input$facet_wrap_scatter %>%
-      str_replace_all(",", "+") %>%
+    facets <- 
+      input$facet_wrap_scatter %>%
+      stringr::str_replace_all(",", "+") %>%
       rlang::parse_exprs()
     
-    frows <- input$facet_rows_scatter %>%
-      str_replace_all(",", "+") %>%
+    frows <- 
+      input$facet_rows_scatter %>%
+      stringr::str_replace_all(",", "+") %>%
       rlang::parse_exprs()
     
-    fcols <- input$facet_cols_scatter %>%
-      str_replace_all(",", "+") %>%
+    fcols <- 
+      input$facet_cols_scatter %>%
+      stringr::str_replace_all(",", "+") %>%
       rlang::parse_exprs()
     
     
     if(input$radioFacet_scatter == "grid"){
       p1 <-
         p1 +
-        facet_grid(vars(!!!frows),
-                   vars(!!!fcols),
-                   labeller = "label_both"
+        ggplot2::facet_grid(
+          ggplot2::vars(!!!frows),
+          ggplot2::vars(!!!fcols),
+          labeller = "label_both"
         )
     }
     
@@ -2535,48 +2661,48 @@ server <- function(session, input, output){
       
       p1 <-
         p1 +
-        facet_wrap(vars(!!!facets), labeller = "label_both"
+        ggplot2::facet_wrap(
+          ggplot2::vars(!!!facets), 
+          labeller = "label_both"
         )
     }
     
     p1
   })
   
-  ## plot_scatter output ----
-  output$plot_scatter <- renderPlot({
+  # plot_scatter output 
+  output$plot_scatter <- shiny::renderPlot({
     
-    validate(
-      need(input$OC_scatter, "No OCs chosen")
+    shiny::validate(
+      shiny::need(input$OC_scatter, "No OCs chosen")
     )
     
-    validate(
-      need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
+    shiny::validate(
+      shiny::need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
     )
     
     tryCatch({
       print(plot_object_scatter())  
     }, error = function(e) {
       err_ <- ""
-      validate(
-        need(err_ != "", "This is not working. Probably because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values. If this does not fix it, please report a bug.")
+      shiny::validate(
+        shiny::need(err_ != "", "This is not working. Probably because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values. If this does not fix it, please report a bug.")
       )  
     })
   })
   
-  ## scatter_ui output ----
-  output$scatter_ui <- renderUI({
-    plotOutput("plot_scatter")
+  # Renger Output for Scatterplot
+  output$scatter_ui <- shiny::renderUI({
+    shiny::plotOutput("plot_scatter")
   })
   
   
-  # Lineplot ------------------------------------------
+  ## Lineplot -------------
   
   # Data frame used for plot
   # Filters every variable for the specified default value except the chosen simulation parameters, which can have more distinguishable values
-  
-  ## df_plot ----
-  df_plot <- reactive({
-    
+
+  df_plot <- shiny::reactive({
     
     # 1 line df with default values for variables that are checked
     default_df <- defaults_input()
@@ -2588,49 +2714,87 @@ server <- function(session, input, output){
     Code$x <- input$x
     
     if(input$checkboxLinetype){
-      sim_par <- c(sim_par, input$linetype)
+      sim_par <- c(
+        sim_par, 
+        input$linetype
+      )
     }
     
     if(input$radioFacet == "grid"){
-      sim_par <- c(sim_par, input$facet_rows, input$facet_cols)
+      sim_par <- c(
+        sim_par, 
+        input$facet_rows, 
+        input$facet_cols
+      )
     }
     
     if(input$radioFacet == "wrap"){
-      sim_par <- c(sim_par, input$facet_wrap)
+      sim_par <- c(
+        sim_par, 
+        input$facet_wrap
+      )
     }
     
     if(input$checkboxColor){
-      sim_par <- c(sim_par, input$color)
+      sim_par <- c(
+        sim_par, 
+        input$color
+      )
     }
     
     if(input$checkboxColor){
-      sim_par <- c(sim_par, input$color)
+      sim_par <- c(
+        sim_par, 
+        input$color
+      )
     }
     
     
     # exclude simulation parameters from df with default values
     default_filter <- default_df[!(names(default_df) %in% sim_par)]
     
-    # default_filter <- gsub('\\[', "", default_filter)
-    # default_filter <- gsub('\\]', "", default_filter)
+    default_filter <- gsub(
+        '\\[\\"', 
+        "", 
+        default_filter
+      )
     
-    default_filter <- gsub('\\[\\"', "", default_filter)
-    default_filter <- gsub('\\"\\]', "", default_filter)
+    default_filter <- gsub(
+      '\\"\\]', 
+      "", 
+      default_filter
+    )
     
-    bedingung <- paste0(paste0("`", names(default_filter), "`"),
-                        " == ",
-                        paste0("'", default_filter, "'"),
-                        # default_filter,
-                        collapse = " & ")
+    bedingung <- paste0(
+      paste0(
+        "`", 
+        names(default_filter), 
+        "`"
+      ),
+      " == ",
+      paste0(
+        "'", 
+        default_filter, 
+        "'"
+      ),
+      collapse = " & "
+    )
     
-    if(length(default_filter) != 0){
-      df_plot_ <- tryCatch({ subset(data_filteredR(), eval(parse(text = bedingung))) },
-                           error = function(e) {
-                             err_ <- ""
-                             validate(
-                               need(err_ != "", "This is not working. Probably because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values. If this does not fix it, please report a bug.")
-                             )
-                           })
+    if(length(default_filter) != 0) {
+      df_plot_ <- tryCatch({ 
+        subset(
+          data_filteredR(), 
+          eval(parse(text = bedingung))
+        )},
+        error = function(e) {
+          err_ <- ""
+          shiny::validate(
+            shiny::need(
+              err_ != "", 
+              "This is not working. Probably because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values. If this does not fix it, please report a bug."
+            )
+          )
+        })
     } else {
       df_plot_ <- data_filteredR()
     }
@@ -2639,10 +2803,12 @@ server <- function(session, input, output){
   })
   
   
-  # df_plot output ----
   output$df_plot <- DT::renderDataTable({
-    validate(
-      need(any(input$chooseDT_search_columns != ""), "    Please specify default values first")
+    shiny::validate(
+      shiny::need(
+        any(input$chooseDT_search_columns != ""), 
+        "Please specify default values first"
+      )
     )
     df_plot()
   },
@@ -2654,146 +2820,171 @@ server <- function(session, input, output){
   )
   )
   
-  
-  # data_longer ----
   # Transform dataset to long format on chosen output variables for easy plotting
-  data_longer <- reactive({
-    req(input$OC)
+  data_longer <- shiny::reactive({
+    shiny::req(input$OC)
     d <- df_plot()
-    d <- tryCatch({ d %>%
-        pivot_longer(
+    d <- tryCatch({ 
+      d %>%
+        tidyr::pivot_longer(
           cols = input$OC,
           names_to = "OC",
           values_to = "value"
-        )}, error = function(e) { 
-          err_ <- ""
-          validate(
-            need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+        )
+      }, 
+      error = function(e) { 
+        err_ <- ""
+        shiny::validate(
+          shiny::need(
+            err_ != "", 
+            "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
           )
-        }
+        )
+      }
     )
     
     if(input$checkboxErrorbar){
       
-      if(input$radioErrorsymmetry == "symmetrical"){
+      if(input$radioErrorsymmetry == "symmetrical") {
         
-        validate(
-          need(isTruthy(input$errorvars), "Please define error variables")
+        shiny::validate(
+          shiny::need(
+            shiny::isTruthy(input$errorvars), "Please define error variables")
         )
         
         d <- tryCatch({
           d %>%
-            pivot_longer(
+            tidyr::pivot_longer(
               cols = input$errorvars,
               names_to = "errorvar_name",
               values_to = "error"
-            )}, error = function(e) {
-              err_ <- ""
-              validate(
-                need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
-              )   
-            })
+            )
+        }, 
+        error = function(e) {
+          err_ <- ""
+          shiny::validate(
+            shiny::need(
+              err_ != "", 
+              "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+            )
+          )   
+        })
         
-        bedingung_errorbar <- paste0("(OC == '", input$OC, "' & errorvar_name == '", input$errorvars, "')", collapse = " | ")
+        bedingung_errorbar <- paste0(
+          "(OC == '", 
+          input$OC, 
+          "' & errorvar_name == '", 
+          input$errorvars, 
+          "')", 
+          collapse = " | "
+        )
         
-        d <- subset(d, eval(parse(text = bedingung_errorbar)))
+        d <- subset(
+          d, 
+          eval(parse(text = bedingung_errorbar))
+        )
         
       } else {
         
-        validate(
-          need(isTruthy(input$errorvars_upper), "Please define variable for upper bound/deviation")
+        shiny::validate(
+          shiny::need(
+            shiny::isTruthy(input$errorvars_upper), 
+            "Please define variable for upper bound/deviation"
+          )
         )
         
-        validate(
-          need(isTruthy(input$errorvars_lower), "Please define variable for upper bound/deviation")
+        shiny::validate(
+          shiny::need(
+            shiny::isTruthy(input$errorvars_lower), 
+            "Please define variable for upper bound/deviation"
+          )
         )
         
         d <- tryCatch({
           d %>%
-            pivot_longer(
+            tidyr::pivot_longer(
               cols = input$errorvars_upper,
               names_to = "errorvar_upper_name",
               values_to = "error_upper"
             )
-        }, error = function(e) {
+        }, 
+        error = function(e) {
           err_ <- ""
-          validate(
-            need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go to the tab with the data and then re-define default values")
+          shiny::validate(
+            shiny::need(
+              err_ != "", 
+              "Select a different variable or if a new dataset has been uploaded, go to the tab with the data and then re-define default values"
+            )
           )     
         })
         
         d <- tryCatch({
           d %>%
-            pivot_longer(
+            tidyr::pivot_longer(
               cols = input$errorvars_lower,
               names_to = "errorvar_lower_name",
               values_to = "error_lower"
             )
-        }, error = function(e) {
+        }, 
+        error = function(e) {
           err_ <- ""
-          validate(
-            need(err_ != "", "Select a different variable or if a new dataset has been uploaded, go to the tab with the data and then re-define default values")
+          shiny::validate(
+            shiny::need(
+              err_ != "", 
+              "Select a different variable or if a new dataset has been uploaded, go to the tab with the data and then re-define default values"
+            )
           )     
         })
         
-        bedingung_errorbar <- paste0("(OC == '", input$OC, "' & errorvar_upper_name == '", input$errorvars_upper, "' & errorvar_lower_name == '", input$errorvars_lower, "')", collapse = " | ")
+        bedingung_errorbar <- paste0(
+          "(OC == '", 
+          input$OC, 
+          "' & errorvar_upper_name == '", 
+          input$errorvars_upper, 
+          "' & errorvar_lower_name == '", 
+          input$errorvars_lower, 
+          "')", 
+          collapse = " | "
+        )
         
-        d <- subset(d, eval(parse(text = bedingung_errorbar)))
+        d <- subset(
+          d, 
+          eval(parse(text = bedingung_errorbar))
+        )
         
       }
     }
+    # return data frame
     as.data.frame(d)
   })
   
-  
-  # Plots ---------------------------------------
-  
-  ## lineplot_object ----
-  # Plot based on which dimensions are chosen
-  lineplot_object <- reactive({
-    
-    # data_lp <- reactive({
-    #     
-    #     data_output <- data_longer()
-    #     
-    #     if(input$checkboxLinetype){
-    #         
-    #         data_output[[input$linetype]] <- as.factor(data_output[[input$linetype]])
-    #         
-    #     }
-    #     data_output
-    # })
+  lineplot_object <- shiny::reactive({
+
     data_lp <- {
-      
       data_output <- data_longer()
-      
-      if(input$checkboxLinetype){
-        
-        data_output[[input$linetype]] <- as.factor(data_output[[input$linetype]])
-        
+      if(input$checkboxLinetype) {
+        data_output[[input$linetype]] <- 
+          as.factor(data_output[[input$linetype]])
       }
       data_output
     }
     
-    # colScale <- reactive({
-    #     if(input$checkboxColor){
-    #         scale_colour_manual(values = lUiColordim())
-    #     } else {
-    #         scale_colour_manual(values = lUiColors())
-    #     }
-    # })
     colScale <- {
       if(input$checkboxColor){
-        scale_colour_manual(values = lUiColordim())
+        ggplot2::scale_colour_manual(values = lUiColordim())
       } else {
-        scale_colour_manual(values = lUiColors())
+        ggplot2::scale_colour_manual(values = lUiColors())
       }
     }
     
-    p1 <- ggplot(
-      data_lp, 
-      aes_string(x = input$x, y = "value")
-    ) 
+    p1 <- 
+      ggplot2::ggplot(
+        data_lp, 
+        ggplot2::aes_string(
+          x = input$x, 
+          y = "value"
+        )
+      ) 
     
     if(input$checkboxPalette_OC){
       p1 <- p1 + colScale
@@ -2805,24 +2996,32 @@ server <- function(session, input, output){
     
     if(input$checkboxLine){
       if(input$checkboxColor){
+        
         p1 <-
           p1 +
-          geom_line(aes(
-            y = value,
-            color  = factor(get(input$color))),
-            size = input$linesize) + 
-          labs(colour = input$color) + 
-          ylab(input$OC)
+          ggplot2::geom_line(
+            ggplot2::aes(
+              y = value,
+              color  = factor(get(input$color))
+            ),
+            size = input$linesize
+          ) + 
+          ggplot2::labs(colour = input$color) + 
+          ggplot2::ylab(input$OC)
         
         Code$colour <<- paste(input$color)
         
       } else {
+        
         p1 <- 
           p1 + 
-          geom_line(aes(
-            y = value,
-            color  = OC),
-            size = input$linesize)
+          ggplot2::geom_line(
+            ggplot2::aes(
+              y = value,
+              color  = OC
+            ),
+            size = input$linesize
+          )
         Code$colour <<- "OC"
         
       }
@@ -2832,20 +3031,29 @@ server <- function(session, input, output){
       if(input$checkboxColor){
         p1 <-
           p1  +
-          geom_point(aes(
-            y = value,
-            color  = factor(get(input$color))),
-            size = 3*input$linesize) + 
-          labs(colour = input$color) + 
-          ylab(input$OC)
+          ggplot2::geom_point(
+            ggplot2::aes(
+              y = value,
+              color  = factor(get(input$color))
+            ),
+            size = 3*input$linesize
+          ) + 
+          ggplot2::labs(
+            colour = input$color
+          ) + 
+          ggplot2::ylab(input$OC)
         
       } else {
+        
         p1 <-
           p1  +
-          geom_point(aes(
-            y = value,
-            color  = OC),
-            size = 3*input$linesize)
+          ggplot2::geom_point(
+            ggplot2::aes(
+              y = value,
+              color  = OC
+            ),
+            size = 3*input$linesize
+          )
         
       }
     }
@@ -2855,31 +3063,39 @@ server <- function(session, input, output){
       
       p1 <-
         p1 +
-        aes_string(
+        ggplot2::aes_string(
           linetype = input$linetype,
           shape = input$linetype
         ) + 
-        labs(linetype = input$linetype, shape = input$linetype)
+        ggplot2::labs(
+          linetype = input$linetype, 
+          shape = input$linetype
+        )
+      
     }
     
-    facets <- input$facet_wrap %>% 
-      str_replace_all(",", "+") %>% 
+    facets <- 
+      input$facet_wrap %>% 
+      stringr::str_replace_all(",", "+") %>% 
       rlang::parse_exprs()
     
-    frows <- input$facet_rows %>%
-      str_replace_all(",", "+") %>%
+    frows <- 
+      input$facet_rows %>%
+      stringr::str_replace_all(",", "+") %>%
       rlang::parse_exprs()
     
-    fcols <- input$facet_cols %>%
-      str_replace_all(",", "+") %>%
+    fcols <- 
+      input$facet_cols %>%
+      stringr::str_replace_all(",", "+") %>%
       rlang::parse_exprs()
     
     if(input$radioFacet == "grid"){
       p1 <- 
         p1 + 
-        facet_grid(vars(!!!frows),
-                   vars(!!!fcols),
-                   labeller = "label_both"
+        ggplot2::facet_grid(
+          ggplot2::vars(!!!frows),
+          ggplot2::vars(!!!fcols),
+          labeller = "label_both"
         )
     }
     
@@ -2887,138 +3103,196 @@ server <- function(session, input, output){
       
       p1 <-
         p1 +
-        facet_wrap(vars(!!!facets), labeller = "label_both"
+        ggplot2::facet_wrap(
+          ggplot2::vars(!!!facets), 
+          labeller = "label_both"
         )
     }
     
     if(input$checkboxErrorbar){
       
-      if(input$radioErrorsymmetry == "symmetrical"){
+      if(input$radioErrorsymmetry == "symmetrical") {
+        
         p1 <- 
-          p1 + geom_errorbar(aes(ymin = value - error, 
-                                 ymax = value + error
-                                 , color = OC), 
-                             position=position_dodge(0.05))
+          p1 + ggplot2::geom_errorbar(
+            ggplot2::aes(
+              ymin = value - error, 
+              ymax = value + error, 
+              color = OC
+            ), 
+            position = ggplot2::position_dodge(0.05)
+          )
+        
       } else {
         
-        if(input$radioErrorstructure == "deviation"){
+        if(input$radioErrorstructure == "deviation") {
           
           p1 <- 
-            p1 + geom_errorbar(aes(ymin = value - error_lower,
-                                   ymax = value + error_upper,
-                                   color = OC),
-                               position = position_dodge(0.05))
+            p1 + ggplot2::geom_errorbar(
+              ggplot2::aes(
+                ymin = value - error_lower,
+                ymax = value + error_upper,
+                color = OC
+              ),
+              position = ggplot2::position_dodge(0.05)
+            )
+          
         } else {
           p1 <- 
-            p1 + geom_errorbar(aes(ymin = error_lower,
-                                   ymax = error_upper,
-                                   color = OC),
-                               position = position_dodge(0.05))
+            p1 + ggplot2::geom_errorbar(
+              ggplot2::aes(
+                ymin = error_lower,
+                ymax = error_upper,
+                color = OC
+              ),
+              position = ggplot2::position_dodge(0.05)
+            )
           
         }
       }
     }
     
-    p1 + theme(legend.key.size = unit(4, 'cm'))
+    # Return plot with modified theme
+    p1 + 
+      ggplot2::theme(legend.key.size = ggplot2::unit(4, 'cm'))
     
   })
   
-  ## plot_object ----
   # create plot_object with final settings
-  plot_object <- reactive({
+  plot_object <- shiny::reactive({
     
     p1 <- lineplot_object()
-    
-    ### THEME & other general plot options ----
-    
     plot_theme <- input$plottheme
     plot_fontsize <- input$plotfontsize
     plot_font <- input$plotfont
     
     if (plot_theme == "Grey") {
-      p1 <- p1 + theme_gray(plot_fontsize, plot_font)
-    }
-    if (plot_theme == "White") {
-      p1 <- p1 + theme_bw(plot_fontsize, plot_font)
-    }
-    if (plot_theme == "Linedraw") {
-      p1 <- p1 + theme_linedraw(plot_fontsize, plot_font)
-    }
-    if (plot_theme == "Light") {
-      p1 <- p1 + theme_light(plot_fontsize, plot_font)
-    }
-    if (plot_theme == "Minimal") {
-      p1 <- p1 + theme_minimal(plot_fontsize, plot_font)
-    }
-    if (plot_theme == "Classic") {
-      p1 <- p1 + theme_classic(plot_fontsize, plot_font)
+      p1 <- 
+        p1 + 
+        ggplot2::theme_gray(
+          plot_fontsize, 
+          plot_font
+        )
     }
     
-    ## TITLE ----------------------------------------
+    if (plot_theme == "White") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_bw(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Linedraw") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_linedraw(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Light") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_light(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Minimal") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_minimal(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Classic") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_classic(
+          plot_fontsize, 
+          plot_font
+        )
+    }
     
     if (input$checkboxTitle){
-      p1 <- p1 +
-        labs(title = input$plot_title)  +
-        theme(plot.title = element_text(colour = input$plot_title_colour,
-                                        size = input$plot_title_size,
-                                        vjust = 1.5,
-                                        hjust = input$plot_title_place))
+      p1 <- 
+        p1 +
+        ggplot2::labs(
+          title = input$plot_title
+        )  +
+        ggplot2::theme(
+          plot.title = ggplot2::element_text(
+            colour = input$plot_title_colour,
+            size = input$plot_title_size,
+            vjust = 1.5,
+            hjust = input$plot_title_place
+          )
+        )
     }
-    
-    ## LABS ----------------------------------------
     
     if(input$checkboxAxis){
-      
-      p1 <- p1 +
-        labs(x = input$xLab,
-             y = input$yLab)
+      p1 <- 
+        p1 +
+        ggplot2::labs(
+          x = input$xLab,
+          y = input$yLab
+        )
     }
-    
     p1
   })
   
-  # plottype observe ----
-  observe({
-    
+  shiny::observe({
     if(input$plottype){
-      
-      output$lineplotly <- renderPlotly({
-        ggplotly(plot_object())
+      output$lineplotly <- plotly::renderPlotly({
+        plotly::ggplotly(plot_object())
       })
-      
     } else {
-      
-      output$lineplot <- renderPlot({
+      output$lineplot <- shiny::renderPlot({
         plot_object()
       })
     }
   })
   
-  
-  # lineplot_ui output ----
-  output$lineplot_ui <- renderUI({
+  output$lineplot_ui <- shiny::renderUI({
     
-    validate(
-      need(input$OC, "No OCs chosen")
+    shiny::validate(
+      shiny::need(
+        input$OC, 
+        "No OCs chosen"
+      )
     )
     
-    validate(
-      need(input$x, "Please specify default values first")
+    shiny::validate(
+      shiny::need(
+        input$x, 
+        "Please specify default values first"
+      )
     )
     
-    validate(
-      need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
+    shiny::validate(
+      shiny::need(
+        any(input$chooseDT_search_columns != ""), 
+        "Please specify default values first"
+      )
     )
     
     if(input$plottype){
-      plotlyOutput("lineplotly",
-                   height = input$plotheight,
-                   width = input$plotwidth
+      plotly::plotlyOutput(
+        "lineplotly",
+        height = input$plotheight,
+        width = input$plotwidth
       )
     }else{
-      plotOutput("lineplot",
-                 height = input$plotheight,
-                 width = input$plotwidth
+      shiny::plotOutput(
+        "lineplot",
+        height = input$plotheight,
+        width = input$plotwidth
       )
     }
   })
@@ -3029,8 +3303,8 @@ server <- function(session, input, output){
   # ## observe ----
   # ### animateIteratorSelect ----
   # 
-  # observe({
-  #   updateSelectInput(session,
+  # shiny::observe({
+  #   shiny::updateSelectInput(session,
   #                     "animateIteratorSelect",
   #                     choices = names(defaults_input())
   #   )
@@ -3039,13 +3313,13 @@ server <- function(session, input, output){
   # 
   # ## observeEvents ----
   # 
-  # observeEvent(input$animationCloseButton, {
-  #   output$animationOutDynamic <- renderImage({ req("") })
+  # shiny::observeEvent(input$animationCloseButton, {
+  #   output$animationOutDynamic <- renderImage({ shiny::req("") })
   # })
   # 
   # 
   # #only renders if Button is clicked (isolate prevents reload on tabswitch)
-  # observeEvent(input$animationRenderButton,{
+  # shiny::observeEvent(input$animationRenderButton,{
   #   
   #   ### animationOutDynamic ---- 
   #   output$animationOutDynamic <- renderImage({
@@ -3057,7 +3331,7 @@ server <- function(session, input, output){
   #       #isolate prevents rerender on tabswitch
   #       isolate({
   #         #validates select input
-  #         validate(need(
+  #         shiny::validate(shiny::need(
   #           input$animateIteratorSelect,
   #           "Please specify iteration variable first"))
   #         
@@ -3093,64 +3367,74 @@ server <- function(session, input, output){
   #       
   #     }, error = function(e) {
   #       err_ <- ""
-  #       validate(need(err_ != "", "Animation cannot be created"))
+  #       shiny::validate(shiny::need(err_ != "", "Animation cannot be created"))
   #     })
   #   },
   #   #Deletes temporary Files after execution
   #   deleteFile = TRUE)
   # })
   
-  
-  # observes ----
-  
-  observe({
-    updateNumericInput(session,
-                       "download_plotwidth",
-                       value = input$plotwidth
+  shiny::observe({
+    shiny::updateNumericInput(
+      session = session,
+      inputId = "download_plotwidth",
+      value = input$plotwidth
     )
   })
   
-  observe({
-    updateNumericInput(session,
-                       "download_plotheight",
-                       value = input$plotheight
+  shiny::observe({
+    shiny::updateNumericInput(
+      session = session,
+      inputId = "download_plotheight",
+      value = input$plotheight
     )
   })
   
-  observe({
-    updateNumericInput(session,
-                       "download_resolution",
-                       value = input$resolution
+  shiny::observe({
+    shiny::updateNumericInput(
+      session = session,
+      inputId = "download_resolution",
+      value = input$resolution
     )
   })
   
   
-  # File IO ----
-  download_type <- reactive({input$download_type})
+  ### Download Handler ----
+  download_type <- shiny::reactive({input$download_type})
   
-  output$download_plot <- downloadHandler(
+  output$download_plot <- shiny::downloadHandler(
     
-    filename = function(){paste0(input$download_name,
-                                 ".", 
-                                 input$download_type)},
+    filename = function() {
+      paste0(
+        input$download_name,
+        ".",
+        input$download_type
+      )
+    },
     
-    content = function(file){
-      fun <- match.fun(download_type() )
+    content = function(file) {
+      fun <- match.fun(download_type())
       
-      fun(file, 
-          height = input$download_plotheight, 
-          width = input$download_plotwidth,
-          units = input$download_unit,
-          res = input$download_resolution)
+      fun(
+        file, 
+        height = input$download_plotheight, 
+        width = input$download_plotwidth,
+        units = input$download_unit,
+        res = input$download_resolution
+      )
       
       print(plot_object())
       dev.off()
     }
   )
-  
-  # Code ----
-  Code <- reactiveValues()
+
+  Code <- shiny::reactiveValues()
 }
 
-# shinyApp ----
-shinyApp(ui = ui, server = server, options = list(launch.browser = TRUE))
+# Run Shiny App ----
+shiny::shinyApp(
+  ui = ui, 
+  server = server, 
+  options = list(launch.browser = TRUE)
+)
+

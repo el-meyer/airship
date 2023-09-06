@@ -128,7 +128,7 @@ ui <-
           ),
           
           shiny::conditionalPanel(
-            condition = "input.checkboxFactsData == 0",
+            condition = "input.checkboxExampleData == 0 && input.checkboxFactsData == 0",
             
             shiny::checkboxInput(
               inputId = "checkboxRepvar",
@@ -141,7 +141,7 @@ ui <-
             condition = "input.checkboxRepvar != 0",
             
             shiny::conditionalPanel(
-              condition = "input.checkboxFactsData == 0",
+              condition = "input.checkboxExampleData == 0 && input.checkboxFactsData == 0",
               
               shiny::selectInput(
                 inputId = "repvar",
@@ -1254,11 +1254,6 @@ server <- function(
         # Custom Data
         
         # Update inputs
-        shiny::updateNumericInput(
-          session = session,
-          inputId = "rowSkip",
-          value = 0
-        )
         
         shiny::updateCheckboxInput(
           session = session,

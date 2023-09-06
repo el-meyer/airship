@@ -1624,8 +1624,8 @@ server <- function(
   })
   
   
-  ## names_outputsR_distribution ----
-  names_outputsR_distribution <-  shiny::reactive({
+  ## names_outputsR_unaggregated ----
+  names_outputsR_unaggregated <-  shiny::reactive({
     
     #shiny::req(data_filteredR, ind_inputendR)
     nm <- names(
@@ -1668,14 +1668,14 @@ server <- function(
     shiny::updateSelectizeInput(
       session = session,
       inputId = "OC_scatter",
-      choices = names_outputsR_distribution(),
-      selected = names_outputsR_distribution()[c(1,2)]
+      choices = names_outputsR_unaggregated(),
+      selected = names_outputsR_unaggregated()[c(1,2)]
     )
     
     shiny::updateSelectInput(
       session = session,
       inputId = "boxplotOutputVar",
-      choices = names_outputsR_distribution()
+      choices = names_outputsR_unaggregated()
     )
     
     if (input$checkboxFactsData == 1) {
@@ -1689,7 +1689,7 @@ server <- function(
       shiny::updateSelectizeInput(
         session = session,
         inputId = "OC_scatter",
-        choices = names_outputsR_distribution(),
+        choices = names_outputsR_unaggregated(),
         selected = c("X.Participants", "Duration")
       )
       
@@ -2702,13 +2702,14 @@ server <- function(
     )
     
     tryCatch({
-      print(plot_object_scatter())  
+      print(plot_object_scatter())
     }, error = function(e) {
       err_ <- ""
       shiny::validate(
         shiny::need(err_ != "", "This is not working. Probably because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values. If this does not fix it, please report a bug.")
-      )  
+      )
     })
+    
   })
   
   # Renger Output for Scatterplot

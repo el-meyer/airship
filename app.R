@@ -2267,6 +2267,30 @@ server <- function(
     )
   })
   
+  ### facet_rows_boxplot ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_distribution_rows",
+      choices = names(defaults_input()))
+  })
+  
+  ### facet_cols_boxplot ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_distribution_cols",
+      choices = names(defaults_input()))
+  })
+  
+  ### facet_wrap_boxplot ----
+  shiny::observe({
+    shiny::updateSelectInput(
+      session = session,
+      inputId = "facet_distribution_wrap",
+      choices = names(defaults_input()))
+  })
+  
   
   ## Plots -------------------------------------------------------------------
   

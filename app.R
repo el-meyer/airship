@@ -2622,7 +2622,8 @@ server <- function(
         )
       ) + 
         ggplot2::geom_point()
-    }, error = function(e) {
+    }, 
+    error = function(e) {
       err_ <- ""
       shiny::validate(
         shiny::need(
@@ -2637,8 +2638,8 @@ server <- function(
       
       p1 <-
         p1 +
-        ggplot2::aes_string(
-          color = input$colvar_scatter
+        ggplot2::aes(
+          color = factor(get(input$colvar_scatter))
         ) + 
         ggplot2::labs(
           colour = input$colvar_scatter
@@ -3021,7 +3022,7 @@ server <- function(
           ggplot2::geom_line(
             ggplot2::aes(
               y = value,
-              color  = factor(get(input$color))
+              color = factor(get(input$color))
             ),
             size = input$linesize
           ) + 
@@ -3053,7 +3054,7 @@ server <- function(
           ggplot2::geom_point(
             ggplot2::aes(
               y = value,
-              color  = factor(get(input$color))
+              color = factor(get(input$color))
             ),
             size = 3*input$linesize
           ) + 

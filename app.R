@@ -315,16 +315,6 @@ ui <-
                 inputId = "boxplotOutputVar",
                 label = "Select y-axis",
                 choices = NULL
-              ),
-              
-              #### Transparancy ----
-              shiny::sliderInput(
-                inputId = "alpha",
-                label = "Select transparency",
-                min = 0,
-                max = 1,
-                value = 0.1,
-                step = 0.1
               )
               
             ),
@@ -419,13 +409,6 @@ ui <-
                 title = "Change style and size of plot", 
                 trigger = "change_style_boxplot", 
                 size = "large",
-                
-                shiny::checkboxInput(
-                  inputId = "checkboxSize_boxplot", 
-                  label = "Change plot size"
-                ),
-                shiny::conditionalPanel(
-                  "input.checkboxSize_boxplot != 0",
                   
                   shiny::sliderInput(
                     inputId = "plotwidth_boxplot",
@@ -441,6 +424,15 @@ ui <-
                     value = 600,
                     min = 300,
                     max = 1000
+                  ),
+                  
+                  shiny::sliderInput(
+                    inputId = "alpha",
+                    label = "Select transparency",
+                    min = 0,
+                    max = 1,
+                    value = 0.1,
+                    step = 0.1
                   ),
                   
                   shiny::numericInput(
@@ -461,8 +453,7 @@ ui <-
                         "Times", 
                         "Courier"
                       )
-                  )
-                ),
+                  ),
                 
                 shiny::checkboxInput(
                   inputId = "checkboxTheme_boxplot",
@@ -819,25 +810,6 @@ ui <-
                 title = "Change style and size of plot", 
                 trigger = "change_style", 
                 size = "large",
-                
-                shiny::checkboxInput(
-                  inputId = "checkboxLine",
-                  label = "Add lines?",
-                  value = TRUE
-                ),
-                      
-                shiny::checkboxInput(
-                  inputId = "checkboxPoint",
-                  label = "Add points?",
-                  value = TRUE
-                ),
-                
-                shiny::checkboxInput(
-                  inputId = "checkboxSize", 
-                  label = "Change plot size"
-                ),
-                shiny::conditionalPanel(
-                  "input.checkboxSize != 0",
                   
                   shiny::sliderInput(
                     inputId = "plotwidth",
@@ -882,7 +854,18 @@ ui <-
                         "Times", 
                         "Courier"
                       )
-                  )
+                  ),
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxLine",
+                  label = "Add lines?",
+                  value = TRUE
+                ),
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxPoint",
+                  label = "Add points?",
+                  value = TRUE
                 ),
                 
                 shiny::checkboxInput(
@@ -1296,13 +1279,6 @@ ui <-
                 title = "Change style and size of plot", 
                 trigger = "change_style_scatter", 
                 size = "large",
-                
-                shiny::checkboxInput(
-                  inputId = "checkboxSize_scatter", 
-                  label = "Change plot size"
-                ),
-                shiny::conditionalPanel(
-                  "input.checkboxSize_scatter != 0",
                   
                   shiny::sliderInput(
                     inputId = "plotwidth_scatter",
@@ -1356,8 +1332,7 @@ ui <-
                         "Times", 
                         "Courier"
                       )
-                  )
-                ),
+                  ),
                 
                 shiny::checkboxInput(
                   inputId = "checkboxTheme_scatter",

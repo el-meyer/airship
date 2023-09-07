@@ -397,6 +397,86 @@ ui <-
               
             ),
             
+            shiny::column(
+              width = 4,
+              
+              #### Interactive Plot ----
+              shinyWidgets::switchInput(
+                inputId = "plottype_boxplot",
+                label = "Interactive Plot?",
+                value = FALSE,
+                size = "small"
+              ),
+              
+              #### Download Plot Button ----
+              shiny::actionButton(
+                inputId = "save_plot_boxplot", 
+                label = "Download plot"
+              ),
+              
+            ),
+            
+            #### Download Plot Window ----
+            shinyBS::bsModal(
+              id = "modal_boxplot", 
+              title = "Download plot", 
+              trigger = "save_plot_boxplot", 
+              size = "medium",
+              
+              shiny::selectInput(
+                inputId = "download_type_boxplot", 
+                label = "Choose file type",
+                choices = c(
+                  "png", 
+                  "jpeg", 
+                  "tiff"
+                )
+              ),
+              
+              shiny::selectInput(
+                inputId = "download_unit_boxplot", 
+                label = "Choose unit",
+                choices = c(
+                  "px", 
+                  "in", 
+                  "cm", 
+                  "mm"
+                )
+              ),
+              
+              shiny::numericInput(
+                inputId = "download_plotwidth_boxplot",
+                label = "Plot width",
+                value = 1000,
+                min = 1,
+                max = 2000
+              ),
+              
+              shiny::numericInput(
+                inputId = "download_plotheight_boxplot",
+                label = "Plot height",
+                value = 600,
+                min = 1,
+                max = 2000
+              ),
+              
+              shiny::numericInput(
+                inputId = "download_resolution_boxplot",
+                label = "Resolution",
+                value = 72,
+                min = 1, 
+                max = 1000
+              ),
+              
+              shiny::textInput(
+                inputId = "download_name_boxplot", 
+                label = "Specify file name"),
+              
+              shiny::downloadButton(
+                outputId = "download_plot_boxplot", 
+                label = "Download")
+            )
+            
           ),
           
           shiny::hr(),
@@ -1050,7 +1130,88 @@ ui <-
                 
               )
               
+            ),
+            
+            shiny::column(
+              width = 4,
+              
+              #### Interactive Plot ----
+              shinyWidgets::switchInput(
+                inputId = "plottype_scatter",
+                label = "Interactive Plot?",
+                value = FALSE,
+                size = "small"
+              ),
+              
+              #### Download Plot Button ----
+              shiny::actionButton(
+                inputId = "save_plot_scatter", 
+                label = "Download plot"
+              ),
+              
+            ),
+            
+            #### Download Plot Window ----
+            shinyBS::bsModal(
+              id = "modal_scatter", 
+              title = "Download plot", 
+              trigger = "save_plot_scatter", 
+              size = "medium",
+              
+              shiny::selectInput(
+                inputId = "download_type_scatter", 
+                label = "Choose file type",
+                choices = c(
+                  "png", 
+                  "jpeg", 
+                  "tiff"
+                )
+              ),
+              
+              shiny::selectInput(
+                inputId = "download_unit_scatter", 
+                label = "Choose unit",
+                choices = c(
+                  "px", 
+                  "in", 
+                  "cm", 
+                  "mm"
+                )
+              ),
+              
+              shiny::numericInput(
+                inputId = "download_plotwidth_scatter",
+                label = "Plot width",
+                value = 1000,
+                min = 1,
+                max = 2000
+              ),
+              
+              shiny::numericInput(
+                inputId = "download_plotheight_scatter",
+                label = "Plot height",
+                value = 600,
+                min = 1,
+                max = 2000
+              ),
+              
+              shiny::numericInput(
+                inputId = "download_resolution_scatter",
+                label = "Resolution",
+                value = 72,
+                min = 1, 
+                max = 1000
+              ),
+              
+              shiny::textInput(
+                inputId = "download_name_scatter", 
+                label = "Specify file name"),
+              
+              shiny::downloadButton(
+                outputId = "download_plot_scatter", 
+                label = "Download")
             )
+            
           ),
           
           shiny::hr(),
@@ -2381,7 +2542,7 @@ server <- function(
   )
   )
   
-  output$pBoxplot <- renderPlot({
+  plot_boxplot <- shiny::reactive({
     
     shiny::validate(
       shiny::need(
@@ -2458,7 +2619,7 @@ server <- function(
       
       boxplot <-
         tryCatch({
-
+          
           frows_distribution <- 
             input$facet_distribution_rows %>%
             stringr::str_replace_all(",", "+") %>%
@@ -2515,10 +2676,66 @@ server <- function(
     
   })
   
-  # Render output
-  output$boxplot_ui <- shiny::renderUI({
-    shiny::plotOutput("pBoxplot")
+  ### Render Plot ----
+  shiny::observe({
+    if(input$plottype_boxplot){
+      output$pBoxplotly <- plotly::renderPlotly({
+        plotly::ggplotly(plot_boxplot())
+      })
+    } else {
+      output$pBoxplot <- shiny::renderPlot({
+        plot_boxplot()
+      })
+    }
   })
+  
+  ### Render UI ----
+  output$boxplot_ui <- shiny::renderUI({
+    
+    if(input$plottype_boxplot){
+      plotly::plotlyOutput(
+        "pBoxplotly",
+        height = input$plotheight,
+        width = input$plotwidth
+      )
+    } else {
+      shiny::plotOutput(
+        "pBoxplot",
+        height = input$plotheight,
+        width = input$plotwidth
+      )
+    }
+    
+  })
+  
+  ### Download Handler ----
+  download_type_boxplot <- shiny::reactive({input$download_type_boxplot})
+
+  output$download_plot_boxplot <- shiny::downloadHandler(
+
+    filename = function() {
+      paste0(
+        input$download_name_boxplot,
+        ".",
+        input$download_type_boxplot
+      )
+    },
+
+    content = function(file) {
+      fun <- match.fun(download_type_boxplot())
+
+      fun(
+        file,
+        height = input$download_plotheight_boxplot,
+        width = input$download_plotwidth_boxplot,
+        units = input$download_unit_boxplot,
+        res = input$download_resolution_boxplot
+      )
+
+      print(plot_boxplot())
+      dev.off()
+    }
+  )
   
   ## Scatterplot ----
   df_scatterplot <- shiny::reactive({
@@ -2692,8 +2909,23 @@ server <- function(
     p1
   })
   
-  # plot_scatter output 
-  output$plot_scatter <- shiny::renderPlot({
+  
+  ### Render Plot ----
+  shiny::observe({
+    if(input$plottype_scatter){
+      output$pScatterly <- plotly::renderPlotly({
+        plotly::ggplotly(plot_object_scatter())
+      })
+    } else {
+      output$pScatter <- shiny::renderPlot({
+        plot_object_scatter()
+      })
+    }
+  })
+  
+  
+  ### Render UI ----
+  output$scatter_ui <- shiny::renderUI({
     
     shiny::validate(
       shiny::need(input$OC_scatter, "No OCs chosen")
@@ -2703,21 +2935,50 @@ server <- function(
       shiny::need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
     )
     
-    tryCatch({
-      print(plot_object_scatter())
-    }, error = function(e) {
-      err_ <- ""
-      shiny::validate(
-        shiny::need(err_ != "", "This is not working. Probably because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values. If this does not fix it, please report a bug.")
+    if(input$plottype_scatter){
+      plotly::plotlyOutput(
+        "pScatterly",
+        height = input$plotheight,
+        width = input$plotwidth
       )
-    })
-    
+    } else {
+      shiny::plotOutput(
+        "pScatter",
+        height = input$plotheight,
+        width = input$plotwidth
+      )
+    }
+  
   })
   
-  # Renger Output for Scatterplot
-  output$scatter_ui <- shiny::renderUI({
-    shiny::plotOutput("plot_scatter")
-  })
+  ### Download Handler ----
+  download_type_scatter <- shiny::reactive({input$download_type_scatter})
+  
+  output$download_plot_scatter <- shiny::downloadHandler(
+    
+    filename = function() {
+      paste0(
+        input$download_name_scatter,
+        ".",
+        input$download_type_scatter
+      )
+    },
+    
+    content = function(file) {
+      fun <- match.fun(download_type_scatter())
+      
+      fun(
+        file,
+        height = input$download_plotheight_scatter,
+        width = input$download_plotwidth_scatter,
+        units = input$download_unit_scatter,
+        res = input$download_resolution_scatter
+      )
+      
+      print(plot_object_scatter())
+      dev.off()
+    }
+  )
   
   
   ## Lineplot -------------
@@ -3181,6 +3442,8 @@ server <- function(
     
   })
   
+  ### Plot Object ----
+  
   # create plot_object with final settings
   plot_object <- shiny::reactive({
     
@@ -3270,6 +3533,7 @@ server <- function(
     p1
   })
   
+  ### Render Plot ----
   shiny::observe({
     if(input$plottype){
       output$lineplotly <- plotly::renderPlotly({
@@ -3282,6 +3546,7 @@ server <- function(
     }
   })
   
+  ### Render UI ----
   output$lineplot_ui <- shiny::renderUI({
     
     shiny::validate(
@@ -3311,13 +3576,14 @@ server <- function(
         height = input$plotheight,
         width = input$plotwidth
       )
-    }else{
+    } else {
       shiny::plotOutput(
         "lineplot",
         height = input$plotheight,
         width = input$plotwidth
       )
     }
+    
   })
   
   

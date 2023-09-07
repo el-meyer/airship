@@ -26,6 +26,7 @@ library(ggplot2)
 options(shiny.sanitize.errors = FALSE) 
 options(shiny.maxRequestSize = 50*1024^2)
 options(shiny.usecairo = TRUE)
+options(shiny.reactlog = TRUE) 
 
 
 # CSS ----
@@ -1937,7 +1938,7 @@ server <- function(
   ### valColvarR 
   valColvarR <- shiny::reactive({
     shiny::req(data_filteredR())
-    unique(data_filteredR()[[input$color]])
+    gsub(" ", "", unique(data_filteredR()[[input$color]]))
   })
   
   ### nValColvarR 
@@ -1960,10 +1961,11 @@ server <- function(
   
   ### valColvar_scatterR 
   valColvar_scatterR <- shiny::reactive({
-    shiny::req(data_filteredR())
+    shiny::req(data_prefiltered())
     tryCatch({
-      unique(data_filteredR()[[input$colvar_scatter]])  
-    }, error = function(e) {
+      gsub(" ", "", unique(data_prefiltered()[[input$colvar_scatter]]))  
+    }, 
+    error = function(e) {
       err_ <- ""
       shiny::validate(
         shiny::need(
@@ -2029,7 +2031,7 @@ server <- function(
       input[[paste0("col_", i)]]
     }))
     vColors <- as.vector(t(df_colors))
-    names(vColors) <- valColvarR()
+    names(vColors) <- unique(data_filteredR()[[input$color]])
     vColors
   })
   
@@ -2041,7 +2043,7 @@ server <- function(
     }))
     vColors <- as.vector(t(df_colors))
     shiny::req(vColors)
-    names(vColors) <- valColvar_scatterR()
+    names(vColors) <- unique(data_prefiltered()[[input$colvar_scatter]])
     vColors
   })
   

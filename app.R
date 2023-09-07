@@ -408,11 +408,155 @@ ui <-
                 size = "small"
               ),
               
+              #### Style options ----
+              shiny::actionButton(
+                inputId = "change_style_boxplot", 
+                label = "Style options"
+              ),
+              
+              shinyBS::bsModal(
+                id = "modal_style_boxplot", 
+                title = "Change style and size of plot", 
+                trigger = "change_style_boxplot", 
+                size = "large",
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxSize_boxplot", 
+                  label = "Change plot size"
+                ),
+                shiny::conditionalPanel(
+                  "input.checkboxSize_boxplot != 0",
+                  
+                  shiny::sliderInput(
+                    inputId = "plotwidth_boxplot",
+                    label = "Plot width (px)",
+                    value = 1000,
+                    min = 600,
+                    max = 1500
+                  ),
+                  
+                  shiny::sliderInput(
+                    inputId = "plotheight_boxplot",
+                    label = "Plot height (px)",
+                    value = 600,
+                    min = 300,
+                    max = 1000
+                  ),
+                  
+                  shiny::numericInput(
+                    inputId = "plotfontsize_boxplot",
+                    label = "Font size",
+                    value = 11,
+                    min = 1,
+                    max = 30,
+                    step = 0.5
+                  ),
+                  
+                  shiny::selectInput(
+                    inputId = "plotfont_boxplot",
+                    label = "Font",
+                    choices = 
+                      c(
+                        "sans", 
+                        "Times", 
+                        "Courier"
+                      )
+                  )
+                ),
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxTheme_boxplot",
+                  label = "Change the theme?"
+                ),
+                
+                shiny::conditionalPanel(
+                  condition = "input.checkboxTheme_boxplot != 0",
+                  
+                  shiny::radioButtons(
+                    inputId = "plottheme_boxplot",
+                    label = "Select the theme",
+                    choices = c(
+                      "Grey", 
+                      "White", 
+                      "Linedraw",
+                      "Light", 
+                      "Minimal", 
+                      "Classic"
+                    )
+                  )
+                  
+                )
+              ),
+              
               #### Download Plot Button ----
               shiny::actionButton(
                 inputId = "save_plot_boxplot", 
                 label = "Download plot"
               ),
+            
+            #### Add Titel ----
+            shiny::checkboxInput(
+              inputId = "checkboxTitle_boxplot",
+              label = "Add title"
+            ),
+            
+            shiny::conditionalPanel(
+              condition = "input.checkboxTitle_boxplot != 0",
+              
+              shiny::textInput(
+                inputId = "plot_title_boxplot",
+                label = "Enter the plot title"
+              ),
+              
+              shiny::radioButtons(
+                inputId = "plot_title_place_boxplot",
+                label = "Title alignment",
+                choices = c(
+                  "left" = 0, 
+                  "center" = 0.5, 
+                  "right" = 1
+                )
+              ),
+              
+              shiny::numericInput(
+                inputId = "plot_title_size_boxplot",
+                label = "Size",
+                value = 30,
+                min = 1,
+                max = 50,
+                step = 1
+              ),
+              
+              colourpicker::colourInput(
+                inputId = "plot_title_colour_boxplot", 
+                label = "Title colour:",
+                showColour = "both",
+                value = "black",
+                allowTransparent = FALSE
+              )
+              
+            ),
+            
+            shiny::hr(),
+            
+            #### Change Axis Labels ----
+            shiny::checkboxInput(
+              inputId = "checkboxAxis_boxplot",
+              label = "Change axis labels"
+            ),
+            
+            shiny::conditionalPanel(
+              condition = "input.checkboxAxis_boxplot != 0",
+              
+              shiny::textInput(
+                inputId = "xLab_boxplot",
+                label = "X-axis label:"
+              ),
+              
+              shiny::textInput(
+                inputId = "yLab_boxplot",
+                label = "Y-axis label:"
+              )
               
             ),
             
@@ -470,12 +614,16 @@ ui <-
               
               shiny::textInput(
                 inputId = "download_name_boxplot", 
-                label = "Specify file name"),
+                label = "Specify file name"
+              ),
               
               shiny::downloadButton(
                 outputId = "download_plot_boxplot", 
-                label = "Download")
+                label = "Download"
+              )
             )
+            
+            ),
             
           ),
           
@@ -690,12 +838,6 @@ ui <-
                 ),
                 shiny::conditionalPanel(
                   "input.checkboxSize != 0",
-                  
-                  shiny::numericInput(
-                    inputId = "resolution",
-                    label = "Resolution",
-                    value = 72
-                  ),
                   
                   shiny::sliderInput(
                     inputId = "plotwidth",
@@ -1143,10 +1285,174 @@ ui <-
                 size = "small"
               ),
               
+              #### Style options ----
+              shiny::actionButton(
+                inputId = "change_style_scatter", 
+                label = "Style options"
+              ),
+              
+              shinyBS::bsModal(
+                id = "modal_style_scatter", 
+                title = "Change style and size of plot", 
+                trigger = "change_style_scatter", 
+                size = "large",
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxSize_scatter", 
+                  label = "Change plot size"
+                ),
+                shiny::conditionalPanel(
+                  "input.checkboxSize_scatter != 0",
+                  
+                  shiny::sliderInput(
+                    inputId = "plotwidth_scatter",
+                    label = "Plot width (px)",
+                    value = 1000,
+                    min = 600,
+                    max = 1500
+                  ),
+                  
+                  shiny::sliderInput(
+                    inputId = "plotheight_scatter",
+                    label = "Plot height (px)",
+                    value = 600,
+                    min = 300,
+                    max = 1000
+                  ),
+                  
+                  shiny::sliderInput(
+                    inputId = "pointsize_scatter",
+                    label = "Point size",
+                    value = 1,
+                    min = 0.1,
+                    max = 3,
+                    step = 0.1
+                  ),
+                  
+                  shiny::sliderInput(
+                    inputId = "transparency_scatter",
+                    label = "Transparency",
+                    value = 0.8,
+                    min = 0,
+                    max = 1,
+                    step = 0.05
+                  ),
+                  
+                  shiny::numericInput(
+                    inputId = "plotfontsize_scatter",
+                    label = "Font size",
+                    value = 11,
+                    min = 1,
+                    max = 30,
+                    step = 0.5
+                  ),
+                  
+                  shiny::selectInput(
+                    inputId = "plotfont_scatter",
+                    label = "Font",
+                    choices = 
+                      c(
+                        "sans", 
+                        "Times", 
+                        "Courier"
+                      )
+                  )
+                ),
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxTheme_scatter",
+                  label = "Change the theme?"
+                ),
+                
+                shiny::conditionalPanel(
+                  condition = "input.checkboxTheme_scatter != 0",
+                  
+                  shiny::radioButtons(
+                    inputId = "plottheme_scatter",
+                    label = "Select the theme",
+                    choices = c(
+                      "Grey", 
+                      "White", 
+                      "Linedraw",
+                      "Light", 
+                      "Minimal", 
+                      "Classic"
+                    )
+                  )
+                  
+                )
+              ),
+              
               #### Download Plot Button ----
               shiny::actionButton(
                 inputId = "save_plot_scatter", 
                 label = "Download plot"
+              ),
+              
+              #### Add Titel ----
+              shiny::checkboxInput(
+                inputId = "checkboxTitle_scatter",
+                label = "Add title"
+              ),
+              
+              shiny::conditionalPanel(
+                condition = "input.checkboxTitle_scatter != 0",
+                
+                shiny::textInput(
+                  inputId = "plot_title_scatter",
+                  label = "Enter the plot title"
+                ),
+                
+                shiny::radioButtons(
+                  inputId = "plot_title_place_scatter",
+                  label = "Title alignment",
+                  choices = c(
+                    "left" = 0, 
+                    "center" = 0.5, 
+                    "right" = 1
+                  )
+                ),
+                
+                shiny::numericInput(
+                  inputId = "plot_title_size_scatter",
+                  label = "Size",
+                  value = 30,
+                  min = 1,
+                  max = 50,
+                  step = 1
+                ),
+                
+                colourpicker::colourInput(
+                  inputId = "plot_title_colour_scatter", 
+                  label = "Title colour:",
+                  showColour = "both",
+                  value = "black",
+                  allowTransparent = FALSE
+                )
+                
+              ),
+              
+              shiny::hr(),
+              
+              #### Change Axis Labels ----
+              shiny::checkboxInput(
+                inputId = "checkboxAxis_scatter",
+                label = "Change axis labels"
+              ),
+              
+              shiny::conditionalPanel(
+                condition = "input.checkboxAxis_scatter != 0",
+                
+                shiny::textInput(
+                  inputId = "xLab_scatter",
+                  label = "X-axis label:"
+                ),
+                
+                shiny::textInput(
+                  inputId = "yLab_scatter",
+                  label = "Y-axis label:"
+                )
+                
               ),
               
             ),
@@ -2672,6 +2978,89 @@ server <- function(
             })
     }
     
+    plot_theme <- input$plottheme_boxplot
+    plot_fontsize <- input$plotfontsize_boxplot
+    plot_font <- input$plotfont_boxplot
+    
+    if (plot_theme == "Grey") {
+      boxplot <- 
+        boxplot + 
+        ggplot2::theme_gray(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "White") {
+      boxplot <- 
+        boxplot + 
+        ggplot2::theme_bw(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Linedraw") {
+      boxplot <- 
+        boxplot + 
+        ggplot2::theme_linedraw(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Light") {
+      boxplot <- 
+        boxplot + 
+        ggplot2::theme_light(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Minimal") {
+      boxplot <- 
+        boxplot + 
+        ggplot2::theme_minimal(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Classic") {
+      boxplot <- 
+        boxplot + 
+        ggplot2::theme_classic(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (input$checkboxTitle_boxplot){
+      boxplot <- 
+        boxplot +
+        ggplot2::labs(
+          title = input$plot_title_boxplot
+        )  +
+        ggplot2::theme(
+          plot.title = ggplot2::element_text(
+            colour = input$plot_title_colour_boxplot,
+            size = input$plot_title_size_boxplot,
+            vjust = 1.5,
+            hjust = input$plot_title_place_boxplot
+          )
+        )
+    }
+    
+    if(input$checkboxAxis_boxplot){
+      boxplot <- 
+        boxplot +
+        ggplot2::labs(
+          x = input$xLab_boxplot,
+          y = input$yLab_boxplot
+        )
+    }
+    
     boxplot
     
   })
@@ -2695,14 +3084,14 @@ server <- function(
     if(input$plottype_boxplot){
       plotly::plotlyOutput(
         "pBoxplotly",
-        height = input$plotheight,
-        width = input$plotwidth
+        height = input$plotheight_boxplot,
+        width = input$plotwidth_boxplot
       )
     } else {
       shiny::plotOutput(
         "pBoxplot",
-        height = input$plotheight,
-        width = input$plotwidth
+        height = input$plotheight_boxplot,
+        width = input$plotwidth_boxplot
       )
     }
     
@@ -2839,8 +3228,11 @@ server <- function(
           x = input$OC_scatter[1], 
           y = input$OC_scatter[2]
         )
-      ) + 
-        ggplot2::geom_point()
+      ) +
+        ggplot2::geom_point(
+          size = input$pointsize_scatter,
+          alpha = input$transparency_scatter
+        )
     }, 
     error = function(e) {
       err_ <- ""
@@ -2906,7 +3298,91 @@ server <- function(
         )
     }
     
+    plot_theme <- input$plottheme_scatter
+    plot_fontsize <- input$plotfontsize_scatter
+    plot_font <- input$plotfont_scatter
+    
+    if (plot_theme == "Grey") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_gray(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "White") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_bw(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Linedraw") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_linedraw(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Light") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_light(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Minimal") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_minimal(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (plot_theme == "Classic") {
+      p1 <- 
+        p1 + 
+        ggplot2::theme_classic(
+          plot_fontsize, 
+          plot_font
+        )
+    }
+    
+    if (input$checkboxTitle_scatter){
+      p1 <- 
+        p1 +
+        ggplot2::labs(
+          title = input$plot_title_scatter
+        )  +
+        ggplot2::theme(
+          plot.title = ggplot2::element_text(
+            colour = input$plot_title_colour_scatter,
+            size = input$plot_title_size_scatter,
+            vjust = 1.5,
+            hjust = input$plot_title_place_scatter
+          )
+        )
+    }
+    
+    if(input$checkboxAxis_scatter){
+      p1 <- 
+        p1 +
+        ggplot2::labs(
+          x = input$xLab_scatter,
+          y = input$yLab_scatter
+        )
+    }
+    
     p1
+    
   })
   
   
@@ -2938,14 +3414,14 @@ server <- function(
     if(input$plottype_scatter){
       plotly::plotlyOutput(
         "pScatterly",
-        height = input$plotheight,
-        width = input$plotwidth
+        height = input$plotheight_scatter,
+        width = input$plotwidth_scatter
       )
     } else {
       shiny::plotOutput(
         "pScatter",
-        height = input$plotheight,
-        width = input$plotwidth
+        height = input$plotheight_scatter,
+        width = input$plotwidth_scatter
       )
     }
   
@@ -3530,7 +4006,9 @@ server <- function(
           y = input$yLab
         )
     }
+    
     p1
+    
   })
   
   ### Render Plot ----
@@ -3682,8 +4160,32 @@ server <- function(
   shiny::observe({
     shiny::updateNumericInput(
       session = session,
-      inputId = "download_resolution",
-      value = input$resolution
+      inputId = "download_plotwidth_boxplot",
+      value = input$plotwidth_boxplot
+    )
+  })
+  
+  shiny::observe({
+    shiny::updateNumericInput(
+      session = session,
+      inputId = "download_plotheight_boxplot",
+      value = input$plotheight_boxplot
+    )
+  })
+  
+  shiny::observe({
+    shiny::updateNumericInput(
+      session = session,
+      inputId = "download_plotwidth_scatter",
+      value = input$plotwidth_scatter
+    )
+  })
+
+  shiny::observe({
+    shiny::updateNumericInput(
+      session = session,
+      inputId = "download_plotheight_scatter",
+      value = input$plotheight_scatter
     )
   })
   

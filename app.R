@@ -2493,7 +2493,7 @@ server <- function(
   output$colors_boxplot_ui <- shiny::renderUI({
     lapply(1:nValColvar_boxplotR(), function(i) {
       colourpicker::colourInput(
-        inputId = paste0("col_", valColvar_boxplotR()[i], "_sc"),
+        inputId = paste0("col_", valColvar_boxplotR()[i], "_bx"),
         label = valColvar_boxplotR()[i],
         showColour = "both",
         value = scales::hue_pal()(nValColvar_boxplotR())[i]
@@ -2563,7 +2563,7 @@ server <- function(
   lUiColors_boxplot <- shiny::reactive({
     shiny::req(valColvar_boxplotR)
     df_colors <- data.frame(lapply(valColvar_boxplotR(), function(i) {
-      input[[paste0("col_", i, "_sc")]]
+      input[[paste0("col_", i, "_bx")]]
     }))
     vColors <- as.vector(t(df_colors))
     shiny::req(vColors)

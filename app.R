@@ -315,6 +315,23 @@ ui <-
                 inputId = "boxplotOutputVar",
                 label = "Select y-axis",
                 choices = NULL
+              ),
+              
+              #### Plottype ----
+              shiny::HTML("<b>Choose plot type</b>"),
+              
+              shiny::radioButtons(
+                inputId = "boxplottype",
+                label = "Boxplot or Violinplot",
+                choices =c("Boxplot", "Violinplot"),
+                selected = "Boxplot",
+              ),
+              
+              #### Coord Flip ----
+              shiny::checkboxInput(
+                inputId = "boxplot_flip",
+                label = "Flip coordinates?",
+                value = FALSE,
               )
               
             ),
@@ -372,17 +389,27 @@ ui <-
                   inputId = "colvar_dist",
                   label = "Choose color variable",
                   choices = NULL
+                ),
+                
+                #### Color Button ----
+                shiny::checkboxInput(
+                  inputId = "checkboxPalette_boxplot",
+                  label = "Specify your own colors?"
+                ),
+                
+                shiny::absolutePanel(
+                  shinyWidgets::dropdownButton(
+                    label = "Color choices",
+                    status = "primary",
+                    circle = TRUE,
+                    right = TRUE,
+                    icon = icon("paintbrush"),
+                    shiny::uiOutput("colors_boxplot_ui"),
+                    inputId = "dropdown_colors_boxplot"
+                  ),
+                  draggable = TRUE
                 )
-              ),
-              
-              #### Plottype ----
-              shiny::HTML("<b>Choose plot type</b>"),
-              
-              shiny::radioButtons(
-                inputId = "boxplottype",
-                label = "Boxplot or Violinplot",
-                choices =c("Boxplot", "Violinplot"),
-                selected = "Boxplot",
+                
               )
               
             ),
@@ -2437,6 +2464,43 @@ server <- function(
     })
   })
   
+  
+  ### valColvar_boxplotR 
+  valColvar_boxplotR <- shiny::reactive({
+    shiny::req(data_prefiltered())
+    tryCatch({
+      gsub(" ", "", unique(data_prefiltered()[[input$colvar_dist]]))  
+    }, 
+    error = function(e) {
+      err_ <- ""
+      shiny::validate(
+        shiny::need(
+          err_ != "", 
+          "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+        )
+      )}
+    )
+  })
+  
+  ### nValColvar_boxplotR 
+  nValColvar_boxplotR <- shiny::reactive({
+    shiny::req(valColvar_boxplotR())
+    length(valColvar_boxplotR())
+  })
+  
+  
+  ### colors_boxplot_ui 
+  output$colors_boxplot_ui <- shiny::renderUI({
+    lapply(1:nValColvar_boxplotR(), function(i) {
+      colourpicker::colourInput(
+        inputId = paste0("col_", valColvar_boxplotR()[i], "_sc"),
+        label = valColvar_boxplotR()[i],
+        showColour = "both",
+        value = scales::hue_pal()(nValColvar_boxplotR())[i]
+      )
+    })
+  })
+  
   shiny::outputOptions(
     x = output, 
     name = "colors_ui", 
@@ -2452,6 +2516,12 @@ server <- function(
   shiny::outputOptions(
     x = output, 
     name = "colors_scatter_ui", 
+    suspendWhenHidden = FALSE
+  )
+  
+  shiny::outputOptions(
+    x = output, 
+    name = "colors_boxplot_ui", 
     suspendWhenHidden = FALSE
   )
   
@@ -2486,6 +2556,18 @@ server <- function(
     vColors <- as.vector(t(df_colors))
     shiny::req(vColors)
     names(vColors) <- unique(data_prefiltered()[[input$colvar_scatter]])
+    vColors
+  })
+  
+  ### lUiColors_boxplot
+  lUiColors_boxplot <- shiny::reactive({
+    shiny::req(valColvar_boxplotR)
+    df_colors <- data.frame(lapply(valColvar_boxplotR(), function(i) {
+      input[[paste0("col_", i, "_sc")]]
+    }))
+    vColors <- as.vector(t(df_colors))
+    shiny::req(vColors)
+    names(vColors) <- unique(data_prefiltered()[[input$colvar_dist]])
     vColors
   })
   
@@ -2847,6 +2929,14 @@ server <- function(
       d[,i] <- as.factor(d[,i])
     }
     
+    shiny::req(lUiColors_boxplot())
+
+    colScale_boxplot <-
+      ggplot2::scale_colour_manual(values = lUiColors_boxplot())
+    
+    fillScale_boxplot <- 
+      ggplot2::scale_fill_manual(values = lUiColors_boxplot())
+    
     boxplot <- tryCatch({
       ggplot2::ggplot(
         d, 
@@ -2870,6 +2960,13 @@ server <- function(
           fill = input$colvar_dist,
           col = input$colvar_dist
         ) 
+      
+      if(input$checkboxPalette_boxplot){
+        boxplot <-
+          boxplot +
+          colScale_boxplot + 
+          fillScale_boxplot
+      }
     }
     
     if (input$boxplottype == "Violinplot") {
@@ -2951,6 +3048,12 @@ server <- function(
                 )
               )
             })
+    }
+    
+    if (input$boxplot_flip) {
+      boxplot <- 
+        boxplot + 
+        ggplot2::coord_flip()
     }
     
     plot_theme <- input$plottheme_boxplot
@@ -3233,7 +3336,9 @@ server <- function(
     }
     
     if(input$checkboxPalette_scatter){
-      p1 <- p1 + colScale_scatter
+      p1 <- 
+        p1 + 
+        colScale_scatter
     }
     
     

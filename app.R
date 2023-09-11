@@ -3867,8 +3867,8 @@ server <- function(
       }
     }
     
-    if(input$checkboxPoint){
-      if(input$checkboxColor){
+    if (input$checkboxPoint) {
+      if (input$checkboxColor) {
         p1 <-
           p1  +
           ggplot2::geom_point(
@@ -3953,40 +3953,89 @@ server <- function(
       
       if(input$radioErrorsymmetry == "symmetrical") {
         
-        p1 <- 
-          p1 + ggplot2::geom_errorbar(
-            ggplot2::aes(
-              ymin = value - error, 
-              ymax = value + error, 
-              color = OC
-            ), 
-            position = ggplot2::position_dodge(0.05)
-          )
+        if (input$checkboxColor) {
+          
+          p1 <- 
+            p1 + ggplot2::geom_errorbar(
+              ggplot2::aes(
+                ymin = value - error, 
+                ymax = value + error, 
+                color = factor(get(input$color))
+              ), 
+              position = ggplot2::position_dodge(0.05)
+            )
+          
+        } else {
+          
+          p1 <- 
+            p1 + ggplot2::geom_errorbar(
+              ggplot2::aes(
+                ymin = value - error, 
+                ymax = value + error, 
+                color = OC
+              ), 
+              position = ggplot2::position_dodge(0.05)
+            )
+          
+        }
         
       } else {
         
         if(input$radioErrorstructure == "deviation") {
           
-          p1 <- 
-            p1 + ggplot2::geom_errorbar(
-              ggplot2::aes(
-                ymin = value - error_lower,
-                ymax = value + error_upper,
-                color = OC
-              ),
-              position = ggplot2::position_dodge(0.05)
-            )
+          if (input$checkboxColor) {
+          
+            p1 <- 
+              p1 + ggplot2::geom_errorbar(
+                ggplot2::aes(
+                  ymin = value - error_lower,
+                  ymax = value + error_upper,
+                  color = factor(get(input$color))
+                ),
+                position = ggplot2::position_dodge(0.05)
+              )
+          
+          } else {
+            
+            p1 <- 
+              p1 + ggplot2::geom_errorbar(
+                ggplot2::aes(
+                  ymin = value - error_lower,
+                  ymax = value + error_upper,
+                  color = OC
+                ),
+                position = ggplot2::position_dodge(0.05)
+              )
+            
+          }
           
         } else {
-          p1 <- 
-            p1 + ggplot2::geom_errorbar(
-              ggplot2::aes(
-                ymin = error_lower,
-                ymax = error_upper,
-                color = OC
-              ),
-              position = ggplot2::position_dodge(0.05)
-            )
+          
+          if (input$checkboxColor) {
+          
+            p1 <- 
+              p1 + ggplot2::geom_errorbar(
+                ggplot2::aes(
+                  ymin = error_lower,
+                  ymax = error_upper,
+                  color = factor(get(input$color))
+                ),
+                position = ggplot2::position_dodge(0.05)
+              )
+          
+          } else {
+            
+            p1 <- 
+              p1 + ggplot2::geom_errorbar(
+                ggplot2::aes(
+                  ymin = error_lower,
+                  ymax = error_upper,
+                  color = OC
+                ),
+                position = ggplot2::position_dodge(0.05)
+              )
+            
+          }
           
         }
       }

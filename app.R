@@ -477,8 +477,8 @@ ui <-
                     choices = 
                       c(
                         "sans", 
-                        "Times", 
-                        "Courier"
+                        "serif", 
+                        "mono"
                       )
                   ),
                 
@@ -878,8 +878,8 @@ ui <-
                     choices = 
                       c(
                         "sans", 
-                        "Times", 
-                        "Courier"
+                        "serif", 
+                        "mono"
                       )
                   ),
                 
@@ -1356,8 +1356,8 @@ ui <-
                     choices = 
                       c(
                         "sans", 
-                        "Times", 
-                        "Courier"
+                        "serif", 
+                        "mono"
                       )
                   ),
                 

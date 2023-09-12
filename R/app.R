@@ -1583,17 +1583,6 @@ server <- function(
   output
 ){
   
-  
-  ## Example Data Input ----
-  # read in Example data and convert some variables for correct display
-  exampleData <- utils::read.csv(
-    "ExampleData.csv",
-    header = TRUE,
-    sep = ",",
-    stringsAsFactors = TRUE
-  )
-  
-  
   ## Upload Data Input ----
   # widget for user data upload
   upload <- shiny::reactive({
@@ -1648,6 +1637,17 @@ server <- function(
     # as they are hidden automatically in GUI
     
     if(input$checkboxExampleData){
+      
+      # # read in Example data and convert some variables for correct display
+      # exampleData <- utils::read.csv(
+      #   "../data/ExampleData1.csv",
+      #   header = TRUE,
+      #   sep = ",",
+      #   stringsAsFactors = TRUE
+      # )
+      
+      # ExampleData1 exists in package airship
+      exampleData <- airship::ExampleData1
       
       # Get column names
       col_names_example_dat <- colnames(exampleData)

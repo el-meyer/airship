@@ -1,0 +1,27 @@
+Package: airship
+Title: What the Package Does (One Line, Title Case)
+Version: 1.0
+Authors@R: 
+    c(
+        person(given = "Elias Laurin",
+               family = "Meyer",
+               role = c("aut", "cre"),
+               email = "elias@berryconsultants.net"),
+        person(given = "Constantin",
+               family = "Kumaus",
+               role = c("ctb")),
+        person(given = "Michal",
+               family = "Majka",
+               role = c("ctb")),
+        person(given = "Franz",
+               family = "Koenig",
+               role = c("ctb"))
+        )
+Description: What the package does (one paragraph).
+License: GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Depends: 
+    R (>= 2.10)
+LazyData: true

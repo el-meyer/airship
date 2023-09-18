@@ -1,6 +1,6 @@
 Package: airship
 Title: What the Package Does (One Line, Title Case)
-Version: 1.0
+Version: 1.0.0
 Authors@R: 
     c(
         person(given = "Elias Laurin",
@@ -12,12 +12,15 @@ Authors@R:
                role = c("ctb")),
         person(given = "Michal",
                family = "Majka",
-               role = c("ctb")),
+               role = c("ctb"),
+        email = "michalmajka@hotmail.com",
+        comment = c(ORCID = "0000-0002-7524-8014")),
         person(given = "Franz",
                family = "Koenig",
                role = c("ctb"))
         )
 Description: What the package does (one paragraph).
+BugReports: https://github.com/el-meyer/airship/issues
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

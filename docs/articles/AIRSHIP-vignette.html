@@ -87,11 +87,94 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airship</span><span class="op">)</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="general-information">General Information<a class="anchor" aria-label="anchor" href="#general-information"></a>
+</h2>
+<p>This app is designed to plot simulation results of clinical trials.
+Its main feature is allowing users to simultaneously investigate the
+impact of several simulation input dimensions through dynamic filtering
+of the simulation results. A more detailed description of the app can be
+found in <a href="https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext" class="external-link">Meyer
+et al.</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="user-manual">User Manual<a class="anchor" aria-label="anchor" href="#user-manual"></a>
+</h2>
+<p>In the following you will find some details on every part of the app
+and how they are supposed to be used.</p>
+<div class="section level3">
+<h3 id="data-settings">Data Settings<a class="anchor" aria-label="anchor" href="#data-settings"></a>
+</h3>
+<p>There are a few requirements to the data in order for the app to
+work. So far only .csv files can be uploaded. It is expected that the
+data is arranged in a way such that the design parameters precede the
+output values/operating characteristics. Each row represents one
+simulation run with a different combination of input/design
+parameters.</p>
+<p>If your data is not aggregated yet (i.e. if you have every single
+simulation outcome as one row in your dataset, and a ‘replication run
+index’ you can click the checkbox and choose which of your variables is
+the ‘replication run index’. The dataset is then averaging over the OCs
+either by mean or median. Additionally the ‘Distribution’ tab opens
+where you can investigate the behaviour of your variables and
+outcomes.</p>
+</div>
+<div class="section level3">
+<h3 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
+</h3>
+<p>In the Data tab you find an overview of your data. Already here you
+can set filters for your input parameters, if you are not interested in
+some observations.</p>
+</div>
+<div class="section level3">
+<h3 id="default-values">Default values<a class="anchor" aria-label="anchor" href="#default-values"></a>
+</h3>
+<p>The default value is a key tab in this App. Please choose one default
+value for every variable that has an impact on your simulation. Later in
+the plot tab the dataset is filtered for these values, unless the
+respective variable is chosen to be one of the dimensions in the graph
+(See ‘plot’ tab).</p>
+</div>
+<div class="section level3">
+<h3 id="distribution">Distribution<a class="anchor" aria-label="anchor" href="#distribution"></a>
+</h3>
+<p>This tab only appears when the checkbox regarding ‘replication run
+index/variables’ is checked. You can create boxplots or distribution
+plots.</p>
+</div>
+<div class="section level3">
+<h3 id="plot">Plot<a class="anchor" aria-label="anchor" href="#plot"></a>
+</h3>
+<p>After uploading the data and establishing the settings, you can
+visualize your simulation results on up to 4 dimensions. An x-axis
+variable as well as at least one OC have to be specified in order for
+the plot to show up: You can opt to add further design parameters on the
+‘facet’ dimensions (row and column), which splits the plot into a grid
+as well as the ‘shape’ dimension, which adds lines/points in different
+shapes according to the value of the respective input parameter.</p>
+<p>Furthermore you can change the style of your plot when clicking the
+‘style options’ button and download a plot in the exact size and quality
+you need when clicking the ‘Download plot’ button.</p>
+</div>
+<div class="section level3">
+<h3 id="scatterplot">Scatterplot<a class="anchor" aria-label="anchor" href="#scatterplot"></a>
+</h3>
+<p>If you are interested in the variability of ceratin operating
+characteristics in 1 specific scenario, you can look at the settings in
+this tab which generates a scatterplot of 2 output variables, with the
+possibility of adding a grid. This is especially suitable if you ran
+e.g. 10000 simulation runs with the same setting and have not aggregated
+your data yet. Then you can choose your ‘replication index variable’ and
+investigate the variability of the outcome.</p>
+</div>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-      </div>
+        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
+    </nav>
+</div>
 
 </div>
 

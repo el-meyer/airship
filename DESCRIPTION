@@ -27,7 +27,7 @@ Authors@R:
           role = c("ctb")
         )
       )
-Description: This app is designed to plot simulation results of clinical trials. Its main feature is being able to simultaneously investigating the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the app can be found in Meyer et al. <DOI:10.1016/j.softx.2023.101347> or the vignette.
+Description: This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the app can be found in Meyer et al. <DOI:10.1016/j.softx.2023.101347> or the vignette.
 BugReports: https://github.com/el-meyer/airship/issues
 License: GPL-3
 Encoding: UTF-8

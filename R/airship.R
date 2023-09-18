@@ -1593,32 +1593,14 @@ airship <- function(...) {
           shinydashboard::tabItem(
             tabName = "help",
             
-            shiny::h1("Info"),
-            shiny::HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus, Michal Majka and Franz Koenig.
-                     It has been published in <a href='https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext'>SoftwareX</a>."),
-            
-            shiny::h2("User Manual"),
-            shiny::HTML("Following you will find details on every part of the app and how they are to be used."),
-            
-            shiny::h3("Data Settings"),
-            shiny::HTML("There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the input variables/design parameters precede the output variables/operating characteristics. Each row represents one simulation run with a different combination of input/design parameters. "),
-            shiny::HTML("If your data is not aggregated yet i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index variable' you can click the checkbox and choose which of your variables is the 'replication run index'. The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes."),
-            
-            
-            shiny::h3("Data"),
-            shiny::HTML("In the Data tab you find an overview of your data. Already here you can set filters for your input parameters, if you are not interested in some observations."),
-            
-            shiny::h3("Default values"),
-            shiny::HTML("The default value tab is a key tab in this App. Please choose one default value for every input variable that can take on more than one unique value. Later in the plot tab the dataset is filtered for these values, unless the respective variable is chosen to be one of the dimensions in the graph (See 'plot' tab)."),
-            shiny::h3("Distribution"),
-            shiny::HTML("This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots for your output variables to get an overview of the distribution behaviour."),
-            
-            shiny::h3("Plot"),
-            shiny::HTML("After uploading the data and establishing the settings, you can visualize your simulation results on up to 4 dimensions. An x-axis variable as well as at least one OC have to be specified in order for the plot to show up: You can opt to add further design parameters on the 'facet' dimensions (row and column), which splits the plot into a grid as well as the 'shape' dimension, which adds lines/points in different shapes according to the value of the respective input parameter."),
-            shiny::HTML("Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clicking the 'Download plot' button"),
-            
-            shiny::h3("Scatterplot"),
-            shiny::HTML("If you are interested in the variability of certain operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.")
+            shiny::h2("Thank you for using AIRSHIP!"),
+            shiny::h3("Resources"),
+            shiny::HTML(
+              "For more information on the app, as well as instructions on how to use it, please refer to either the 
+              <a target='_blank' rel='noopener' href='https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html'> Vignette</a>,
+              <a target='_blank' rel='noopener' href='https://github.com/el-meyer/airship'> Github repository</a> or
+              <a target='_blank' rel='noopener' href='https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext'> SoftwareX publication</a>."
+            )
           )
         )
       )
@@ -1632,6 +1614,30 @@ airship <- function(...) {
     input, 
     output
   ){
+    
+    ## Startup Popup -----
+    startup <- 1
+    shiny::observeEvent(
+      once = TRUE, 
+      ignoreNULL = FALSE, 
+      ignoreInit = FALSE, 
+      eventExpr = startup,
+      { 
+        # event will be called when startup changes, which only happens once, when it is initially calculated
+        shiny::showModal(
+          shiny::modalDialog(
+            title = "Welcome to AIRSHIP",
+            shiny::HTML("Thank you for using AIRSHIP! This app was designed to plot simulation results of clinical trials."),
+            shiny::HTML(
+              "For more information on the app, as well as instructions on how to use it, please refer to either the 
+              <a target='_blank' rel='noopener' href='https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html'> Vignette</a>,
+              <a target='_blank' rel='noopener' href='https://github.com/el-meyer/airship'> Github repository</a> or
+              <a target='_blank' rel='noopener' href='https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext'> SoftwareX publication</a>."
+            )
+          )
+        )
+      }
+    )
     
     ## Upload Data Input ----
     # widget for user data upload

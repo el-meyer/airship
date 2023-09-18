@@ -1533,7 +1533,7 @@ airship <- function(...) {
             tabName = "help",
             
             shiny::h1("Info"),
-            shiny::HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus, Michal Majka and Franz König.
+            shiny::HTML("This app is designed to plot simulation results of clinical trials. It has been developed by Elias Laurin Meyer, Constantin Kumaus, Michal Majka and Franz Koenig.
                      It has been published in <a href='https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext'>SoftwareX</a>."),
             
             shiny::h2("User Manual"),

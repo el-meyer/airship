@@ -1,25 +1,33 @@
 Package: airship
-Title: What the Package Does (One Line, Title Case)
+Title: Visualization of simulated datesets with multiple simulation input dimensions
 Version: 1.0.0
 Authors@R: 
     c(
-        person(given = "Elias Laurin",
-               family = "Meyer",
-               role = c("aut", "cre"),
-               email = "elias@berryconsultants.net"),
-        person(given = "Constantin",
-               family = "Kumaus",
-               role = c("ctb")),
-        person(given = "Michal",
-               family = "Majka",
-               role = c("ctb"),
-        email = "michalmajka@hotmail.com",
-        comment = c(ORCID = "0000-0002-7524-8014")),
-        person(given = "Franz",
-               family = "Koenig",
-               role = c("ctb"))
+        person(
+          given = "Elias Laurin",
+          family = "Meyer",
+          role = c("aut", "cre"),
+          email = "elias@berryconsultants.net"
+        ),
+        person(
+          given = "Constantin",
+          family = "Kumaus",
+          role = c("ctb")
+        ),
+        person(
+          given = "Michal",
+          family = "Majka",
+          role = c("ctb"),
+          email = "michalmajka@hotmail.com",
+          comment = c(ORCID = "0000-0002-7524-8014")
+        ),
+        person(
+          given = "Franz",
+          family = "Koenig",
+          role = c("ctb")
         )
-Description: What the package does (one paragraph).
+      )
+Description: This app is designed to plot simulation results of clinical trials. Its main feature is being able to simultaneously investigating the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the app can be found in Meyer et al. <DOI:10.1016/j.softx.2023.101347> or the vignette.
 BugReports: https://github.com/el-meyer/airship/issues
 License: GPL-3
 Encoding: UTF-8
@@ -42,5 +50,10 @@ Imports:
     shinydashboard,
     scales,
     Cairo,
-    ggplot2
+    ggplot2,
+    rlang
 LazyData: true
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

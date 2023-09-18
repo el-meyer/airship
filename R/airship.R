@@ -8,8 +8,69 @@
 #' \dontrun{
 #' airship()
 #' }
+#' 
+#' @importFrom magrittr "%>%"
+#' 
 #' @export
 airship <- function(...) {
+  
+  # Install dependencies --------
+  dependencies <- c(
+    "shiny",
+    "DT",
+    "shinybusy",
+    "plotly",
+    "dplyr",
+    "tidyselect",
+    "tidyr",
+    "stringr",
+    "shinyBS",
+    "colourpicker",
+    "shinyWidgets",
+    "shinydashboard",
+    "scales",
+    "Cairo",
+    "ggplot2",
+    "rlang",
+    "magrittr"
+  )
+  
+  ind_missing_package <- !dependencies %in% utils::installed.packages()[ ,"Package"]
+  
+  if (any(ind_missing_package)) {
+    n_missing_packages <- sum(ind_missing_package)
+    stop(
+      "Some dependencies are missing. Please install ",
+      ifelse(
+        n_missing_packages == 1, 
+        "the", 
+        "these"
+      ),
+      " missing package",
+      ifelse(
+        n_missing_packages > 1, 
+        "s", 
+        ""
+      ),
+      " by running :\n ",
+      "install.packages(",
+      ifelse(
+        n_missing_packages > 1, 
+        "c('", 
+        "'"
+      ),
+      paste0(
+        "", 
+        dependencies[ind_missing_package], 
+        collapse = "','"
+      ),
+      ifelse(
+        n_missing_packages > 1, 
+        "'))", 
+        "')"
+      )
+    )
+  }
   
   # Global Options ----
   options(shiny.sanitize.errors = FALSE) 
@@ -231,7 +292,7 @@ airship <- function(...) {
       shinydashboard::dashboardBody(
         
         ### Busy Spinner ----
-        tags$head(tags$style(css)),
+        shiny::tags$head(shiny::tags$style(css)),
         shinybusy::add_busy_spinner(spin = "fading-circle"),
         shinybusy::add_busy_bar(color = "red", height = "8px"),
         
@@ -392,7 +453,7 @@ airship <- function(...) {
                       status = "primary",
                       circle = TRUE,
                       right = TRUE,
-                      icon = icon("paintbrush"),
+                      icon = shiny::icon("paintbrush"),
                       shiny::uiOutput("colors_boxplot_ui"),
                       inputId = "dropdown_colors_boxplot"
                     ),
@@ -929,7 +990,7 @@ airship <- function(...) {
                       status = "primary",
                       circle = TRUE,
                       right = TRUE,
-                      icon = icon("paintbrush"),
+                      icon = shiny::icon("paintbrush"),
                       tooltip = TRUE,
                       shiny::uiOutput("colors_ui"),
                       inputId = "dropdown_colors"
@@ -951,7 +1012,7 @@ airship <- function(...) {
                       status = "primary",
                       circle = TRUE,
                       right = TRUE,
-                      icon = icon("paintbrush"),
+                      icon = shiny::icon("paintbrush"),
                       shiny::uiOutput("colordim_ui"),
                       inputId = "dropdown_colordim"
                     ),
@@ -1262,7 +1323,7 @@ airship <- function(...) {
                       status = "primary",
                       circle = TRUE,
                       right = TRUE,
-                      icon = icon("paintbrush"),
+                      icon = shiny::icon("paintbrush"),
                       shiny::uiOutput("colors_scatter_ui"),
                       inputId = "dropdown_colors_scatter"
                     ),
@@ -1787,12 +1848,12 @@ airship <- function(...) {
           data_full() %>% dplyr::select(-input$repvar)
         } else {
           data_full()
-        }  
+        }
       }, error = function(e) {
         err_ <- ""
         shiny::validate(
           shiny::need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
-        ) 
+        )
       })
       
     })

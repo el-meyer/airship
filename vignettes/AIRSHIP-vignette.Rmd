@@ -21,7 +21,7 @@ library(airship)
 
 ## General Information                
 
-This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the app can be found in [Meyer et al.](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext).
+This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext).
 
 ## User Manual
 

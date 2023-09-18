@@ -51,7 +51,8 @@ Imports:
     scales,
     Cairo,
     ggplot2,
-    rlang
+    rlang,
+    magrittr
 LazyData: true
 Suggests: 
     knitr,

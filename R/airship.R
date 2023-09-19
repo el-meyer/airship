@@ -278,6 +278,7 @@ airship <- function(...) {
           
           ### Help ----
           shinydashboard::menuItem(
+            selected = TRUE,
             text = "Help",
             tabName = "help",
             icon = shiny::icon("question")
@@ -1594,6 +1595,7 @@ airship <- function(...) {
             tabName = "help",
             
             shiny::h2("Thank you for using AIRSHIP!"),
+            shiny::HTML("Get started by clicking on the 'Data Settings' tab and then choose/upload a dataset."),
             shiny::h3("Resources"),
             shiny::HTML(
               "For more information on the app, as well as instructions on how to use it, please refer to either the 
@@ -1615,43 +1617,43 @@ airship <- function(...) {
     output
   ){
     
-    ## Startup Popup -----
-    startup <- 1
-    shiny::observeEvent(
-      once = TRUE, 
-      ignoreNULL = FALSE, 
-      ignoreInit = FALSE, 
-      eventExpr = startup,
-      { 
-        # event will be called when startup changes, which only happens once, when it is initially calculated
-        shiny::showModal(
-          shiny::modalDialog(
-            title = "Welcome to AIRSHIP",
-            shiny::HTML("Thank you for using AIRSHIP! This app was designed to plot simulation results of clinical trials."),
-            shiny::HTML(
-              "For more information on the app, as well as instructions on how to use it, please refer to either the 
-              <a target='_blank' rel='noopener' href='https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html'> Vignette</a>,
-              <a target='_blank' rel='noopener' href='https://github.com/el-meyer/airship'> Github repository</a> or
-              <a target='_blank' rel='noopener' href='https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext'> SoftwareX publication</a>."
-            )
-          )
-        )
-      }
-    )
-    
+    # ## Startup Popup -----
+    # startup <- 1
+    # shiny::observeEvent(
+    #   once = TRUE, 
+    #   ignoreNULL = FALSE, 
+    #   ignoreInit = FALSE, 
+    #   eventExpr = startup,
+    #   { 
+    #     # event will be called when startup changes, which only happens once, when it is initially calculated
+    #     shiny::showModal(
+    #       shiny::modalDialog(
+    #         title = "Welcome to AIRSHIP",
+    #         shiny::HTML("Thank you for using AIRSHIP! This app was designed to plot simulation results of clinical trials."),
+    #         shiny::HTML(
+    #           "For more information on the app, as well as instructions on how to use it, please refer to either the 
+    #           <a target='_blank' rel='noopener' href='https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html'> Vignette</a>,
+    #           <a target='_blank' rel='noopener' href='https://github.com/el-meyer/airship'> Github repository</a> or
+    #           <a target='_blank' rel='noopener' href='https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext'> SoftwareX publication</a>."
+    #         )
+    #       )
+    #     )
+    #   }
+    # )
+    # 
     ## Upload Data Input ----
     # widget for user data upload
     upload <- shiny::reactive({
-      
+
       shiny::validate(
         # if no file is uploaded yet "no file" appears everywhere upload() is called
         shiny::need(input$file, "No file")
-      ) 
-      
+      )
+
       # file = user uploaded file in tab Data Settings
-      inFile <- input$file 
-      
-      df_candidate <- 
+      inFile <- input$file
+
+      df_candidate <-
         try(
           utils::read.csv(
             inFile$datapath,
@@ -1661,16 +1663,16 @@ airship <- function(...) {
             stringsAsFactors = TRUE
           )
         )
-      
+
       # Get rid of empty columns?
       if ("X" %in% colnames(df_candidate)) {
-        df_candidate <- 
+        df_candidate <-
           df_candidate[, -which(colnames(df_candidate) == "X")]
       }
-      
+
       # Return df_candidate
       df_candidate
-      
+
     })
     
     

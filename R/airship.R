@@ -35,6 +35,8 @@ airship <- function(...) {
     "magrittr"
   )
   
+  "%>%" <- dplyr::"%>%"
+  
   ind_missing_package <- !dependencies %in% utils::installed.packages()[ ,"Package"]
   
   if (any(ind_missing_package)) {
@@ -126,116 +128,11 @@ airship <- function(...) {
         shinydashboard::sidebarMenu(
           id = "sidebarMenu",
           
-          ### Data Settings ----
-          shinydashboard::menuItem(
-            text = "Data Settings",
-            tabName = "data_settings", 
-            icon = shiny::icon("gear"),
-            
-            shiny::checkboxInput(
-              inputId = "checkboxExampleData", 
-              label = "Use example dataset"
-            ),
-            
-            shiny::conditionalPanel(
-              condition = "input.checkboxExampleData == 0",
-              
-              shiny::checkboxInput(
-                inputId = "checkboxFactsData", 
-                label = "Use FACTS aggregated simulations"
-              ),
-              
-              shiny::fileInput(
-                inputId = "file", 
-                label = "Choose file to upload"
-              ),
-              
-              shiny::conditionalPanel(
-                condition = "input.checkboxFactsData == 0",
-                
-                shiny::radioButtons(
-                  inputId = "sep", 
-                  label = "Csv-Separator", 
-                  choiceValues = c(",", ";", ""),
-                  choiceNames = c(",", ";", "whitespace")
-                ),
-                
-                shiny::numericInput(
-                  inputId = "rowSkip",
-                  label = "Initial rows to skip",
-                  value = 0,
-                  min = 0, 
-                  step = 1
-                ),
-                
-                shiny::selectInput(
-                  inputId = "inputend", 
-                  label = "Select last input variable", 
-                  choices = NULL
-                ),
-                
-              ),
-              
-            ),
-            
-            shiny::conditionalPanel(
-              condition = "input.checkboxExampleData == 0 && input.checkboxFactsData == 0",
-              
-              shiny::checkboxInput(
-                inputId = "checkboxRepvar",
-                label = "Aggregate over individual simulations?"
-              )
-              
-            ),
-            
-            shiny::conditionalPanel(
-              condition = "input.checkboxRepvar != 0",
-              
-              shiny::conditionalPanel(
-                condition = "input.checkboxExampleData == 0 && input.checkboxFactsData == 0",
-                
-                shiny::selectInput(
-                  inputId = "repvar",
-                  label = "Select the simulation run variable",
-                  choices = NULL
-                ),
-                
-              ),
-              
-              shiny::selectInput(
-                inputId = "repvarMethod",
-                label = "Select the summary method you want to apply to your data",
-                choices = c("mean", "median")
-              ),
-              
-              shiny::selectInput(
-                inputId = "deviationMethod",
-                label = "Select the deviation you want to calculate",
-                choices = c("sd", "sem")
-              ),
-              
-              shiny::conditionalPanel(
-                condition = "input.deviationMethod == 'sem'",
-                
-                shiny::numericInput(
-                  inputId = "sem_mult",
-                  label = "multiply with",
-                  value = 1.96,
-                  step = 0.1,
-                  min = 0.001
-                )
-                
-              )
-              
-            )
-            
-          ),
-          
           ### Data ----               
           shinydashboard::menuItem(
             text = "Data",
             tabName = "data",
-            icon = shiny::icon("database")
+            icon = shiny::icon("gear")
           ),
           
           ### Default Values ----
@@ -299,14 +196,133 @@ airship <- function(...) {
         
         shinydashboard::tabItems(
           
-          ### Data Settings ----
-          shinydashboard::tabItem(
-            tabName = "data_settings",
-          ),
-          
           ### Data ----
           shinydashboard::tabItem(
             tabName = "data",
+            
+            shiny::fluidRow(
+              shiny::column(
+                width = 4,
+                
+                shiny::checkboxInput(
+                  inputId = "checkboxExampleData", 
+                  label = "Use example dataset"
+                ),
+                
+                shiny::conditionalPanel(
+                  condition = "input.checkboxExampleData == 0",
+                  
+                  shiny::checkboxInput(
+                    inputId = "checkboxFactsData", 
+                    label = "Use FACTS aggregated simulations"
+                  )
+                ), 
+                
+              ),
+              
+              shiny::column(
+                width = 4,
+                
+                shiny::conditionalPanel(
+                  condition = "input.checkboxExampleData == 0",
+                  
+                  shiny::fileInput(
+                    inputId = "file", 
+                    label = "Choose file to upload"
+                  ),
+                  
+                  shiny::conditionalPanel(
+                    condition = "input.checkboxFactsData == 0",
+                    
+                    shiny::radioButtons(
+                      inputId = "sep", 
+                      label = "Csv-Separator", 
+                      choiceValues = c(",", ";", ""),
+                      choiceNames = c(",", ";", "whitespace")
+                    ),
+                    
+                    shiny::numericInput(
+                      inputId = "rowSkip",
+                      label = "Initial rows to skip",
+                      value = 0,
+                      min = 0, 
+                      step = 1
+                    ),
+                    
+                    shiny::selectInput(
+                      inputId = "inputend", 
+                      label = "Select last input variable", 
+                      choices = NULL
+                    ),
+                    
+                  ),
+                  
+                ),
+                
+              ),
+              
+              shiny::column(
+                width = 4,
+                
+                shiny::conditionalPanel(
+                  condition = "input.checkboxExampleData == 0 && input.checkboxFactsData == 0",
+                  
+                  shiny::checkboxInput(
+                    inputId = "checkboxRepvar",
+                    label = "Aggregate over individual simulations?"
+                  )
+                  
+                ),
+                
+                shiny::conditionalPanel(
+                  condition = "input.checkboxRepvar != 0",
+                  
+                  shiny::conditionalPanel(
+                    condition = "input.checkboxExampleData == 0 && input.checkboxFactsData == 0",
+                    
+                    shiny::selectInput(
+                      inputId = "repvar",
+                      label = "Select the simulation run variable",
+                      choices = NULL
+                    ),
+                    
+                  ),
+                  
+                  shiny::selectInput(
+                    inputId = "repvarMethod",
+                    label = "Select the summary method you want to apply to your data",
+                    choices = c("mean", "median")
+                  ),
+                  
+                  shiny::selectInput(
+                    inputId = "deviationMethod",
+                    label = "Select the deviation you want to calculate",
+                    choices = c("sd", "sem")
+                  ),
+                  
+                  shiny::conditionalPanel(
+                    condition = "input.deviationMethod == 'sem'",
+                    
+                    shiny::numericInput(
+                      inputId = "sem_mult",
+                      label = "multiply with",
+                      value = 1.96,
+                      step = 0.1,
+                      min = 0.001
+                    )
+                    
+                  )
+                  
+                )
+                
+              ),
+              
+            ),
+            
+            shiny::hr(),
+            shiny::br(),
+            
+            shiny::h3("Original Data"),
             DT::dataTableOutput("dataDT"),
             shiny::uiOutput("dataDT_summarized")
           ),
@@ -1595,7 +1611,7 @@ airship <- function(...) {
             tabName = "help",
             
             shiny::h2("Thank you for using AIRSHIP!"),
-            shiny::HTML("Get started by clicking on the 'Data Settings' tab and then choose/upload a dataset."),
+            shiny::HTML("Get started by clicking on the 'Data' tab and then choose/upload a dataset."),
             shiny::h3("Resources"),
             shiny::HTML(
               "For more information on the app, as well as instructions on how to use it, please refer to either the 

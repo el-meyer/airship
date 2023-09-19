@@ -34,9 +34,10 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Depends: 
-    R (>= 2.10)
-Imports:
+    R (>= 2.10),
     shiny,
+    shinyBS
+Imports:
     DT,
     shinybusy,
     plotly,
@@ -44,7 +45,6 @@ Imports:
     tidyselect,
     tidyr,
     stringr,
-    shinyBS,
     colourpicker,
     shinyWidgets,
     shinydashboard,

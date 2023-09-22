@@ -16,7 +16,8 @@ devtools::install_github("el-meyer/airship")
 and run the app using:
 
 ``` r
-airship::airship()
+library(airship)
+airship()
 ```
 
 ## Documentation

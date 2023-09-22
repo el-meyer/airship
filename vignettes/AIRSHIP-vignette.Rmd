@@ -1,6 +1,12 @@
 ---
 title: "AIRSHIP Manual"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    fig_caption: yes
+    highlight: textmate
+    code_folding: show
 vignette: >
   %\VignetteIndexEntry{AIRSHIP-vignette}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,44 +20,128 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(airship)
-```
-
 
 ## General Information                
 
-This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext).
+This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more technical description of a previous version of the app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext).
 
-## User Manual
+The app is part of the **airship** R package, which can be downloaded from Github using:
 
-In the following you will find some details on every part of the app and how they are supposed to be used.
+```{r, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("el-meyer/airship")
+```
 
-### Data Settings
+In order to run the app, load the library and call the *airship()* function:
 
-There are a few requirements to the data in order for the app to work. So far only .csv files can be uploaded. It is expected that the data is arranged in a way such that the design parameters precede the output values/operating characteristics. Each row represents one  simulation run with a different combination of input/design parameters. 
+```{r, eval = FALSE}
+library(airship)
+airship()
+```
 
-If your data is not aggregated yet (i.e. if you have every single simulation outcome as one row in your dataset, and a 'replication run index' you can click the checkbox and choose which of your variables is the 'replication run index'. The dataset is then averaging over the OCs either by mean or median. Additionally the 'Distribution' tab opens where you can investigate the behaviour of your variables and outcomes.
-                
-### Data
+## Getting Started
 
-In the Data tab you find an overview of your data. Already here you can set filters for your input parameters, if you are not interested in some observations.
+First, you need to navigate to the Data tab in the sidebar to the left and upload some data. If this is your first time using the app, we suggest to tick the checkbox "Use example dataset" in the top left corner to familiarize yourself with the workflow of the app. 
 
-### Default values
+This toy example dataset has the following structure:
 
-The default value is a key tab in this App. Please choose one default value for every variable that has an impact on your simulation. Later in the plot tab the dataset is filtered for these values, unless the respective variable is chosen to be one of the dimensions in the graph (See 'plot' tab).
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+DT::datatable(
+  airship::ExampleData1,
+    filter = "bottom",
+    class = 'cell-border stripe',
+    extensions = c('Scroller', 'FixedColumns'),
+    options = list(
+      dom = 'Bfrtip',
+      scrollX = TRUE,
+      fixedColumns = TRUE,
+      deferRender = TRUE,
+      scrollY = 200,
+      scroller = TRUE,
+      fixedColumns = list(leftColumns = 1, rightColumns = 0)
+    )
+)
+```
 
-### Distribution
+Two outcomes (*output1* and *output2*) were simulated using four simulation input variables (*input1-4*). The input variables take three different values each and for every unique combination of input variables, the outcomes were simulated 1000 times (*replications*) following some random mechanism.
 
-This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots.
+After checking "Use example dataset", you might have noticed three things happening:
 
-                
-### Plot
+1. The data upload interface disappeared, since you are using the example dataset
+2. An option appeared on the top right to specify how the data should be aggregated across simulation replications
+3. An overview of both the original example dataset, as well as the aggregated example dataset appeared on the screen
 
-After uploading the data and establishing the settings, you can visualize your simulation results on up to 4 dimensions. An x-axis variable as well as at least one OC have to be specified in order for the plot to show up: You can opt to add further design parameters on the 'facet' dimensions (row and column), which splits the plot into a grid as well as the 'shape' dimension, which adds lines/points in different shapes according to the value of the respective input parameter.
+Different graphs in **airship** use either the original or the aggregated dataset. This is all done automatically and not something you as a user have to worry about. 
 
-Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clicking the 'Download plot' button.
-                
-### Scatterplot
+The next step is to set default values for the simulation input parameters by navigating to the [Default Values Tab]. For now, just click on the button "Take first row as default values". If you want to learn more about default values, and why they are essential to this app, see section [Default Values Tab].
 
-If you are interested in the variability of ceratin operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome.
+You are now ready to create some plots! Click on any of the remaining plot tabs to the left and customize the plot to your liking.
+
+You are now familiar with the general functionality of **airship** and may revisit the [Data tab] to upload your own data for visualization!
+
+
+## Data Tab
+
+In this tab, you can select/upload the dataset you wish to visualize using **airship**. 
+
+There are two types of supported data: Datasets that contain individual simulation replication level results or aggregated results. If you tick the "Use example dataset" checkbox, you can see an example of both of these datasets. Data needs to be in csv format.
+
+First, the user needs to choose whether 
+
+a. the example dataset is used
+b. a FACTS aggregated simulations file is uploaded 
+c. a custom dataset is uploaded
+
+If either b. or c. are chosen, the user needs to upload the csv file using the "Browse" button. If c. is chosen, the user needs to choose the appropriate csv separator, the number of initial lines of the csv file to skip and specify which column in the dataset corresponds to the last input variable. This is set via the "Select last input variable" dropdown menu. 
+
+Finally, if c. was chosen, the user needs to specify if the dataset contains individual simulation replication level results or has already been aggregated. This is done via the "Aggregate over individual simulation?" button, which unlocks another dropdown menu where the column corresponding to the replication variable needs to be specified. 
+
+If a dataset with individual simulation replication level results has been uploaded, the user may choose a method of aggregation (currently mean and median for location parameter as well as standard deviation (sd) and standard error of the mean (sem) for variation parameter are available).
+
+In the resulting table "Original Data", the user may further filter the dataset to exclude observations.
+
+
+## Default Values Tab
+
+Remember the structure of our example data:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+DT::datatable(
+  airship::ExampleData1,
+    filter = "bottom",
+    class = 'cell-border stripe',
+    extensions = c('Scroller', 'FixedColumns'),
+    options = list(
+      dom = 'Bfrtip',
+      scrollX = TRUE,
+      fixedColumns = TRUE,
+      deferRender = TRUE,
+      scrollY = 200,
+      scroller = TRUE,
+      fixedColumns = list(leftColumns = 1, rightColumns = 0)
+    )
+)
+```
+
+Imagine you have a simple boxplot that shows the impact of *input1* on *output1*. Since *input1* has three levels, you would expect three boxes showing the distribution of *output1* conditional on each of the three levels of *input1*. What about the different levels of *input2-4*? 
+
+Since we assume that *input2-4* could have an effect on *output1*, ideally we would fix these to a certain level (by subsetting the dataset) and then interpret the boxplot as "This is the relationship between *input1* and *output1*, given *input2* is 3, *input3* is Z and *input4* is 12." However, if we want to plot the effect of *input2* on *output1*, we cannot use the subsetted dataset from the previous boxplot, since this dataset contains only the data for a certain level of *input2* and all the information on *input1*, which we do not want for this plot. In a manual workflow, for every plot we would create a new subsetted dataset, but **airship** automates this by having the user choose default values for every simulation input variable, according to which the dataset is fitlered. If the simulation input variable is chosen to be displayed in a plot (like *input1* was chosen as the grouping variable in the boxplot), the dataset is unfiltered for this variable. 
+
+When choosing default values by selecting the filtering variables in the displayed data table, make sure that in the end one only one line remains. If certain input variables are redundant in the sense that they describe the same underlying variation in simulation input parameters (e.g. having a column "scenario" that is a unique identifier for combinations of input variables), you can choose if you want to filter according to those or the individual input parameters. 
+
+All variables for which default values are chosen are later available as aesthetics when building the plots.
+
+<!-- ### Boxplot Tab -->
+
+<!-- This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots. -->
+
+
+<!-- ## Line/Dotplot Tab -->
+
+<!-- After uploading the data and establishing the settings, you can visualize your simulation results on up to 4 dimensions. An x-axis variable as well as at least one OC have to be specified in order for the plot to show up: You can opt to add further design parameters on the 'facet' dimensions (row and column), which splits the plot into a grid as well as the 'shape' dimension, which adds lines/points in different shapes according to the value of the respective input parameter. -->
+
+<!-- Furthermore you can change the style of your plot when clicking the 'style options' button and download a plot in the exact size and quality you need when clicking the 'Download plot' button. -->
+
+<!-- ## Scatterplot Tab -->
+
+<!-- If you are interested in the variability of ceratin operating characteristics in 1 specific scenario, you can look at the settings in this tab which generates a scatterplot of 2 output variables, with the possibility of adding a grid. This is especially suitable if you ran e.g. 10000 simulation runs with the same setting and have not aggregated your data yet. Then you can choose your 'replication index variable' and investigate the variability of the outcome. -->

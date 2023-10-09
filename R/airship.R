@@ -137,9 +137,9 @@ airship <- function(...) {
           
           ### Default Values ----
           shinydashboard::menuItem(
-            text = "Default values", 
+            text = "Focus Variables", 
             tabName = "default", 
-            icon = shiny::icon("pen")
+            icon = shiny::icon("layer-group")
           ),
           
           ### Boxplot ----
@@ -328,9 +328,16 @@ airship <- function(...) {
           ),
           
           ### Default Values ----
+          
           shinydashboard::tabItem(
             tabName = "default",
             shiny::br(),
+            shiny::h3("Please choose a subset (at least one) of the input variables as focus variables."),
+            shiny::h4("Focus variables can be investigated further in the plot tabs. By specifying a default value for input variables, they are treated as focus variables."),
+            shiny::h4("If focus variables are not chosen to be displayed in a plot, the displayed dataset is filtered according to the chosen default values."),
+            shiny::br(),
+            shiny::br(),
+            
             shiny::actionButton(
               inputId = "buttonDefault", 
               label = "Take first row as default values"
@@ -1876,7 +1883,7 @@ airship <- function(...) {
       }, error = function(e) {
         err_ <- ""
         shiny::validate(
-          shiny::need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+          shiny::need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define focus variables")
         )
       })
       
@@ -2513,7 +2520,7 @@ airship <- function(...) {
         shiny::validate(
           shiny::need(
             err_ != "", 
-            "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+            "If a new dataset has been uploaded, go first to the tab with the data and then re-define focus variables"
           )
         )}
       )
@@ -2550,7 +2557,7 @@ airship <- function(...) {
         shiny::validate(
           shiny::need(
             err_ != "", 
-            "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+            "If a new dataset has been uploaded, go first to the tab with the data and then re-define focus variables"
           )
         )}
       )
@@ -2991,7 +2998,7 @@ airship <- function(...) {
       shiny::validate(
         shiny::need(
           shiny::isTruthy(input$boxplotOutputVar), 
-          "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+          "If a new dataset has been uploaded, go first to the tab with the data and then re-define focus variables"
         )
       )
       
@@ -3022,7 +3029,7 @@ airship <- function(...) {
       }, error = function(e) {
         err_ <- ""
         shiny::validate(
-          shiny::need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+          shiny::need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define focus variables")
         )
       }
       )
@@ -3092,7 +3099,7 @@ airship <- function(...) {
                 shiny::validate(
                   shiny::need(
                     err_ != "", 
-                    "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+                    "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define focus variables"
                   )
                 )
                 
@@ -3118,7 +3125,7 @@ airship <- function(...) {
                 shiny::validate(
                   shiny::need(
                     err_ != "", 
-                    "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+                    "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define focus variables"
                   )
                 )
               })
@@ -3391,7 +3398,7 @@ airship <- function(...) {
         shiny::validate(
           shiny::need(
             err_ != "", 
-            "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+            "If a new dataset has been uploaded, go first to the tab with the data and then re-define focus variables"
           )
         )
       }
@@ -3562,7 +3569,7 @@ airship <- function(...) {
       )
       
       shiny::validate(
-        shiny::need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
+        shiny::need(any(input$chooseDT_search_columns != ""), "Please specify focus variables first")
       )
       
       if(input$plottype_scatter){

@@ -1,12 +1,7 @@
 ---
 title: "AIRSHIP Manual"
 output:
-  rmarkdown::html_document:
-    toc: true
-    toc_float: true
-    fig_caption: yes
-    highlight: textmate
-    code_folding: show
+  rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{AIRSHIP-vignette}
   %\VignetteEngine{knitr::rmarkdown}
@@ -73,7 +68,7 @@ After checking "Use example dataset", you might have noticed three things happen
 
 Different graphs in **airship** use either the original or the aggregated dataset. This is all done automatically and not something you as a user have to worry about. 
 
-The next step is to set default values for the simulation input parameters by navigating to the [Default Values Tab]. For now, just click on the button "Take first row as default values". If you want to learn more about default values, and why they are essential to this app, see section [Default Values Tab].
+The next step is to choose focus variables and corresponding default values for the simulation input parameters by navigating to the [Focus Variables Tab]. For now, just click on the button "Take first row as default values". If you want to learn more about focus variables, and why they are essential to this app, see section [Focus Variables Tab].
 
 You are now ready to create some plots! Click on any of the remaining plot tabs to the left and customize the plot to your liking.
 
@@ -101,7 +96,7 @@ If a dataset with individual simulation replication level results has been uploa
 In the resulting table "Original Data", the user may further filter the dataset to exclude observations.
 
 
-## Default Values Tab
+## Focus Variables Tab
 
 Remember the structure of our example data:
 
@@ -125,9 +120,9 @@ DT::datatable(
 
 Imagine you have a simple boxplot that shows the impact of *input1* on *output1*. Since *input1* has three levels, you would expect three boxes showing the distribution of *output1* conditional on each of the three levels of *input1*. What about the different levels of *input2-4*? 
 
-Since we assume that *input2-4* could have an effect on *output1*, ideally we would fix these to a certain level (by subsetting the dataset) and then interpret the boxplot as "This is the relationship between *input1* and *output1*, given *input2* is 3, *input3* is Z and *input4* is 12." However, if we want to plot the effect of *input2* on *output1*, we cannot use the subsetted dataset from the previous boxplot, since this dataset contains only the data for a certain level of *input2* and all the information on *input1*, which we do not want for this plot. In a manual workflow, for every plot we would create a new subsetted dataset, but **airship** automates this by having the user choose default values for every simulation input variable, according to which the dataset is fitlered. If the simulation input variable is chosen to be displayed in a plot (like *input1* was chosen as the grouping variable in the boxplot), the dataset is unfiltered for this variable. 
+We may or may not assume that *input2-4* could have an effect on *output1*, however if we assume they have an effect, ideally we would fix these to a certain level (by subsetting the dataset) and then interpret the boxplot as "This is the relationship between *input1* and *output1*, given *input2* is 3, *input3* is Z and *input4* is 12." However, if we want to plot the effect of *input2* on *output1*, we cannot use the subsetted dataset from the previous boxplot, since this dataset contains only the data for a certain level of *input2* and all the information on *input1*, which we do not want for this plot. In a manual workflow, for every plot we would create a new subsetted dataset, but **airship** automates this by having the user choose focus variables and corresponding default values for every simulation input variable, according to which the dataset is filtered. If the simulation input variable is chosen to be displayed in a plot (as *input1* was chosen as the grouping variable in the boxplot), the dataset is unfiltered for this variable. 
 
-When choosing default values by selecting the filtering variables in the displayed data table, make sure that in the end one only one line remains. If certain input variables are redundant in the sense that they describe the same underlying variation in simulation input parameters (e.g. having a column "scenario" that is a unique identifier for combinations of input variables), you can choose if you want to filter according to those or the individual input parameters. 
+If either we are happy to "blur over" the effect of a simulation input parameter (e.g. check model performance across different priors) or certain input variables are redundant in the sense that they describe the same underlying variation in simulation input parameters (e.g. having a column "scenario" that is a unique identifier for combinations of input variables), they are not chosen as focus variables and hence no default value is chosen.
 
 All variables for which default values are chosen are later available as aesthetics when building the plots.
 

@@ -1,3 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^old$
+^data/ExampleDataFACTS\.csv$
+^data/ExampleDataNASH\.csv$
+^LICENSE$
+^docs$

@@ -137,9 +137,9 @@ airship <- function(...) {
           
           ### Default Values ----
           shinydashboard::menuItem(
-            text = "Default values", 
+            text = "Focus Variables", 
             tabName = "default", 
-            icon = shiny::icon("pen")
+            icon = shiny::icon("layer-group")
           ),
           
           ### Boxplot ----
@@ -210,6 +210,20 @@ airship <- function(...) {
                 ),
                 
                 shiny::conditionalPanel(
+                  condition = "input.checkboxExampleData == 1",
+                  
+                  shiny::selectInput(
+                    inputId = "selectExampleData", 
+                    label = "Which example dataset?",
+                    choices = 
+                      c(
+                        "NASH platform trial design",
+                        "Toy simulation study"
+                      )
+                  )
+                ), 
+                
+                shiny::conditionalPanel(
                   condition = "input.checkboxExampleData == 0",
                   
                   shiny::checkboxInput(
@@ -269,7 +283,7 @@ airship <- function(...) {
                   
                   shiny::checkboxInput(
                     inputId = "checkboxRepvar",
-                    label = "Aggregate over individual simulations?"
+                    label = "Summarize over individual simulations?"
                   )
                   
                 ),
@@ -328,9 +342,17 @@ airship <- function(...) {
           ),
           
           ### Default Values ----
+          
           shinydashboard::tabItem(
             tabName = "default",
             shiny::br(),
+            shiny::h4("Please choose a subset (at least one) of the input variables as focus variables."),
+            shiny::HTML("Focus variables can be investigated further in the plot tabs. By specifying a default value for input variables, they are treated as focus variables."),
+            shiny::br(),
+            shiny::HTML("If focus variables are not chosen to be displayed in a plot, the displayed dataset is filtered according to the chosen default values."),
+            shiny::br(),
+            shiny::br(),
+            
             shiny::actionButton(
               inputId = "buttonDefault", 
               label = "Take first row as default values"
@@ -1663,7 +1685,10 @@ airship <- function(...) {
 
       shiny::validate(
         # if no file is uploaded yet "no file" appears everywhere upload() is called
-        shiny::need(input$file, "No file")
+        shiny::need(
+          input$file, 
+          "No file uploaded."
+        )
       )
 
       # file = user uploaded file in tab Data Settings
@@ -1712,46 +1737,76 @@ airship <- function(...) {
       
       if(input$checkboxExampleData){
         
-        # # read in Example data and convert some variables for correct display
-        # exampleData <- utils::read.csv(
-        #   "../data/ExampleData1.csv",
-        #   header = TRUE,
-        #   sep = ",",
-        #   stringsAsFactors = TRUE
-        # )
-        
-        # ExampleData1 exists in package airship
-        exampleData <- airship::ExampleData1
-        
-        # Get column names
-        col_names_example_dat <- colnames(exampleData)
-        
-        # Update inputs
-        shiny::updateCheckboxInput(
-          session = session,
-          inputId = "checkboxFactsData",
-          value = FALSE
-        )
-        
-        shiny::updateCheckboxInput(
-          session = session,
-          inputId = "checkboxRepvar",
-          value = TRUE
-        )
-        
-        shiny::updateSelectInput(
-          session = session, 
-          inputId = "inputend", 
-          choices = col_names_example_dat,
-          selected = "input4"
-        )
-        
-        shiny::updateSelectInput(
-          session = session,
-          inputId = "repvar",
-          choices = col_names_example_dat,
-          selected = "replications"
-        )
+        if (input$selectExampleData == "NASH platform trial design") {
+          
+          # ExampleData2 exists in package airship
+          exampleData <- airship::ExampleData2
+          
+          # Get column names
+          col_names_example_dat <- colnames(exampleData)
+          
+          # Update inputs
+          shiny::updateCheckboxInput(
+            session = session,
+            inputId = "checkboxFactsData",
+            value = FALSE
+          )
+          
+          shiny::updateCheckboxInput(
+            session = session,
+            inputId = "checkboxRepvar",
+            value = FALSE
+          )
+          
+          shiny::updateSelectInput(
+            session = session, 
+            inputId = "inputend", 
+            choices = col_names_example_dat,
+            selected = "TreatmentEfficacySetting"
+          )
+          
+          shiny::updateSelectInput(
+            session = session,
+            inputId = "repvar",
+            choices = col_names_example_dat
+          )
+          
+        } else  if (input$selectExampleData == "Toy simulation study") {
+          
+          # ExampleData1 exists in package airship
+          exampleData <- airship::ExampleData1
+          
+          # Get column names
+          col_names_example_dat <- colnames(exampleData)
+          
+          # Update inputs
+          shiny::updateCheckboxInput(
+            session = session,
+            inputId = "checkboxFactsData",
+            value = FALSE
+          )
+          
+          shiny::updateCheckboxInput(
+            session = session,
+            inputId = "checkboxRepvar",
+            value = TRUE
+          )
+          
+          shiny::updateSelectInput(
+            session = session, 
+            inputId = "inputend", 
+            choices = col_names_example_dat,
+            selected = "input4"
+          )
+          
+          shiny::updateSelectInput(
+            session = session,
+            inputId = "repvar",
+            choices = col_names_example_dat,
+            selected = "replications"
+          )
+          
+        }
         
         return(exampleData)
         
@@ -1864,7 +1919,10 @@ airship <- function(...) {
     data_full_norep <- shiny::reactive({
       
       shiny::validate(
-        shiny::need(input$repvar != input$inputend, "Replication variable can't be input variable (Please alter last input variable or replication variable)")
+        shiny::need(
+          input$repvar != input$inputend, 
+          "Replication variable can't be input variable (Please alter last input variable or replication variable)"
+        )
       )
       
       tryCatch({
@@ -1876,7 +1934,10 @@ airship <- function(...) {
       }, error = function(e) {
         err_ <- ""
         shiny::validate(
-          shiny::need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+          shiny::need(
+            err_ != "", 
+            "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
+          )
         )
       })
       
@@ -1922,7 +1983,8 @@ airship <- function(...) {
           ncol(
             data_full_norep()
           ) != ind_inputendR(),
-          "Last input variable cannot be last variable in data frame")
+          "You have selected the last input variable to be the last column in the dataset. This is impossible, because it does not leave any outcome variables."
+        )
       )
       ind_inputendR() + 1
     })
@@ -1934,7 +1996,10 @@ airship <- function(...) {
       shiny::req(ind_outputstartR())
       shiny::req(data_full())
       shiny::validate(
-        shiny::need(input$repvar != input$inputend, "Replication variable can't be input variable (Please alter last input variable or replication variable)")
+        shiny::need(
+          input$repvar != input$inputend, 
+          "Replication variable can't be input variable (Please alter last input variable or replication variable)"
+        )
       )
       shiny::req(input$dataDT_rows_all)
       d <- data_full()
@@ -1966,13 +2031,17 @@ airship <- function(...) {
     data_agg <- shiny::reactive({
       
       shiny::validate(
-        shiny::need(!is.integer(input$repvar), 
-                    "Replication variable can't be input variable (Please alter last input variable or replication run variable)")
+        shiny::need(
+          !is.integer(input$repvar), 
+          "Replication variable can't be input variable (Please alter last input variable or replication run variable)"
+        )
       )
       
       shiny::validate(
-        shiny::need(input$repvar != input$inputend, 
-                    "Replication variable can't be input variable (Please alter last input variable or replication run variable)")
+        shiny::need(
+          input$repvar != input$inputend, 
+          "You have selected the last input variable to be the last column in the dataset. This is impossible, because it does not leave any outcome variables."
+        )
       )
       
       # summarize DT with replication runs by averaging outputs for every setting
@@ -2023,12 +2092,15 @@ airship <- function(...) {
           ) 
           
           text_err <- paste0(
-            "All defined output variables must be of class numeric. ", 
+            "All defined outcome variables must be of class numeric. If this error persits even when the outcome variables are of class numeric, contact the package maintainer.", 
             xx
           )
           
           shiny::validate(
-            shiny::need(all(output_class == "numeric"), text_err)
+            shiny::need(
+              all(output_class == "numeric"), 
+              text_err
+            )
           )
         }
         
@@ -2129,7 +2201,7 @@ airship <- function(...) {
       shiny::renderUI({
         if(input$checkboxRepvar){
           shiny::tagList(
-            shiny::h3("Aggregated Data"),
+            shiny::h3("Summarized Data"),
             DT::dataTableOutput("repDataDT")
           )
         }
@@ -2513,7 +2585,7 @@ airship <- function(...) {
         shiny::validate(
           shiny::need(
             err_ != "", 
-            "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+            "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
           )
         )}
       )
@@ -2550,7 +2622,7 @@ airship <- function(...) {
         shiny::validate(
           shiny::need(
             err_ != "", 
-            "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+            "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
           )
         )}
       )
@@ -2991,7 +3063,7 @@ airship <- function(...) {
       shiny::validate(
         shiny::need(
           shiny::isTruthy(input$boxplotOutputVar), 
-          "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+          "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
         )
       )
       
@@ -3022,7 +3094,10 @@ airship <- function(...) {
       }, error = function(e) {
         err_ <- ""
         shiny::validate(
-          shiny::need(err_ != "", "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values")
+          shiny::need(
+            err_ != "", 
+            "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
+          )
         )
       }
       )
@@ -3064,7 +3139,7 @@ airship <- function(...) {
           shiny::validate(
             shiny::need(
               err_ != "", 
-              "Faceting variables can only appear in row or cols, not both"
+              "Faceting variables can only appear in rows or columns, not both."
             )
           )
         }
@@ -3092,7 +3167,7 @@ airship <- function(...) {
                 shiny::validate(
                   shiny::need(
                     err_ != "", 
-                    "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+                    "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
                   )
                 )
                 
@@ -3118,7 +3193,7 @@ airship <- function(...) {
                 shiny::validate(
                   shiny::need(
                     err_ != "", 
-                    "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
+                    "Something went wrong. If changing some settings does not solve the problem, e-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
                   )
                 )
               })
@@ -3391,8 +3466,8 @@ airship <- function(...) {
         shiny::validate(
           shiny::need(
             err_ != "", 
-            "If a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
-          )
+            "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
+            )
         )
       }
       )
@@ -3558,11 +3633,17 @@ airship <- function(...) {
     output$scatter_ui <- shiny::renderUI({
       
       shiny::validate(
-        shiny::need(input$OC_scatter, "No OCs chosen")
+        shiny::need(
+          input$OC_scatter, 
+          "No OCs chosen."
+        )
       )
       
       shiny::validate(
-        shiny::need(any(input$chooseDT_search_columns != ""), "Please specify default values first")
+        shiny::need(
+          any(input$chooseDT_search_columns != ""), 
+          "Please specify focus variables first."
+        )
       )
       
       if(input$plottype_scatter){
@@ -3705,8 +3786,8 @@ airship <- function(...) {
             shiny::validate(
               shiny::need(
                 err_ != "", 
-                "This is not working. Probably because the underlying dataset has changed. 1) Go back to the data tab. 2) Re-define default values. If this does not fix it, please report a bug."
-              )
+                "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
+                )
             )
           })
       } else {
@@ -3721,7 +3802,7 @@ airship <- function(...) {
       shiny::validate(
         shiny::need(
           any(input$chooseDT_search_columns != ""), 
-          "Please specify default values first"
+          "Please specify focus variables first."
         )
       )
       df_plot()
@@ -3751,8 +3832,8 @@ airship <- function(...) {
         shiny::validate(
           shiny::need(
             err_ != "", 
-            "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
-          )
+            "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
+            )
         )
       }
       )
@@ -3763,7 +3844,9 @@ airship <- function(...) {
           
           shiny::validate(
             shiny::need(
-              shiny::isTruthy(input$errorvars), "Please define error variables")
+              shiny::isTruthy(input$errorvars), 
+              "Please define error variables."
+            )
           )
           
           d <- tryCatch({
@@ -3779,8 +3862,8 @@ airship <- function(...) {
             shiny::validate(
               shiny::need(
                 err_ != "", 
-                "Select a different variable or if a new dataset has been uploaded, go first to the tab with the data and then re-define default values"
-              )
+                "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
+                )
             )   
           })
           
@@ -3803,7 +3886,7 @@ airship <- function(...) {
           shiny::validate(
             shiny::need(
               shiny::isTruthy(input$errorvars_upper), 
-              "Please define variable for upper bound/deviation"
+              "Please define variable for upper bound/deviation."
             )
           )
           
@@ -3827,8 +3910,8 @@ airship <- function(...) {
             shiny::validate(
               shiny::need(
                 err_ != "", 
-                "Select a different variable or if a new dataset has been uploaded, go to the tab with the data and then re-define default values"
-              )
+                "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
+                )
             )     
           })
           
@@ -3845,8 +3928,8 @@ airship <- function(...) {
             shiny::validate(
               shiny::need(
                 err_ != "", 
-                "Select a different variable or if a new dataset has been uploaded, go to the tab with the data and then re-define default values"
-              )
+                "Something went wrong. If changing some settings does not solve the problem, re-visit the data tab, re-upload the data and wait for computations and then re-define focus variables. If this error persists, contact the package maintainer."
+                )
             )     
           })
           
@@ -4233,21 +4316,21 @@ airship <- function(...) {
       shiny::validate(
         shiny::need(
           input$OC, 
-          "No OCs chosen"
+          "No OCs chosen."
         )
       )
       
       shiny::validate(
         shiny::need(
           input$x, 
-          "Please specify default values first"
+          "Please specify focus variables. first."
         )
       )
       
       shiny::validate(
         shiny::need(
           any(input$chooseDT_search_columns != ""), 
-          "Please specify default values first"
+          "Please specify focus variables first."
         )
       )
       

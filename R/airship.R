@@ -269,7 +269,7 @@ airship <- function(...) {
                   
                   shiny::checkboxInput(
                     inputId = "checkboxRepvar",
-                    label = "Aggregate over individual simulations?"
+                    label = "Summarize over individual simulations?"
                   )
                   
                 ),
@@ -2136,7 +2136,7 @@ airship <- function(...) {
       shiny::renderUI({
         if(input$checkboxRepvar){
           shiny::tagList(
-            shiny::h3("Aggregated Data"),
+            shiny::h3("Summarized Data"),
             DT::dataTableOutput("repDataDT")
           )
         }

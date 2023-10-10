@@ -3,7 +3,7 @@ title: "AIRSHIP Manual"
 output:
   rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{AIRSHIP-vignette}
+  %\VignetteIndexEntry{AIRSHIP Manual}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -36,7 +36,7 @@ airship()
 
 ## Getting Started
 
-First, you need to navigate to the Data tab in the sidebar to the left and upload some data. If this is your first time using the app, we suggest to tick the checkbox "Use example dataset" in the top left corner to familiarize yourself with the workflow of the app. 
+First, you need to navigate to the Data tab in the sidebar to the left and upload some data. If this is your first time using the app, we suggest to tick the checkbox "Use example dataset" and then select "Toy simulation study" from the dropdown menu in the top left corner to familiarize yourself with the workflow of the app. 
 
 This toy example dataset has the following structure:
 
@@ -63,10 +63,10 @@ Two outcomes (*output1* and *output2*) were simulated using four simulation inpu
 After checking "Use example dataset", you might have noticed three things happening:
 
 1. The data upload interface disappeared, since you are using the example dataset
-2. An option appeared on the top right to specify how the data should be aggregated across simulation replications
-3. An overview of both the original example dataset, as well as the aggregated example dataset appeared on the screen
+2. An option appeared on the top right to specify how the data should be summarized across simulation replications
+3. An overview of both the original example dataset, as well as the summarized example dataset appeared on the screen
 
-Different graphs in **airship** use either the original or the aggregated dataset. This is all done automatically and not something you as a user have to worry about. 
+Different graphs in **airship** use either the original or the summarized dataset. This is all done automatically and not something you as a user have to worry about. 
 
 The next step is to choose focus variables and corresponding default values for the simulation input parameters by navigating to the [Focus Variables Tab]. For now, just click on the button "Take first row as default values". If you want to learn more about focus variables, and why they are essential to this app, see section [Focus Variables Tab].
 
@@ -79,7 +79,7 @@ You are now familiar with the general functionality of **airship** and may revis
 
 In this tab, you can select/upload the dataset you wish to visualize using **airship**. 
 
-There are two types of supported data: Datasets that contain individual simulation replication level results or aggregated results. If you tick the "Use example dataset" checkbox, you can see an example of both of these datasets. Data needs to be in csv format.
+There are two types of supported data: Datasets that contain individual simulation replication level results or summarized results. If you tick the "Use example dataset" checkbox, you can see an example of both of these datasets. Data needs to be in csv format.
 
 First, the user needs to choose whether 
 
@@ -89,7 +89,7 @@ c. a custom dataset is uploaded
 
 If either b. or c. are chosen, the user needs to upload the csv file using the "Browse" button. If c. is chosen, the user needs to choose the appropriate csv separator, the number of initial lines of the csv file to skip and specify which column in the dataset corresponds to the last input variable. This is set via the "Select last input variable" dropdown menu. 
 
-Finally, if c. was chosen, the user needs to specify if the dataset contains individual simulation replication level results or has already been aggregated. This is done via the "Aggregate over individual simulation?" button, which unlocks another dropdown menu where the column corresponding to the replication variable needs to be specified. 
+Finally, if c. was chosen, the user needs to specify if the dataset contains individual simulation replication level results or has already been summarized. This is done via the "Summarize over individual simulation?" button, which unlocks another dropdown menu where the column corresponding to the replication variable needs to be specified. 
 
 If a dataset with individual simulation replication level results has been uploaded, the user may choose a method of aggregation (currently mean and median for location parameter as well as standard deviation (sd) and standard error of the mean (sem) for variation parameter are available).
 
@@ -122,7 +122,7 @@ Imagine you have a simple boxplot that shows the impact of *input1* on *output1*
 
 We may or may not assume that *input2-4* could have an effect on *output1*, however if we assume they have an effect, ideally we would fix these to a certain level (by subsetting the dataset) and then interpret the boxplot as "This is the relationship between *input1* and *output1*, given *input2* is 3, *input3* is Z and *input4* is 12." However, if we want to plot the effect of *input2* on *output1*, we cannot use the subsetted dataset from the previous boxplot, since this dataset contains only the data for a certain level of *input2* and all the information on *input1*, which we do not want for this plot. In a manual workflow, for every plot we would create a new subsetted dataset, but **airship** automates this by having the user choose focus variables and corresponding default values for every simulation input variable, according to which the dataset is filtered. If the simulation input variable is chosen to be displayed in a plot (as *input1* was chosen as the grouping variable in the boxplot), the dataset is unfiltered for this variable. 
 
-If either we are happy to "blur over" the effect of a simulation input parameter (e.g. check model performance across different priors) or certain input variables are redundant in the sense that they describe the same underlying variation in simulation input parameters (e.g. having a column "scenario" that is a unique identifier for combinations of input variables), they are not chosen as focus variables and hence no default value is chosen.
+If either we are happy to "blur over" the effect of a simulation input parameter (e.g. check model performance across different assumptions regarding the treatment effect) or certain input variables are redundant in the sense that they describe the same underlying variation in simulation input parameters (e.g. having a column "scenario" that is a unique identifier for combinations of input variables), they are not chosen as focus variables and hence no default value is chosen.
 
 All variables for which default values are chosen are later available as aesthetics when building the plots.
 

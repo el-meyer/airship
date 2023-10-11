@@ -77,7 +77,7 @@ You are now familiar with the general functionality of **airship** and may revis
 
 ## Data Tab
 
-In this tab, you can select/upload the dataset you wish to visualize using **airship**. 
+In this tab, you can select/upload the dataset you wish to visualize using **airship**. Please note that currently the maximum file size for upload is 100MB.
 
 There are two types of supported data: Datasets that contain individual simulation replication level results or summarized results. If you tick the "Use example dataset" checkbox, you can see an example of both of these datasets. Data needs to be in csv format.
 

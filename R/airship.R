@@ -76,7 +76,7 @@ airship <- function(...) {
   
   # Global Options ----
   options(shiny.sanitize.errors = FALSE) 
-  options(shiny.maxRequestSize = 50*1024^2)
+  options(shiny.maxRequestSize = 100*1024^2)
   options(shiny.usecairo = TRUE)
   options(shiny.reactlog = TRUE) 
   
@@ -242,7 +242,7 @@ airship <- function(...) {
                   
                   shiny::fileInput(
                     inputId = "file", 
-                    label = "Choose file to upload"
+                    label = "Choose file to upload (max 100MB)"
                   ),
                   
                   shiny::conditionalPanel(

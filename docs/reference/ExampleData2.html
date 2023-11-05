@@ -69,7 +69,10 @@
     </div>
     <div id="source">
     <h2>Source</h2>
-    <p>https://github.com/el-meyer/airship/blob/master/data/ExampleDataNASH.csv</p>
+    <p>https://github.com/el-meyer/airship/blob/master/data/ExampleDataNASH.csv
+ExampleData2 &lt;- read.csv("data/ExampleDataNash.csv")
+for (i in c(3,6,7)) ExampleData2,i &lt;- as.factor(ExampleData2,i)
+usethis::use_data(ExampleData2, overwrite = TRUE)</p>
     </div>
 
   </div>

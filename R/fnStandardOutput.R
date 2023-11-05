@@ -1,0 +1,142 @@
+
+fnStandardOutputUI <- 
+  function(
+    cID
+  ) {
+    
+    shiny::tagList(
+      
+      shiny::fluidRow(
+        shiny::column(
+          width = 12,
+          #### Boxplot Output ----
+          shiny::uiOutput(shiny::NS(cID, "PlotOutput"))
+        )
+      ),
+      
+      shiny::hr(),
+      
+      #### Code Output ----
+      shiny::h2("R code to create plot"),
+      shiny::hr(),
+      
+      shiny::fluidRow(
+        shiny::column(
+          width = 12,
+          shiny::textOutput(
+            outputId = shiny::NS(cID, "Code")
+          )
+        ),
+      ),
+      
+      ### Plotted Data ----
+      shiny::h2("Plotted Data"),
+      shiny::hr(),
+
+      shiny::fluidRow(
+        shiny::checkboxInput(
+          inputId = shiny::NS(cID, "plotDataDownloadAll"),
+          label = "Download all Data",
+          value = FALSE
+        ),
+        DT::dataTableOutput(
+          outputId = shiny::NS(cID, "PlotData")
+        )
+      )
+      
+    )
+    
+  }
+
+
+fnStandardOutputServer <- 
+  function(
+    cID,
+    lPlot,
+    bEnablePlotly = TRUE
+  ) {
+    
+    shiny::moduleServer(
+      cID, 
+      function(input, output, session) 
+      {
+        # Should Plotly features be enabled
+        if (bEnablePlotly) {
+          
+          #### Render Plot ----
+          if (input$bPlotly) {
+            output$Plot <- plotly::renderPlotly({
+              plotly::ggplotly(lPlot()$lggPlot)
+            })
+          } else {
+            output$Plot <- shiny::renderPlot({
+              lPlot()$lggPlot
+            })
+          }
+          
+          
+          #### Render UI ----
+          output$PlotOutput <- shiny::renderUI({
+            if (input$bPlotly) {
+              plotly::plotlyOutput(
+                shiny::NS(cID, "Plot"),
+                height = input$plotheight,
+                width = input$plotwidth
+              )
+            } else {
+              shiny::plotOutput(
+                shiny::NS(cID, "Plot"),
+                height = input$plotheight,
+                width = input$plotwidth
+              )
+            }
+          })
+          
+        } else {
+          
+          #### Render Plot ----
+          output$Plot <- shiny::renderPlot({
+            lPlot()$lggPlot
+          })
+          
+          
+          #### Render UI ----
+          output$PlotOutput <- shiny::renderUI({
+            shiny::plotOutput(
+              shiny::NS(cID, "Plot"),
+              height = input$plotheight_boxplot,
+              width = input$plotwidth_boxplot
+            )
+          })
+          
+        }
+        
+        
+        #### Render Code -----
+        output$Code <- shiny::renderText({
+          paste(lPlot()$lCode, collapse = "")
+        })
+        
+        #### Render Dataset ----
+        output$PlotData <- DT::renderDT(
+          server = !input$plotDataDownloadAll, 
+          {
+            lPlot()$lData
+          },
+        extensions = 'Buttons',
+        options = list(
+          scrollX = TRUE,
+          dom = 'Bfrtip',
+          buttons = list(
+            list(extend = "csv", text = "Download Data", filename = "allData",
+                 exportOptions = list(
+                   modifier = list(page = "all")
+                 )
+            )
+          )
+        )
+        )
+        
+      }
+      
+    )}

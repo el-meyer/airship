@@ -4,7 +4,7 @@
 \alias{airship}
 \title{Runs the app "AIRSHIP".}
 \usage{
-airship(...)
+airship(dfData = NULL, cLastInputVar = NULL, cReplicationVar = NULL)
 }
 \arguments{
 \item{...}{Further arguments to be passed to Shiny's "shinyApp()" function}

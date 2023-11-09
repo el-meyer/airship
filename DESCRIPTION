@@ -52,7 +52,8 @@ Imports:
     Cairo,
     ggplot2,
     rlang,
-    magrittr
+    magrittr,
+    shinyjs
 LazyData: true
 Suggests: 
     knitr,

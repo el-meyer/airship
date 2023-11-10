@@ -9,19 +9,19 @@ fnDownloadUI <-
       #### Download Plot Button ----
       shiny::actionButton(
         inputId = shiny::NS(cID, "SavePlot"), 
-        label = "Download plot"
+        label = "Download"
       ),
       
       #### Download Plot Window ----
       shinyBS::bsModal(
         id = shiny::NS(cID, "DownloadModal"), 
-        title = "Download plot", 
+        title = "Download plot and data", 
         trigger = shiny::NS(cID, "SavePlot"), 
         size = "medium",
         
         shiny::selectInput(
           inputId = shiny::NS(cID, "DownloadType"), 
-          label = "Choose file type",
+          label = "Choose plot file type",
           choices = c(
             "png", 
             "jpeg", 
@@ -31,7 +31,7 @@ fnDownloadUI <-
         
         shiny::selectInput(
           inputId = shiny::NS(cID, "DownloadUnit"), 
-          label = "Choose unit",
+          label = "Choose plot unit",
           choices = c(
             "px", 
             "in", 
@@ -58,7 +58,7 @@ fnDownloadUI <-
         
         shiny::numericInput(
           inputId = shiny::NS(cID, "DownloadResolution"),
-          label = "Resolution",
+          label = "Plot resolution",
           value = 72,
           min = 1, 
           max = 1000
@@ -66,12 +66,17 @@ fnDownloadUI <-
         
         shiny::textInput(
           inputId = shiny::NS(cID, "DownloadName"), 
-          label = "Specify file name"
+          label = "Specify plot file name"
         ),
         
         shiny::downloadButton(
           outputId = shiny::NS(cID, "DownloadPlot"), 
-          label = "Download"
+          label = "Download Plot"
+        ),
+        
+        shiny::downloadButton(
+          outputId = shiny::NS(cID, "DownloadData"), 
+          label = "Download Data"
         )
         
       )
@@ -142,6 +147,20 @@ fnDownloadServer <-
             
             print(lPlot()$lggPlot)
             dev.off()
+          }
+        )
+        
+        output$DownloadData <- shiny::downloadHandler(
+          
+          filename = function() {
+            "data.csv"
+          },
+          
+          content = function(file) {
+            write.csv(
+              lPlot()$lData,
+              file
+            )
           }
         )
         

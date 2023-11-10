@@ -34,11 +34,6 @@ fnStandardOutputUI <-
       shiny::hr(),
 
       shiny::fluidRow(
-        shiny::checkboxInput(
-          inputId = shiny::NS(cID, "plotDataDownloadAll"),
-          label = "Download all Data",
-          value = FALSE
-        ),
         DT::dataTableOutput(
           outputId = shiny::NS(cID, "PlotData")
         )
@@ -119,22 +114,13 @@ fnStandardOutputServer <-
         
         #### Render Dataset ----
         output$PlotData <- DT::renderDT(
-          server = !input$plotDataDownloadAll, 
           {
             lPlot()$lData
           },
-        extensions = 'Buttons',
         options = list(
           scrollX = TRUE,
-          dom = 'Bfrtip',
-          buttons = list(
-            list(extend = "csv", text = "Download Data", filename = "allData",
-                 exportOptions = list(
-                   modifier = list(page = "all")
-                 )
-            )
+          dom = 'Bfrtip'
           )
-        )
         )
         
       }

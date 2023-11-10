@@ -99,8 +99,8 @@ fnStandardOutputServer <-
           output$PlotOutput <- shiny::renderUI({
             shiny::plotOutput(
               shiny::NS(cID, "Plot"),
-              height = input$plotheight_boxplot,
-              width = input$plotwidth_boxplot
+              height = input$plotheight,
+              width = input$plotwidth
             )
           })
           

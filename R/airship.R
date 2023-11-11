@@ -783,8 +783,10 @@ airship <- function(...) {
     output$dataDT <- DT::renderDataTable({
       shiny::req(data_full())
       data_full()},
+      colnames = paste0(colnames(data_full()), "\n", "(", sapply(data_full(), function(x) class(x)[1]), ")"),
       filter = "top",
       options = list(
+        columnDefs = list(list(className = 'dt-center', targets = 0:4)),
         lengthChange = FALSE, 
         autoWidth = TRUE,
         scrollX = TRUE

@@ -786,7 +786,7 @@ airship <- function(...) {
       colnames = paste0(colnames(data_full()), "\n", "(", sapply(data_full(), function(x) class(x)[1]), ")"),
       filter = "top",
       options = list(
-        columnDefs = list(list(className = 'dt-center', targets = 0:(ncol(data_full())))),
+        columnDefs = list(list(className = 'dt-center', targets = 0:ncol(data_full()))),
         lengthChange = FALSE, 
         autoWidth = TRUE,
         scrollX = TRUE

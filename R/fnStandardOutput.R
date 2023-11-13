@@ -55,6 +55,9 @@ fnStandardOutputServer <-
       cID, 
       function(input, output, session) 
       {
+        
+        tryCatch({
+        
         # Should Plotly features be enabled
         if (bEnablePlotly) {
           
@@ -121,6 +124,17 @@ fnStandardOutputServer <-
           scrollX = TRUE,
           dom = 'Bfrtip'
           )
+        )
+        
+        }, error = function(e) {
+          err_ <- ""
+          shiny::validate(
+            shiny::need(
+              err_ != "",
+              "Please wait. If you have to wait too long, please report a bug in fnStandardOutput."
+            )
+          )
+        }
         )
         
       }

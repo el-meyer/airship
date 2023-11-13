@@ -14,7 +14,64 @@
 #' @importFrom rlang "!!"
 #' 
 #' @export
-airship <- function(...) {
+airship <- function(
+ dfData = NULL,
+ cLastInputVar = NULL,
+ cReplicationVar = NULL
+) {
+  
+  # Error messages ----
+  
+  if (
+      !is.null(dfData) && 
+      (
+       !is.data.frame(dfData) | 
+       length(dfData) < 2
+      )
+    ) {
+    stop(
+      "airship(): ", 
+      "Please provide a data frame with at least two columns.", 
+      call. = FALSE
+    )
+  }
+  
+  if (
+    !is.null(dfData) &&
+    !is.null(cReplicationVar) &&
+    length(dfData) < 3
+  ) {
+    stop(
+      "airship(): ", 
+      "Please provide a data frame with at least three columns if one column represents simulation replications.", 
+      call. = FALSE
+    )
+    
+  }
+  
+  if (!is.null(cLastInputVar)) {
+    if (!cLastInputVar %in% colnames(dfData))
+    {
+      stop(
+        "airship(): ", 
+        cLastInputVar,
+        " is not a column in the supplied dataset.",
+        call. = FALSE
+      )
+    }
+  }
+  
+  if (!is.null(cReplicationVar)) {
+    if (!cReplicationVar %in% colnames(dfData))
+    {
+      stop(
+        "airship(): ", 
+        cReplicationVar,
+        " is not a column in the supplied dataset.",
+        call. = FALSE
+      )
+    }
+  }
   
   # Install dependencies --------
   dependencies <- c(
@@ -34,7 +91,8 @@ airship <- function(...) {
     "Cairo",
     "ggplot2",
     "rlang",
-    "magrittr"
+    "magrittr",
+    "shinyjs"
   )
   
   "%>%" <- dplyr::"%>%"
@@ -125,6 +183,7 @@ airship <- function(...) {
       
       ## Sidebar -----
       shinydashboard::dashboardSidebar(
+        shinyjs::useShinyjs(),
         width = 300,
         
         shinydashboard::sidebarMenu(
@@ -312,7 +371,7 @@ airship <- function(...) {
                   
                   shiny::selectInput(
                     inputId = "deviationMethod",
-                    label = "Select the deviation you want to calculate",
+                    label = "Select the dispersion you want to calculate",
                     choices = c("sd", "sem")
                   ),
                   
@@ -510,6 +569,64 @@ airship <- function(...) {
     input, 
     output
   ){
+    
+    ## dfData check ----
+    ## Check if dataset was provided and if yes, hide upload
+    if (!is.null(dfData)) {
+      
+      shinyjs::hide(id = "checkboxExampleData")
+      shinyjs::hide(id = "checkboxFactsData")
+      shinyjs::hide(id = "file")
+      shinyjs::hide(id = "sep")
+      shinyjs::hide(id = "rowSkip")
+      
+      shiny::updateSelectInput(
+        session = session, 
+        inputId = "inputend", 
+        choices = colnames(dfData)
+      )
+      
+      shiny::updateSelectInput(
+        session = session, 
+        inputId = "repvar", 
+        choices = colnames(dfData)
+      )
+      
+      if (!is.null(cLastInputVar)) {
+        
+        shinyjs::hide(id = "inputend")
+        
+        shiny::updateSelectInput(
+          session = session, 
+          inputId = "inputend", 
+          choices = colnames(dfData),
+          selected = cLastInputVar
+        )
+        
+      }
+      
+      if (!is.null(cReplicationVar)) {
+        
+        shiny::updateCheckboxInput(
+          session = session, 
+          inputId = "checkboxRepvar", 
+          value = TRUE
+        )
+        
+        shinyjs::hide(id = "checkboxRepvar")
+        
+        shiny::updateSelectInput(
+          session = session, 
+          inputId = "repvar", 
+          choices = colnames(dfData),
+          selected = cReplicationVar
+        )
+        
+        shinyjs::hide(id = "repvar")
+        
+      }
+      
+    }
 
     ## Upload Data Input ----
     # widget for user data upload
@@ -551,7 +668,8 @@ airship <- function(...) {
     
     ## Create Dataset ----
     # Dataset to be used (before possible aggregation)
-    # Use example data if checkbox is checked, otherwise use uploaded dataset
+    # Use example data if checkbox is checked, otherwise use either supplied
+    # or uploaded dataset
     # Update Input choices
     data_full <- shiny::reactive({
       
@@ -561,153 +679,168 @@ airship <- function(...) {
       shinydashboard::updateTabItems(
         session = session,
         inputId = "sidebarMenu",
-        selected ="data"
+        selected = "data"
       )
       
-      # If example data is chosen, update other input options
-      # as they are hidden automatically in GUI
-      
-      if(input$checkboxExampleData){
+      # Check if Dataset was provided via console or not
+      if (!is.null(dfData)) {
         
-        if (input$selectExampleData == "NASH platform trial design") {
-          
-          # ExampleData2 exists in package airship
-          exampleData <- airship::ExampleData2
-          
-          # Get column names
-          col_names_example_dat <- colnames(exampleData)
-          
-          # Update inputs
-          shiny::updateCheckboxInput(
-            session = session,
-            inputId = "checkboxFactsData",
-            value = FALSE
-          )
-          
-          shiny::updateCheckboxInput(
-            session = session,
-            inputId = "checkboxRepvar",
-            value = FALSE
-          )
-          
-          shiny::updateSelectInput(
-            session = session, 
-            inputId = "inputend", 
-            choices = col_names_example_dat,
-            selected = "TreatmentEfficacySetting"
-          )
-          
-          shiny::updateSelectInput(
-            session = session,
-            inputId = "repvar",
-            choices = col_names_example_dat
-          )
-          
-        } else  if (input$selectExampleData == "Toy simulation study") {
-          
-          # ExampleData1 exists in package airship
-          exampleData <- airship::ExampleData1
-          
-          # Get column names
-          col_names_example_dat <- colnames(exampleData)
-          
-          # Update inputs
-          shiny::updateCheckboxInput(
-            session = session,
-            inputId = "checkboxFactsData",
-            value = FALSE
-          )
-          
-          shiny::updateCheckboxInput(
-            session = session,
-            inputId = "checkboxRepvar",
-            value = TRUE
-          )
-          
-          shiny::updateSelectInput(
-            session = session, 
-            inputId = "inputend", 
-            choices = col_names_example_dat,
-            selected = "input4"
-          )
-          
-          shiny::updateSelectInput(
-            session = session,
-            inputId = "repvar",
-            choices = col_names_example_dat,
-            selected = "replications"
-          )
-          
+        # Get rid of empty columns?
+        if ("X" %in% colnames(dfData)) {
+          dfData <-
+            dfData[, -which(colnames(dfData) == "X")]
         }
         
-        return(exampleData)
-        
+        return(dfData)
         
       } else {
-        # If not using default data, differentiate between behviour when 
-        # FACTS data is used vs. custom uploaded data
         
-        # Get column names
-        col_names_upload <- colnames(upload())
+        # If example data is chosen, update other input options
+        # as they are hidden automatically in GUI
         
-        # FACTS Data
-        if (input$checkboxFactsData == 1) {
+        if(input$checkboxExampleData){
           
-          # Update inputs
-          shiny::updateNumericInput(
-            session = session,
-            inputId = "rowSkip",
-            value = 2
-          )
+          if (input$selectExampleData == "NASH platform trial design") {
+            
+            # ExampleData2 exists in package airship
+            exampleData <- airship::ExampleData2
+            
+            # Get column names
+            col_names_example_dat <- colnames(exampleData)
+            
+            # Update inputs
+            shiny::updateCheckboxInput(
+              session = session,
+              inputId = "checkboxFactsData",
+              value = FALSE
+            )
+            
+            shiny::updateCheckboxInput(
+              session = session,
+              inputId = "checkboxRepvar",
+              value = FALSE
+            )
+            
+            shiny::updateSelectInput(
+              session = session, 
+              inputId = "inputend", 
+              choices = col_names_example_dat,
+              selected = "TreatmentEfficacySetting"
+            )
+            
+            shiny::updateSelectInput(
+              session = session,
+              inputId = "repvar",
+              choices = col_names_example_dat
+            )
+            
+          } else  if (input$selectExampleData == "Toy simulation study") {
+            
+            # ExampleData1 exists in package airship
+            exampleData <- airship::ExampleData1
+            
+            # Get column names
+            col_names_example_dat <- colnames(exampleData)
+            
+            # Update inputs
+            shiny::updateCheckboxInput(
+              session = session,
+              inputId = "checkboxFactsData",
+              value = FALSE
+            )
+            
+            shiny::updateCheckboxInput(
+              session = session,
+              inputId = "checkboxRepvar",
+              value = TRUE
+            )
+            
+            shiny::updateSelectInput(
+              session = session, 
+              inputId = "inputend", 
+              choices = col_names_example_dat,
+              selected = "input4"
+            )
+            
+            shiny::updateSelectInput(
+              session = session,
+              inputId = "repvar",
+              choices = col_names_example_dat,
+              selected = "replications"
+            )
+            
+          }
           
-          shiny::updateCheckboxInput(
-            session = session,
-            inputId = "checkboxRepvar",
-            value = TRUE
-          )
-          
-          shiny::updateSelectInput(
-            session = session,
-            inputId = "inputend",
-            choices = col_names_upload,
-            selected = "Agg.Timestamp"
-          )
-          
-          shiny::updateSelectInput(
-            session = session,
-            inputId = "repvar",
-            choices = col_names_upload,
-            selected = "X.Sim"
-          )
+          return(exampleData)
           
           
         } else {
-          # Custom Data
+          # If not using default data, differentiate between behviour when 
+          # FACTS data is used vs. custom uploaded data
           
-          # Update inputs
+          # Get column names
+          col_names_upload <- colnames(upload())
           
-          shiny::updateCheckboxInput(
-            session = session,
-            inputId = "checkboxRepvar",
-            value = FALSE
-          )
+          # FACTS Data
+          if (input$checkboxFactsData == 1) {
+            
+            # Update inputs
+            shiny::updateNumericInput(
+              session = session,
+              inputId = "rowSkip",
+              value = 2
+            )
+            
+            shiny::updateCheckboxInput(
+              session = session,
+              inputId = "checkboxRepvar",
+              value = TRUE
+            )
+            
+            shiny::updateSelectInput(
+              session = session,
+              inputId = "inputend",
+              choices = col_names_upload,
+              selected = "Agg.Timestamp"
+            )
+            
+            shiny::updateSelectInput(
+              session = session,
+              inputId = "repvar",
+              choices = col_names_upload,
+              selected = "X.Sim"
+            )
+            
+            
+          } else {
+            # Custom Data
+            
+            # Update inputs
+            
+            shiny::updateCheckboxInput(
+              session = session,
+              inputId = "checkboxRepvar",
+              value = FALSE
+            )
+            
+            shiny::updateSelectInput(
+              session = session,
+              inputId = "inputend",
+              choices = col_names_upload
+            )
+            
+            shiny::updateSelectInput(
+              session = session,
+              inputId = "repvar",
+              choices = col_names_upload,
+              selected = col_names_upload[1]
+            )
+            
+          }
           
-          shiny::updateSelectInput(
-            session = session,
-            inputId = "inputend",
-            choices = col_names_upload
-          )
-          
-          shiny::updateSelectInput(
-            session = session,
-            inputId = "repvar",
-            choices = col_names_upload,
-            selected = col_names_upload[1]
-          )
-          
+          return(upload())
         }
         
-        return(upload())
       }
       
     })

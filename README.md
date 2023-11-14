@@ -10,7 +10,7 @@ You can install the development version from [GitHub](https://github.com/el-meye
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("el-meyer/airship")
+devtools::install_github("el-meyer/airship@*release")
 ```
 
 and run the app using:

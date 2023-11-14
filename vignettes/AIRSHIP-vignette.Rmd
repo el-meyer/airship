@@ -24,7 +24,7 @@ The app is part of the **airship** R package, which can be downloaded from Githu
 
 ```{r, eval = FALSE}
 # install.packages("devtools")
-devtools::install_github("el-meyer/airship")
+devtools::install_github("el-meyer/airship@*release")
 ```
 
 In order to run the app, load the library and call the *airship()* function:

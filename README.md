@@ -6,7 +6,7 @@ This app is designed to plot simulation results of clinical trials. Its main fea
 
 ## Installation and Execution
 
-You can install the development version from [GitHub](https://github.com/el-meyer/airship) using:
+You can install the latest stable version from [GitHub](https://github.com/el-meyer/airship) using:
 
 ``` r
 # install.packages("devtools")
@@ -18,6 +18,13 @@ and run the app using:
 ``` r
 library(airship)
 airship()
+```
+
+The development version can be installed using:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("el-meyer/airship")
 ```
 
 ## Documentation

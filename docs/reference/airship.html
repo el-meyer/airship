@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">airship</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.2.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.0</span>
       </span>
     </div>
 
@@ -60,13 +60,24 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">airship</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">airship</span><span class="op">(</span>dfData <span class="op">=</span> <span class="cn">NULL</span>, cLastInputVar <span class="op">=</span> <span class="cn">NULL</span>, cReplicationVar <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>...</dt>
-<dd><p>Further arguments to be passed to Shiny's "shinyApp()" function</p></dd>
+    <dl><dt>dfData</dt>
+<dd><p>Dataset that should be plotted by Airship; can be NULL if
+upload should be done within the app.</p></dd>
+
+
+<dt>cLastInputVar</dt>
+<dd><p>Optional and only useful in combination with dfData.
+Character name of last input variable.</p></dd>
+
+
+<dt>cReplicationVar</dt>
+<dd><p>Optional and only useful in combination with dfData.
+Character name of simulation replication variable.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -78,9 +89,13 @@
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">airship</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">airship</span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># See Vignette.</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

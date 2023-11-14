@@ -1,13 +1,24 @@
 #' Runs the app "AIRSHIP".
 #'
-#' @param ...  Further arguments to be passed to Shiny's "shinyApp()" function
+#' @param dfData Dataset that should be plotted by Airship; can be NULL if 
+#'               upload should be done within the app.
+#'               
+#' @param cLastInputVar   Optional and only useful in combination with dfData. 
+#'                        Character name of last input variable.
+#'                      
+#' @param cReplicationVar Optional and only useful in combination with dfData. 
+#'                        Character name of simulation replication variable.
 #' 
 #' @return No return value
 #'
 #' @examples
+#'
 #' \dontrun{
 #' airship()
+#' airship(data)
 #' }
+#' 
+#' # See Vignette.
 #' 
 #' @importFrom magrittr "%>%"
 #' @importFrom ggplot2 "%+%"
@@ -71,6 +82,17 @@ airship <- function(
         call. = FALSE
       )
     }
+  }
+  
+  if (
+    is.null(dfData) &&
+    any(c(!is.null(cReplicationVar), !is.null(cLastInputVar)))
+  ){
+    stop(
+      "airship(): ", 
+      "cLastInputVar or cReplicationVar were provided without dfData.",
+      call. = FALSE
+    )
   }
   
   # Install dependencies --------

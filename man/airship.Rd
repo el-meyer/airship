@@ -7,7 +7,14 @@
 airship(dfData = NULL, cLastInputVar = NULL, cReplicationVar = NULL)
 }
 \arguments{
-\item{...}{Further arguments to be passed to Shiny's "shinyApp()" function}
+\item{dfData}{Dataset that should be plotted by Airship; can be NULL if
+upload should be done within the app.}
+
+\item{cLastInputVar}{Optional and only useful in combination with dfData.
+Character name of last input variable.}
+
+\item{cReplicationVar}{Optional and only useful in combination with dfData.
+Character name of simulation replication variable.}
 }
 \value{
 No return value
@@ -16,8 +23,12 @@ No return value
 Runs the app "AIRSHIP".
 }
 \examples{
+
 \dontrun{
 airship()
+airship(data)
 }
+
+# See Vignette.
 
 }

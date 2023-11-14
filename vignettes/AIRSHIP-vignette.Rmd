@@ -126,6 +126,24 @@ If either we are happy to "blur over" the effect of a simulation input parameter
 
 All variables for which default values are chosen are later available as aesthetics when building the plots.
 
+## Running AIRSHIP from the command line
+
+Instead of running 
+
+```{r, eval = FALSE}
+airship()
+```
+
+and uploading the dataset directly in the app, the dataset can be supplied directly when running the app using the **dfData** argument. Please note that if **dfData** is provided, the dataset cannot be changed inside the app anymore. Furthermore, we can specify the last input variable and the (if it exists) simulation replication variable using **cLastInputVar** and **cReplicationVar**. 
+
+```{r, eval = FALSE}
+airship(
+  dfData = ExampleData1,
+  cLastInputVar = "input4",
+  cReplicationVar = "replications"
+)
+```
+
 <!-- ### Boxplot Tab -->
 
 <!-- This tab only appears when the checkbox regarding 'replication run index/variables' is checked. You can create boxplots or distribution plots. -->

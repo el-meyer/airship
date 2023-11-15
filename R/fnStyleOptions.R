@@ -178,7 +178,7 @@ fnStyleOptionsServer <-
         ### Update Plot -----
         
         #### Theme
-        fnPlotTheme <- match.fun(getFromNamespace(input$plottheme, "ggplot2"))
+        fnPlotTheme <- match.fun(utils::getFromNamespace(input$plottheme, "ggplot2"))
         plot_fontsize <- input$plotfontsize
         plot_font <- input$plotfont
         

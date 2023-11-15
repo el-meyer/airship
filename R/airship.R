@@ -23,6 +23,7 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom ggplot2 "%+%"
 #' @importFrom rlang "!!"
+#' @importFrom stats "sd"
 #' 
 #' @export
 airship <- function(

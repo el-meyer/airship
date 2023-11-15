@@ -135,7 +135,7 @@ fnDownloadServer <-
           },
           
           content = function(file) {
-            fun <- match.fun(fnDownloadType())
+            fun <- match.fun(utils::getFromNamespace(fnDownloadType(), "grDevices"))
             
             fun(
               file,
@@ -146,7 +146,7 @@ fnDownloadServer <-
             )
             
             print(lPlot()$lggPlot)
-            dev.off()
+            grDevices::dev.off()
           }
         )
         
@@ -157,7 +157,7 @@ fnDownloadServer <-
           },
           
           content = function(file) {
-            write.csv(
+            utils::write.csv(
               lPlot()$lData,
               file
             )

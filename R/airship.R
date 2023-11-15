@@ -1900,7 +1900,7 @@ airship <- function(
     
     ## Handle Session closing ----
     session$onSessionEnded(function() {
-      stopApp()
+      shiny::stopApp()
     })
     
   }

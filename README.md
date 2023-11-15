@@ -29,7 +29,7 @@ devtools::install_github("el-meyer/airship")
 
 ## Documentation
 
-Please see the [reference manual](https://el-meyer.github.io/airship/index.html) for more information on the usage of this package, or jump directly to the [vignette](https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html).
+Please see the [reference manual](https://el-meyer.github.io/airship/) for more information on the usage of this package, or jump directly to the [vignette](https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html).
 
 ## Funding
 

@@ -1898,6 +1898,11 @@ airship <- function(
       lPlot = ldplot_get
     )
     
+    ## Handle Session closing ----
+    session$onSessionEnded(function() {
+      stopApp()
+    })
+    
   }
   
   # Run Shiny App ----

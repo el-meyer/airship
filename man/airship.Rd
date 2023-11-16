@@ -4,7 +4,12 @@
 \alias{airship}
 \title{Runs the app "AIRSHIP".}
 \usage{
-airship(dfData = NULL, cLastInputVar = NULL, cReplicationVar = NULL)
+airship(
+  dfData = NULL,
+  cLastInputVar = NULL,
+  cReplicationVar = NULL,
+  bIsFacts = FALSE
+)
 }
 \arguments{
 \item{dfData}{Dataset that should be plotted by Airship; can be NULL if
@@ -15,6 +20,8 @@ Character name of last input variable.}
 
 \item{cReplicationVar}{Optional and only useful in combination with dfData.
 Character name of simulation replication variable.}
+
+\item{bIsFacts}{Boolean variable; is the supplied dfData a FACTS aggregated simulation file.}
 }
 \value{
 No return value

@@ -8,6 +8,8 @@
 #'                      
 #' @param cReplicationVar Optional and only useful in combination with dfData. 
 #'                        Character name of simulation replication variable.
+#'                        
+#' @param bIsFacts Boolean variable; is the supplied dfData a FACTS aggregated simulation file.
 #' 
 #' @return No return value
 #'
@@ -29,7 +31,8 @@
 airship <- function(
  dfData = NULL,
  cLastInputVar = NULL,
- cReplicationVar = NULL
+ cReplicationVar = NULL,
+ bIsFacts = FALSE
 ) {
   
   # Error messages ----
@@ -705,14 +708,24 @@ airship <- function(
         selected = "data"
       )
       
+      # If Facts data, get rid of any "Flags" columns
+      if (bIsFacts || input$checkboxFactsData == 1) {
+        if ("Flags" %in% colnames(dfData)) {
+          dfData <- subset(dfData, select = -c(`Flags`))
+        }
+      }
+      
       # Check if Dataset was provided via console or not
       if (!is.null(dfData)) {
         
-        # Get rid of empty columns?
+        # Get rid of columns without names
         if ("X" %in% colnames(dfData)) {
           dfData <-
             dfData[, -which(colnames(dfData) == "X")]
         }
+        
+        # Get rid of empty columns
+        dfData <- dfData[,colSums(is.na(dfData)) < nrow(dfData)]
         
         return(dfData)
         

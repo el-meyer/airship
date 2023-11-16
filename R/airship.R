@@ -732,11 +732,17 @@ airship <- function(
       # Get rid of empty columns
       df_candidate <- df_candidate[,colSums(is.na(df_candidate)) < nrow(df_candidate)]
       
-      # If Facts data, get rid of any "Flags" columns
+      # If Facts data, get rid of any "Flags" or "Random.Number.Seed" columns
       if (input$checkboxFactsData == 1) {
+        
         if ("Flags" %in% colnames(df_candidate)) {
           df_candidate <- subset(df_candidate, select = -c(`Flags`))
         }
+        
+        if ("Random.Number.Seed" %in% colnames(df_candidate)) {
+          df_candidate <- subset(df_candidate, select = -c(`Random.Number.Seed`))
+        }
+        
       }
       
       # Return df_candidate
@@ -764,11 +770,17 @@ airship <- function(
       # Check if Dataset was provided via console or not
       if (!is.null(dfData)) {
         
-        # If Facts data, get rid of any "Flags" columns
+        # If Facts data, get rid of any "Flags" and "Random.Number.Seed" columns
         if (bIsFacts) {
+          
           if ("Flags" %in% colnames(dfData)) {
             dfData <- subset(dfData, select = -c(`Flags`))
           }
+
+          if ("Random.Number.Seed" %in% colnames(dfData)) {
+            dfData <- subset(dfData, select = -c(`Random.Number.Seed`))
+          }
+          
         }
         
         # Get rid of columns without names

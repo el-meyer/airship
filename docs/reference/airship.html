@@ -60,7 +60,12 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">airship</span><span class="op">(</span>dfData <span class="op">=</span> <span class="cn">NULL</span>, cLastInputVar <span class="op">=</span> <span class="cn">NULL</span>, cReplicationVar <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">airship</span><span class="op">(</span></span>
+<span>  dfData <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cLastInputVar <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cReplicationVar <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  bIsFacts <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -78,6 +83,10 @@ Character name of last input variable.</p></dd>
 <dt>cReplicationVar</dt>
 <dd><p>Optional and only useful in combination with dfData.
 Character name of simulation replication variable.</p></dd>
+
+
+<dt>bIsFacts</dt>
+<dd><p>Boolean variable; is the supplied dfData a FACTS aggregated simulation file.</p></dd>
 
 </dl></div>
     <div id="value">

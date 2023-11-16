@@ -669,21 +669,74 @@ airship <- function(
       # file = user uploaded file in tab Data Settings
       inFile <- input$file
       
-      df_candidate <-
-        try(
-          utils::read.csv(
-            inFile$datapath,
-            header = TRUE,
-            sep = input$sep,
-            skip = input$rowSkip,
-            stringsAsFactors = TRUE
+      if (input$checkboxFactsData == 0) {
+        
+        df_candidate <-
+          try(
+            utils::read.csv(
+              inFile$datapath,
+              header = TRUE,
+              sep = input$sep,
+              skip = input$rowSkip,
+              stringsAsFactors = TRUE
+            )
           )
+        
+      } else {
+        
+        headrows <- readLines(
+          inFile$datapath,
+          n = 5
         )
-      
-      # Get rid of empty columns?
+        
+        deleterows <- length(
+          grep(
+            '^ *#', 
+            headrows
+          )
+        ) - 1
+        
+        df_candidate <-
+          try(
+            utils::read.csv(
+              inFile$datapath, 
+              header = TRUE, 
+              sep = input$sep,
+              skip = deleterows, 
+              stringsAsFactors = TRUE
+            )
+          )
+        
+          colnames(df_candidate) <- sub(
+            'X.', 
+            '', 
+            colnames(df_candidate)
+          )
+          
+          if (!'Sim' %in% colnames(df_candidate)) {
+            if ('Number' %in% colnames(df_candidate)) {
+              colnames(df_candidate)[colnames(df_candidate) == 'Number'] <- 'Sim'
+            } else {
+              stop('The dataset contains neither a `Sim` nor a `Number` column')
+            } 
+          }
+        
+      }
+
+      # Get rid of columns without names
       if ("X" %in% colnames(df_candidate)) {
         df_candidate <-
           df_candidate[, -which(colnames(df_candidate) == "X")]
+      }
+      
+      # Get rid of empty columns
+      df_candidate <- df_candidate[,colSums(is.na(df_candidate)) < nrow(df_candidate)]
+      
+      # If Facts data, get rid of any "Flags" columns
+      if (input$checkboxFactsData == 1) {
+        if ("Flags" %in% colnames(df_candidate)) {
+          df_candidate <- subset(df_candidate, select = -c(`Flags`))
+        }
       }
       
       # Return df_candidate
@@ -708,15 +761,15 @@ airship <- function(
         selected = "data"
       )
       
-      # If Facts data, get rid of any "Flags" columns
-      if (bIsFacts || input$checkboxFactsData == 1) {
-        if ("Flags" %in% colnames(dfData)) {
-          dfData <- subset(dfData, select = -c(`Flags`))
-        }
-      }
-      
       # Check if Dataset was provided via console or not
       if (!is.null(dfData)) {
+        
+        # If Facts data, get rid of any "Flags" columns
+        if (bIsFacts) {
+          if ("Flags" %in% colnames(dfData)) {
+            dfData <- subset(dfData, select = -c(`Flags`))
+          }
+        }
         
         # Get rid of columns without names
         if ("X" %in% colnames(dfData)) {
@@ -811,7 +864,7 @@ airship <- function(
           
           
         } else {
-          # If not using default data, differentiate between behviour when 
+          # If not using default data, differentiate between behavior when 
           # FACTS data is used vs. custom uploaded data
           
           # Get column names
@@ -819,13 +872,6 @@ airship <- function(
           
           # FACTS Data
           if (input$checkboxFactsData == 1) {
-            
-            # Update inputs
-            shiny::updateNumericInput(
-              session = session,
-              inputId = "rowSkip",
-              value = 2
-            )
             
             shiny::updateCheckboxInput(
               session = session,
@@ -844,7 +890,7 @@ airship <- function(
               session = session,
               inputId = "repvar",
               choices = col_names_upload,
-              selected = "X.Sim"
+              selected = "Sim"
             )
             
             

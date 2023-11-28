@@ -24,7 +24,7 @@
 #' 
 #' @importFrom magrittr "%>%"
 #' @importFrom ggplot2 "%+%"
-#' @importFrom rlang "!!"
+#' @importFrom rlang "!!" "is_string"
 #' @importFrom stats "sd"
 #' 
 #' @export
@@ -318,6 +318,14 @@ airship <- function(
                     label = "Use FACTS aggregated simulations"
                   )
                 ), 
+                shiny::conditionalPanel(
+                  condition = "input.checkboxFactsData == 1",
+                  
+                  shiny::checkboxInput(
+                    inputId = "toPivotOnDoseData", 
+                    label = "Pivot Longer on Treatment"
+                  )
+                ),
                 
               ),
               
@@ -781,6 +789,11 @@ airship <- function(
             dfData <- subset(dfData, select = -c(`Random.Number.Seed`))
           }
           
+          # if(input$toPivotOnDoseData == 1) {
+          #   dfData = dfData %>% pivot_longer(cols = matches("\\.[0-9]+"), names_to = "name", values_to = "value") %>% 
+          #     mutate(Dose = as.integer(gsub(".*\\.([0-9]).*", "\\1", name)), name = gsub("(.*)\\.[0-9]+(.*)", "\\1\\2", name)) %>%
+          #     pivot_wider(names_from = name)
+          # }
         }
         
         # Get rid of columns without names
@@ -880,6 +893,7 @@ airship <- function(
           # FACTS data is used vs. custom uploaded data
           
           # Get column names
+          retDF = upload()
           col_names_upload <- colnames(upload())
           
           # FACTS Data
@@ -893,19 +907,36 @@ airship <- function(
             
             shiny::updateSelectInput(
               session = session,
-              inputId = "inputend",
-              choices = col_names_upload,
-              selected = "Agg.Timestamp"
-            )
-            
-            shiny::updateSelectInput(
-              session = session,
               inputId = "repvar",
               choices = col_names_upload,
               selected = "Sim"
             )
             
+            if(input$toPivotOnDoseData == 1) {
+              retDF = retDF %>% tidyr::pivot_longer(cols = matches("(?<!DR.Param)\\.+[0-9]+(.*)", perl = TRUE), names_to = "name", values_to = "value") %>%
+                dplyr::mutate(Dose = as.integer(stringr::str_extract(pattern = "\\.+([[:digit:]]+)", name, group = 1)), 
+                              name = sub("(?<!DR.Param)(\\.+[0-9]+)", "\\2", name, perl = TRUE)) %>% 
+                dplyr::select(1:Agg.Timestamp, Dose, everything()) %>% 
+                tidyr::pivot_wider(names_from = name, values_from = value)
+              
+              shiny::updateSelectInput(
+                session = session,
+                inputId = "inputend",
+                choices = colnames(retDF),
+                selected = "Dose"
+              )
+            } else {
+              shiny::updateSelectInput(
+                session = session,
+                inputId = "inputend",
+                choices = col_names_upload,
+                selected = "Agg.Timestamp"
+              )
+            }
             
+            
+            
+            return(retDF)
           } else {
             # Custom Data
             
@@ -929,14 +960,10 @@ airship <- function(
               choices = col_names_upload,
               selected = col_names_upload[1]
             )
-            
+            return(upload())
           }
-          
-          return(upload())
         }
-        
       }
-      
     })
     
     ## Aggregation ----
@@ -1057,6 +1084,7 @@ airship <- function(
         )
       )
       ind_inputendR() + 1
+      
     })
     
     
@@ -1322,6 +1350,37 @@ airship <- function(
       nm
     })
     
+    ## names_unagg_intORfactor ----
+    # names of variables that are factor or integer valued and have a short (<=12) unique length
+    names_unagg_intORfactorShort <- shiny::reactive({
+      
+      nm <- names(
+        data_prefiltered() %>% 
+          dplyr::select_if(\(x){(is_string(x) | is.factor(x) | !all(is.na(tryCatch(vctrs::vec_cast(sample(x, size = min(250, length(x))), integer()), error = function(x){NA})))) & 
+              dplyr::between(length(unique(x)), 1.01, 12.01)})
+      )
+      
+      nm
+    })
+    # names of variables that are factor or integer valued and have a long (<500) unique length
+    names_unagg_intORfactorLong <- shiny::reactive({
+      
+      nm <- names(
+        data_prefiltered() %>% 
+          dplyr::select_if(\(x){(is_string(x) | is.factor(x) | !all(is.na(tryCatch(vctrs::vec_cast(sample(x, size = min(250, length(x))), integer()), error = function(x){NA})))) & 
+              dplyr::between(length(unique(x)), 1.01, 500.01)})
+      )
+      
+      nm
+    })
+    ## names_outputsR ----
+    # outputvariables
+    names_outputsR <- shiny::reactive({
+      colnames(
+        data_filteredR()
+      )[ind_outputstartR():ncol(data_filteredR())]
+    })
+    
     ## names of focus variables -----
     cNamesFocusVar <- shiny::reactive({
       names(defaults_input())
@@ -1547,18 +1606,18 @@ airship <- function(
       
       airship:::fnXYUpdateInput(
         cID = "boxplot",
-        cNamesX = names(defaults_input()),
+        cNamesX = names_unagg_intORfactorLong(),
         cNamesY = names_outputsR_unaggregated()
       )
       
       airship:::fnFacetGridUpdateInput(
         cID = "boxplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorShort()
       )
       
       airship:::fnColorUpdateInput(
         cID = "boxplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorShort()
       )
       
       airship:::fnDownloadUpdateInput(
@@ -1693,12 +1752,12 @@ airship <- function(
       
       airship:::fnFacetGridUpdateInput(
         cID = "scatterplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorShort()
       )
       
       airship:::fnColorUpdateInput(
         cID = "scatterplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorShort()
       )
       
       airship:::fnDownloadUpdateInput(
@@ -1827,18 +1886,18 @@ airship <- function(
       
       airship:::fnXYUpdateInput(
         cID = "ldplot",
-        cNamesX = names(defaults_input()),
+        cNamesX = names_unagg_intORfactorLong(),
         cNamesY = names_outputsR()
       )
       
       airship:::fnFacetGridUpdateInput(
         cID = "ldplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorShort()
       )
       
       airship:::fnLDPlotUpdateInput(
         cID = "ldplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorShort()
       )
       
       airship:::fnDownloadUpdateInput(

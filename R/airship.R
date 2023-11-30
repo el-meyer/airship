@@ -26,6 +26,7 @@
 #' @importFrom ggplot2 "%+%"
 #' @importFrom rlang "!!"
 #' @importFrom stats "sd"
+#' @importFrom stats "median"
 #' 
 #' @export
 airship <- function(

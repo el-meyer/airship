@@ -317,7 +317,18 @@ airship <- function(
                   shiny::checkboxInput(
                     inputId = "checkboxFactsData", 
                     label = "Use FACTS aggregated simulations"
+                  ),
+                  
+                  shiny::conditionalPanel(
+                    condition = "input.checkboxFactsData == 1",
+                  
+                    shiny::checkboxInput(
+                      inputId = "checkboxFactsConvertNA", 
+                      label = "Convert -9999 values to NA"
+                    ),
+                  
                   )
+                  
                 ), 
                 
               ),
@@ -653,6 +664,16 @@ airship <- function(
         
       }
       
+      if (bIsFacts) {
+        
+        shiny::updateCheckboxInput(
+          session = session, 
+          inputId = "checkboxFactsData", 
+          value = TRUE
+        )
+        
+      }
+      
     }
 
     ## Upload Data Input ----
@@ -672,7 +693,7 @@ airship <- function(
       
       if (input$checkboxFactsData == 0) {
         
-        df_candidate <-
+        dfCandidate <-
           try(
             utils::read.csv(
               inFile$datapath,
@@ -697,7 +718,7 @@ airship <- function(
           )
         ) - 1
         
-        df_candidate <-
+        dfCandidate <-
           try(
             utils::read.csv(
               inFile$datapath, 
@@ -708,46 +729,50 @@ airship <- function(
             )
           )
         
-          colnames(df_candidate) <- sub(
+          colnames(dfCandidate) <- sub(
             'X.', 
             '', 
-            colnames(df_candidate)
+            colnames(dfCandidate)
           )
           
-          if (!'Sim' %in% colnames(df_candidate)) {
-            if ('Number' %in% colnames(df_candidate)) {
-              colnames(df_candidate)[colnames(df_candidate) == 'Number'] <- 'Sim'
+          if (!'Sim' %in% colnames(dfCandidate)) {
+            if ('Number' %in% colnames(dfCandidate)) {
+              colnames(dfCandidate)[colnames(dfCandidate) == 'Number'] <- 'Sim'
             } else {
               stop('The dataset contains neither a `Sim` nor a `Number` column')
-            } 
+            }
+          }
+
+          if (input$checkboxFactsConvertNA) {
+            dfCandidate[dfCandidate == -9999] <- NA
           }
         
       }
 
       # Get rid of columns without names
-      if ("X" %in% colnames(df_candidate)) {
-        df_candidate <-
-          df_candidate[, -which(colnames(df_candidate) == "X")]
+      if ("X" %in% colnames(dfCandidate)) {
+        dfCandidate <-
+          dfCandidate[, -which(colnames(dfCandidate) == "X")]
       }
       
       # Get rid of empty columns
-      df_candidate <- df_candidate[,colSums(is.na(df_candidate)) < nrow(df_candidate)]
+      dfCandidate <- dfCandidate[,colSums(is.na(dfCandidate)) < nrow(dfCandidate)]
       
       # If Facts data, get rid of any "Flags" or "Random.Number.Seed" columns
       if (input$checkboxFactsData == 1) {
         
-        if ("Flags" %in% colnames(df_candidate)) {
-          df_candidate <- subset(df_candidate, select = -c(`Flags`))
+        if ("Flags" %in% colnames(dfCandidate)) {
+          dfCandidate <- subset(dfCandidate, select = -c(`Flags`))
         }
         
-        if ("Random.Number.Seed" %in% colnames(df_candidate)) {
-          df_candidate <- subset(df_candidate, select = -c(`Random.Number.Seed`))
+        if ("Random.Number.Seed" %in% colnames(dfCandidate)) {
+          dfCandidate <- subset(dfCandidate, select = -c(`Random.Number.Seed`))
         }
         
       }
       
-      # Return df_candidate
-      df_candidate
+      # Return dfCandidate
+      dfCandidate
       
     })
     
@@ -780,6 +805,10 @@ airship <- function(
 
           if ("Random.Number.Seed" %in% colnames(dfData)) {
             dfData <- subset(dfData, select = -c(`Random.Number.Seed`))
+          }
+          
+          if (input$checkboxFactsConvertNA) {
+            dfData[dfData == -9999] <- NA
           }
           
         }

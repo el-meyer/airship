@@ -124,7 +124,8 @@ airship <- function(
   
   "%>%" <- dplyr::"%>%"
   
-  ind_missing_package <- !dependencies %in% utils::installed.packages()[ ,"Package"]
+  installed_packages_ <- utils::installed.packages()[ ,"Package"]
+  ind_missing_package <- !dependencies %in% installed_packages_
   
   if (any(ind_missing_package)) {
     n_missing_packages <- sum(ind_missing_package)
@@ -160,6 +161,8 @@ airship <- function(
       )
     )
   }
+  
+  dt_pkg_available <- "data.table" %in% installed_packages_
   
   # Global Options ----
   options(shiny.sanitize.errors = FALSE) 
@@ -695,12 +698,13 @@ airship <- function(
         
         dfCandidate <-
           try(
-            utils::read.csv(
+            read_csv_(
               inFile$datapath,
               header = TRUE,
               sep = input$sep,
               skip = input$rowSkip,
-              stringsAsFactors = TRUE
+              stringsAsFactors = TRUE, 
+              use_data_table = dt_pkg_available
             )
           )
         
@@ -719,13 +723,15 @@ airship <- function(
         ) - 1
         
         dfCandidate <-
+          
           try(
-            utils::read.csv(
-              inFile$datapath, 
-              header = TRUE, 
+            read_csv_(
+              inFile$datapath,
+              header = TRUE,
               sep = input$sep,
-              skip = deleterows, 
-              stringsAsFactors = TRUE
+              skip = deleterows,
+              stringsAsFactors = TRUE, 
+              use_data_table = dt_pkg_available
             )
           )
         
@@ -755,6 +761,10 @@ airship <- function(
           dfCandidate[, -which(colnames(dfCandidate) == "X")]
       }
       
+      if ("#X" %in% colnames(dfCandidate)) {
+        dfCandidate <- dfCandidate[, -which(colnames(dfCandidate) == "#X")]
+      }
+      
       # Get rid of empty columns
       dfCandidate <- dfCandidate[,colSums(is.na(dfCandidate)) < nrow(dfCandidate)]
       
@@ -773,7 +783,6 @@ airship <- function(
       
       # Return dfCandidate
       dfCandidate
-      
     })
     
     

@@ -38,6 +38,25 @@ fnBoxplotUI <-
     
   }
 
+fnBoxplotOutlierUI <- 
+  function(
+    cID
+  ) {
+    
+    shiny::tagList(
+      
+      shiny::conditionalPanel(
+        condition = "input.cType == 'Boxplot'",
+        ns = shiny::NS("boxplot"),
+        
+        checkboxInput(NS(cID, "showoutliers"), 
+                      label = "Show outliers?",
+                      value = TRUE)
+      ) 
+      
+    )
+  }
+
 fnBoxplotServer <- 
   function(
     cID,
@@ -66,12 +85,14 @@ fnBoxplotServer <-
           
           lPlot$lggPlot <-
             lPlot$lggPlot +
-            ggplot2::geom_boxplot(alpha = input$dAlpha)
+            ggplot2::geom_boxplot(alpha = input$dAlpha,
+                                  outlier.shape = if (input$showoutliers) NULL else ""
+                                  )
           
           lPlot$lCode$boxplot <- 
             paste0(
-              " + ggplot2::geom_boxplot(alpha = ", 
-              input$dAlpha,
+              " + ggplot2::geom_boxplot(alpha = ", input$dAlpha,
+              ifelse(!input$showoutliers, ", outlier.shape = ''", ""),
               ")"
             )
           
@@ -94,3 +115,5 @@ fnBoxplotServer <-
       }
       
     )}
+
+

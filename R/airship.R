@@ -699,7 +699,7 @@ airship <- function(
         
         dfCandidate <-
           try(
-            read_csv_(
+            airship:::fnReadCSV(
               inFile$datapath,
               header = TRUE,
               sep = input$sep,
@@ -726,7 +726,7 @@ airship <- function(
         dfCandidate <-
           
           try(
-            read_csv_(
+            airship:::fnReadCSV(
               inFile$datapath,
               header = TRUE,
               sep = input$sep,
@@ -827,6 +827,10 @@ airship <- function(
         if ("X" %in% colnames(dfData)) {
           dfData <-
             dfData[, -which(colnames(dfData) == "X")]
+        }
+        
+        if ("#X" %in% colnames(dfData)) {
+          dfData <- dfData[, -which(colnames(dfData) == "#X")]
         }
         
         # Get rid of empty columns

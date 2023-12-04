@@ -119,7 +119,8 @@ airship <- function(
     "ggplot2",
     "rlang",
     "magrittr",
-    "shinyjs"
+    "shinyjs",
+    "data.table"
   )
   
   "%>%" <- dplyr::"%>%"
@@ -711,44 +712,13 @@ airship <- function(
         
       } else {
         
-        headrows <- readLines(
-          inFile$datapath,
-          n = 5
-        )
-        
-        deleterows <- length(
-          grep(
-            '^ *#', 
-            headrows
-          )
-        ) - 1
-        
         dfCandidate <-
-          
           try(
-            airship:::fnReadCSV(
+            airship:::fnReadFacts(
               inFile$datapath,
-              header = TRUE,
-              sep = input$sep,
-              skip = deleterows,
-              stringsAsFactors = TRUE, 
-              use_data_table = dt_pkg_available
+              bUseFread = dt_pkg_available
             )
           )
-        
-          colnames(dfCandidate) <- sub(
-            'X.', 
-            '', 
-            colnames(dfCandidate)
-          )
-          
-          if (!'Sim' %in% colnames(dfCandidate)) {
-            if ('Number' %in% colnames(dfCandidate)) {
-              colnames(dfCandidate)[colnames(dfCandidate) == 'Number'] <- 'Sim'
-            } else {
-              stop('The dataset contains neither a `Sim` nor a `Number` column')
-            }
-          }
 
           if (input$checkboxFactsConvertNA) {
             dfCandidate[dfCandidate == -9999] <- NA
@@ -768,19 +738,6 @@ airship <- function(
       
       # Get rid of empty columns
       dfCandidate <- dfCandidate[,colSums(is.na(dfCandidate)) < nrow(dfCandidate)]
-      
-      # If Facts data, get rid of any "Flags" or "Random.Number.Seed" columns
-      if (input$checkboxFactsData == 1) {
-        
-        if ("Flags" %in% colnames(dfCandidate)) {
-          dfCandidate <- subset(dfCandidate, select = -c(`Flags`))
-        }
-        
-        if ("Random.Number.Seed" %in% colnames(dfCandidate)) {
-          dfCandidate <- subset(dfCandidate, select = -c(`Random.Number.Seed`))
-        }
-        
-      }
       
       # Return dfCandidate
       dfCandidate
@@ -806,16 +763,8 @@ airship <- function(
       # Check if Dataset was provided via console or not
       if (!is.null(dfData)) {
         
-        # If Facts data, get rid of any "Flags" and "Random.Number.Seed" columns
+        # If Facts data, allow checkbox for re-coding of -9999
         if (bIsFacts) {
-          
-          if ("Flags" %in% colnames(dfData)) {
-            dfData <- subset(dfData, select = -c(`Flags`))
-          }
-
-          if ("Random.Number.Seed" %in% colnames(dfData)) {
-            dfData <- subset(dfData, select = -c(`Random.Number.Seed`))
-          }
           
           if (input$checkboxFactsConvertNA) {
             dfData[dfData == -9999] <- NA

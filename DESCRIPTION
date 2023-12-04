@@ -53,10 +53,10 @@ Imports:
     ggplot2,
     rlang,
     magrittr,
-    shinyjs
+    shinyjs,
+    data.table
 LazyData: true
 Suggests: 
     knitr,
-    rmarkdown,
-    data.table
+    rmarkdown
 VignetteBuilder: knitr

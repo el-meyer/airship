@@ -29,7 +29,7 @@ fnBoxplotUI <-
         condition = "input.cType == 'Boxplot'",
         ns = shiny::NS("boxplot"),
         
-        checkboxInput(
+        shiny::checkboxInput(
           shiny::NS(cID, "showoutliers"), 
           label = "Show outliers?",
           value = TRUE

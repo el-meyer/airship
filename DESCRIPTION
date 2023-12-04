@@ -57,5 +57,6 @@ Imports:
 LazyData: true
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    data.table
 VignetteBuilder: knitr

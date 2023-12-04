@@ -491,7 +491,6 @@ airship <- function(
               
               shiny::column(
                 width = 3,
-                airship:::fnBoxplotOutlierUI("boxplot"),
                 airship:::fnColorUI("boxplot")
               ),
               

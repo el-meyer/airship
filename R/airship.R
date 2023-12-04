@@ -491,6 +491,7 @@ airship <- function(
               
               shiny::column(
                 width = 3,
+                airship:::fnBoxplotOutlierUI("boxplot"),
                 airship:::fnColorUI("boxplot")
               ),
               
@@ -1046,6 +1047,7 @@ airship <- function(
         "(", sapply(data_full(), function(x) class(x)[1]), ")"
       ),
       filter = "top",
+      extensions = "ColReorder", 
       options = list(
         columnDefs = list(
           list(
@@ -1055,7 +1057,8 @@ airship <- function(
         ),
         lengthChange = FALSE, 
         autoWidth = TRUE,
-        scrollX = TRUE
+        scrollX = TRUE,
+        colReorder = TRUE
       )
     )
     

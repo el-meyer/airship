@@ -78,7 +78,7 @@ fnDynFilterData <-
           shiny::validate(
             shiny::need(
               err_ != "",
-              "If you have recently submitted a new dataset, check if the focus variables are set correctly. If you haven't changed the dataset or have to wait too long, please report a bug in fnDynFilterData."
+              "If you have recently submitted a new dataset, check if the focus variables are set correctly.\nIf you haven't changed the dataset or have to wait too long, please report a bug in fnDynFilterData."
             )
           )
         }

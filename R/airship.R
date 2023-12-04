@@ -205,13 +205,14 @@ airship <- function(
     shinydashboard::dashboardPage(
       # title in browser window tab
       shinydashboard::dashboardHeader(
-        title = "AIRSHIP"
+        title = "AIRSHIP", 
+        titleWidth = "210px"
       ), 
       
       ## Sidebar -----
       shinydashboard::dashboardSidebar(
         shinyjs::useShinyjs(),
-        width = 300,
+        width = "210px",
         
         shinydashboard::sidebarMenu(
           id = "sidebarMenu",

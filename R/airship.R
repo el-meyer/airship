@@ -1087,7 +1087,10 @@ airship <- function(
     
     
     # Define sem function to calculate sem used in deviation method when using replication variable
-    sem <- function(x) {
+    sem <- function(x, na.rm = FALSE) {
+      if (na.rm) {
+        x <- x[!is.na(x)]
+      }
       sd(x) / sqrt(length(x))
     }
     
@@ -1189,22 +1192,10 @@ airship <- function(
           dplyr::summarise(
             dplyr::across(
               tidyselect::everything(),
-              custom_list
+              custom_list,
+              na.rm = TRUE
             )
           )
-        
-        # d <- tryCatch({
-        #   suppressMessages(group_by_at(d, ggplot2::vars(inputs)) %>%
-        #                      summarise(across(
-        #                        everything(),
-        #                        custom_list
-        #                      )))
-        # }, warning = function(w) {
-        #   err_ <- ""
-        #   shiny::validate(
-        #     shiny::need(err_ != "", "Replication variable must be an integer variable")
-        #   )}
-        # )
         
         d <- 
           d %>% 
@@ -1245,7 +1236,7 @@ airship <- function(
     })
     
     
-    ## render Data Table ----
+    ## render Summarized Data ----
     output$repDataDT <- 
       DT::renderDataTable({
         d <- data_agg()
@@ -1262,8 +1253,6 @@ airship <- function(
       )
       )
     
-    
-    ## Aggregated Datatable ----
     output$dataDT_summarized <- 
       shiny::renderUI({
         if(input$checkboxRepvar){

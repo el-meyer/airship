@@ -120,9 +120,11 @@ fnStandardOutputServer <-
           {
             lPlot()$lData
           },
-        options = list(
-          scrollX = TRUE,
-          dom = 'Bfrtip'
+          extensions = "ColReorder",
+          options = list(
+            scrollX = TRUE,
+            dom = 'Bfrtip',
+            colReorder = TRUE
           )
         )
         

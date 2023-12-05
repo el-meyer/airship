@@ -737,7 +737,7 @@ airship <- function(
       }
       
       # Get rid of empty columns
-      dfCandidate <- dfCandidate[,colSums(is.na(dfCandidate)) < nrow(dfCandidate)]
+      dfCandidate <- dfCandidate[, colSums(is.na(dfCandidate)) < nrow(dfCandidate)]
       
       # Return dfCandidate
       dfCandidate
@@ -765,11 +765,11 @@ airship <- function(
         
         # If Facts data, allow checkbox for re-coding of -9999
         if (bIsFacts) {
-          
+
           if (input$checkboxFactsConvertNA) {
             dfData[dfData == -9999] <- NA
           }
-          
+
         }
         
         # Get rid of columns without names
@@ -783,7 +783,7 @@ airship <- function(
         }
         
         # Get rid of empty columns
-        dfData <- dfData[,colSums(is.na(dfData)) < nrow(dfData)]
+        dfData <- dfData[, colSums(is.na(dfData)) < nrow(dfData)]
         
         return(dfData)
         
@@ -932,7 +932,7 @@ airship <- function(
       
     })
     
-    ## Aggregation ----
+    ## Optional Tab Items ----
     
     # Show Boxplot and Scatterplot tab only if replication is chosen above
     shiny::observe({
@@ -1092,7 +1092,7 @@ airship <- function(
     }
     
     # data_agg ----
-    # aggregate data (if not aggregated yet)
+    # summarize data (if not summarized yet)
     data_agg <- shiny::reactive({
       
       shiny::validate(
@@ -1253,10 +1253,12 @@ airship <- function(
       },
       
       filter = "top",
+      extensions = "ColReorder",
       options = list(
         lengthChange = FALSE, 
         autoWidth = TRUE,
-        scrollX = TRUE
+        scrollX = TRUE,
+        colReorder = TRUE
       )
       )
     

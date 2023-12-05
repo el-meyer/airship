@@ -776,8 +776,15 @@ airship <- function(
       # Check if Dataset was provided via console or not
       if (!is.null(dfData)) {
         
-        # If Facts data, allow checkbox for re-coding of -9999
+        # If Facts data, allow checkbox for re-coding of -9999 and removal of constants
         if (bIsFacts) {
+          
+          if (input$checkboxRemoveConstants) {
+            # Optional: Get rid of columns with constant values
+            deleteColumns <- colnames(dfData)[apply(dfData, 2, function(x) length(unique(x))) == 1]
+            deleteColumns <- deleteColumns[!deleteColumns %in% c("Agg.Timestamp")]
+            dfData <- dfData[, !colnames(dfData) %in% deleteColumns]
+          }
 
           if (input$checkboxFactsConvertNA) {
             dfData[dfData == -9999] <- NA

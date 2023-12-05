@@ -163,7 +163,8 @@ airship <- function(
     )
   }
   
-  dt_pkg_available <- "data.table" %in% installed_packages_
+  # dt_pkg_available <- "data.table" %in% installed_packages_
+  dt_pkg_available <- FALSE
   
   # Global Options ----
   options(shiny.sanitize.errors = FALSE) 
@@ -326,15 +327,20 @@ airship <- function(
                   
                   shiny::conditionalPanel(
                     condition = "input.checkboxFactsData == 1",
-                  
+                    
                     shiny::checkboxInput(
                       inputId = "checkboxFactsConvertNA", 
                       label = "Convert -9999 values to NA"
                     ),
+                    
+                    shiny::checkboxInput(
+                      inputId = "checkboxRemoveConstants", 
+                      label = "Remove columns with constant values"
+                    ),
+                    
+                  ),
                   
-                  )
-                  
-                ), 
+                ),
                 
               ),
               
@@ -716,7 +722,9 @@ airship <- function(
           try(
             airship:::fnReadFacts(
               inFile$datapath,
-              bUseFread = dt_pkg_available
+              bUseFread = dt_pkg_available,
+              bRemoveConstant = input$checkboxRemoveConstants,
+              cProtect = c("Agg.Timestamp")
             )
           )
 
@@ -785,7 +793,7 @@ airship <- function(
         # Get rid of empty columns
         dfData <- dfData[, colSums(is.na(dfData)) < nrow(dfData)]
         
-        return(dfData)
+        dfFull <- dfData
         
       } else {
         
@@ -865,7 +873,7 @@ airship <- function(
             
           }
           
-          return(exampleData)
+          dfFull <- exampleData
           
           
         } else {
@@ -925,10 +933,12 @@ airship <- function(
             
           }
           
-          return(upload())
+          dfFull <- upload()
         }
         
       }
+      
+      return(dfFull)
       
     })
     

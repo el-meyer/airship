@@ -6,8 +6,6 @@ fnReadCSV <- function(
     skip, 
     stringsAsFactors = TRUE, 
     use_data_table = FALSE,
-    bRemoveConstant = FALSE,
-    cProtect = NULL,
     ...
 ) {
   
@@ -38,13 +36,6 @@ fnReadCSV <- function(
     
   }
   
-  if (bRemoveConstant) {
-    # Optional: Get rid of columns with constant values
-    deleteColumns <- colnames(ret)[apply(ret, 2, function(x) length(unique(x))) == 1]
-    deleteColumns <- deleteColumns[!deleteColumns %in% cProtect]
-    ret <- ret[, !colnames(ret) %in%deleteColumns]
-  }
-  
   return(ret)
   
 }
@@ -52,8 +43,6 @@ fnReadCSV <- function(
 fnReadFacts <- function(
     file,
     bUseFread,
-    bRemoveConstant = FALSE,
-    cProtect = NULL,
     ...
 ) {
   
@@ -77,8 +66,7 @@ fnReadFacts <- function(
       skip = deleterows,
       stringsAsFactors = TRUE, 
       use_data_table = bUseFread,
-      bRemoveConstant = bRemoveConstant,
-      cProtect = cProtect
+      ...
     )
   
   colnames(dfCandidate) <- gsub(

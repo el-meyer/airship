@@ -722,15 +722,20 @@ airship <- function(
           try(
             airship:::fnReadFacts(
               inFile$datapath,
-              bUseFread = dt_pkg_available,
-              bRemoveConstant = input$checkboxRemoveConstants,
-              cProtect = c("Agg.Timestamp")
+              bUseFread = dt_pkg_available
             )
           )
-
-          if (input$checkboxFactsConvertNA) {
-            dfCandidate[dfCandidate == -9999] <- NA
-          }
+        
+        if (input$checkboxRemoveConstants) {
+          # Optional: Get rid of columns with constant values
+          deleteColumns <- colnames(dfCandidate)[apply(dfCandidate, 2, function(x) length(unique(x))) == 1]
+          deleteColumns <- deleteColumns[!deleteColumns %in% c("Agg.Timestamp")]
+          dfCandidate <- dfCandidate[, !colnames(dfCandidate) %in% deleteColumns]
+        }
+        
+        if (input$checkboxFactsConvertNA) {
+          dfCandidate[dfCandidate == -9999] <- NA
+        }
         
       }
 

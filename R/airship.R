@@ -163,8 +163,7 @@ airship <- function(
     )
   }
   
-  # dt_pkg_available <- "data.table" %in% installed_packages_
-  dt_pkg_available <- FALSE
+  dt_pkg_available <- "data.table" %in% installed_packages_
   
   # Global Options ----
   options(shiny.sanitize.errors = FALSE) 
@@ -705,7 +704,7 @@ airship <- function(
       if (input$checkboxFactsData == 0) {
         
         dfCandidate <-
-          try(
+          tryCatch({ 
             airship:::fnReadCSV(
               inFile$datapath,
               header = TRUE,
@@ -714,7 +713,14 @@ airship <- function(
               stringsAsFactors = TRUE, 
               use_data_table = dt_pkg_available
             )
-          )
+          }, error = function(e) {
+              validate(
+                need(
+                  FALSE, 
+                  message = "Dataset could not be loaded. Consider skipping rows."
+                )
+              )
+          })
         
       } else {
         
@@ -750,7 +756,9 @@ airship <- function(
       }
       
       # Get rid of empty columns
-      dfCandidate <- dfCandidate[, colSums(is.na(dfCandidate)) < nrow(dfCandidate)]
+      if (ncol(dfCandidate) > 1) {
+        dfCandidate <- dfCandidate[, colSums(is.na(dfCandidate)) < nrow(dfCandidate)]  
+      }
       
       # Return dfCandidate
       dfCandidate
@@ -803,7 +811,9 @@ airship <- function(
         }
         
         # Get rid of empty columns
-        dfData <- dfData[, colSums(is.na(dfData)) < nrow(dfData)]
+        if (ncol(dfData) > 1) {
+          dfData <- dfData[, colSums(is.na(dfData)) < nrow(dfData)]  
+        }
         
         dfFull <- dfData
         
@@ -812,7 +822,7 @@ airship <- function(
         # If example data is chosen, update other input options
         # as they are hidden automatically in GUI
         
-        if(input$checkboxExampleData){
+        if (input$checkboxExampleData) {
           
           if (input$selectExampleData == "NASH platform trial design") {
             
@@ -848,7 +858,7 @@ airship <- function(
               choices = col_names_example_dat
             )
             
-          } else  if (input$selectExampleData == "Toy simulation study") {
+          } else if (input$selectExampleData == "Toy simulation study") {
             
             # ExampleData1 exists in package airship
             exampleData <- airship::ExampleData1
@@ -958,7 +968,8 @@ airship <- function(
     
     # Show Boxplot and Scatterplot tab only if replication is chosen above
     shiny::observe({
-      if(input$checkboxRepvar){
+      
+      if (input$checkboxRepvar) {
         
         shiny::showTab(
           inputId = "tabs", 
@@ -1000,7 +1011,7 @@ airship <- function(
       )
       
       tryCatch({
-        if(input$checkboxRepvar){
+        if (input$checkboxRepvar) {
           data_full() %>% dplyr::select(-input$repvar)
         } else {
           data_full()

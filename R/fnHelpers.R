@@ -18,6 +18,7 @@ fnReadCSV <- function(
         sep = sep,
         skip = skip,
         stringsAsFactors = stringsAsFactors,
+        check.names = TRUE,
         data.table = FALSE, 
         ...
       )

@@ -54,7 +54,8 @@ Imports:
     rlang,
     magrittr,
     shinyjs,
-    data.table
+    data.table,
+    shinyalert
 LazyData: true
 Suggests: 
     knitr,

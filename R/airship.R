@@ -24,9 +24,9 @@
 #' 
 #' @importFrom magrittr "%>%"
 #' @importFrom ggplot2 "%+%"
-#' @importFrom rlang "!!"
 #' @importFrom stats "sd"
 #' @importFrom stats "median"
+#' @importFrom rlang "!!" "is_string"
 #' 
 #' @export
 airship <- function(
@@ -120,7 +120,8 @@ airship <- function(
     "rlang",
     "magrittr",
     "shinyjs",
-    "data.table"
+    "data.table",
+    "shinyalert"
   )
   
   "%>%" <- dplyr::"%>%"
@@ -454,6 +455,7 @@ airship <- function(
           
           shinydashboard::tabItem(
             tabName = "default",
+            
             shiny::br(),
             shiny::h4("Please choose a subset (at least one) of the input variables as focus variables."),
             shiny::HTML("Focus variables can be investigated further in the plot tabs. By specifying a default value for input variables, they are treated as focus variables."),
@@ -1341,6 +1343,50 @@ airship <- function(
       nm
     })
     
+    ## names_unagg_intORfactor ----
+    # names of variables that are factor or integer valued and have a short (<=12) unique length
+    names_unagg_intORfactorShort <- shiny::reactive({
+      
+      nm <- names(
+        data_prefiltered() %>% 
+          dplyr::select_if(
+            \(x){
+              (
+                is_string(x) | 
+                  is.factor(x) | 
+                  !all(is.na(
+                    tryCatch(vctrs::vec_cast(sample(x, size = min(250, length(x))), integer()), 
+                             error = function(x){NA})))
+              ) & 
+                dplyr::between(length(unique(x)), 1.01, 12.01)
+            }
+          )
+      )
+      
+      nm
+    })
+    # names of variables that are factor or integer valued and have a long (<500) unique length
+    names_unagg_intORfactorLong <- shiny::reactive({
+      
+      nm <- names(
+        data_prefiltered() %>% 
+          dplyr::select_if(
+            \(x){
+              (
+                is_string(x) | 
+                  is.factor(x) | 
+                  !all(is.na(
+                    tryCatch(vctrs::vec_cast(sample(x, size = min(250, length(x))), integer()),
+                             error = function(x){NA})))
+              ) & 
+                dplyr::between(length(unique(x)), 1.01, 500.01)
+            }
+          )
+      )
+      
+      nm
+    })
+    
     ## names of focus variables -----
     cNamesFocusVar <- shiny::reactive({
       names(defaults_input())
@@ -1449,8 +1495,6 @@ airship <- function(
     
     )
     
-    
-    
     ### Buttons ----
     # Update Default value filters in Tab based on pre-defined buttons
     
@@ -1556,6 +1600,56 @@ airship <- function(
       )
     })
     
+    ### Check if filter is overspecified --
+    isOverspecified <- shiny::reactive({
+      
+      dfFilter <- data.frame(as.list(gsub("\\[\"|\"\\]", "", defaults_input())))
+      dfData <- data_filteredR()
+      
+      # If only one variable or less is chosen, cannot be overspecified
+      if (is.null(dfFilter)) {
+        bIsOverspecified <- 0
+      } else if (ncol(dfFilter) == 1) {
+        bIsOverspecified <- 0
+      } else {
+        # Reduce by one dimension to see if still unique
+        dfFilterReduced <- dfFilter[,1:(ncol(dfFilter) - 1)]
+        dfMerge <- merge(dfFilterReduced, dfData)
+        bIsOverspecified <- ifelse(nrow(dfMerge) == 1, 1, 0)
+      }
+      
+      bIsOverspecified
+      
+    })
+    
+    shiny::observeEvent(shiny::req(isOverspecified() == 1), {
+      # Show a modal when the button is pressed
+      shinyalert::shinyalert("Warning!", "You have overspecified the focus variables. This likely means you have chosen a default value for a variable that was already fully explained through your previous choices.", type = "warning")
+    })
+    
+    ### Check if filter is impossible --
+    isImpossible <- shiny::reactive({
+      
+      dfFilter <- data.frame(as.list(gsub("\\[\"|\"\\]", "", defaults_input())))
+      dfData <- data_filteredR()
+      
+      # If only one variable or less is chosen, cannot be overspecified
+      if (is.null(dfFilter)) {
+        bIsImpossible <- 0
+      } else {
+        dfMerge <- merge(dfFilter, dfData)
+        bIsImpossible <- ifelse(nrow(dfMerge) == 0, 1, 0)
+      }
+      
+      bIsImpossible
+      
+    })
+    
+    shiny::observeEvent(shiny::req(isImpossible() == 1), {
+      # Show a modal when the button is pressed
+      shinyalert::shinyalert("Error!", "You have chosen an impossible combination of values. Please select valid default values.", type = "error")
+    })
+    
     ## Plots -------------------------------------------------------------------
     
     ### Boxplot -----------
@@ -1566,7 +1660,7 @@ airship <- function(
       
       airship:::fnXYUpdateInput(
         cID = "boxplot",
-        cNamesX = names(defaults_input()),
+        cNamesX = names_unagg_intORfactorLong(),
         cNamesY = names_outputsR_unaggregated()
       )
       

@@ -1611,8 +1611,7 @@ airship <- function(
           cID = "boxplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
-          cSimPars = lPlot$cSimPars,
-          cInputNames = names_inputsR()
+          cSimPars = lPlot$cSimPars
         )
       
       ##### Empty plot 
@@ -1663,8 +1662,7 @@ airship <- function(
           cID = "boxplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
-          cSimPars = lPlot$cSimPars,
-          cInputNames = names_inputsR()
+          cSimPars = lPlot$cSimPars
         )
       
       # replace fully filtered dataset with dynamically filtered dataset
@@ -1751,8 +1749,7 @@ airship <- function(
           cID = "scatterplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
-          cSimPars = lPlot$cSimPars,
-          cInputNames = names_inputsR()
+          cSimPars = lPlot$cSimPars
         )
       
       ##### Empty plot 
@@ -1803,8 +1800,7 @@ airship <- function(
           cID = "scatterplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
-          cSimPars = lPlot$cSimPars,
-          cInputNames = names_inputsR()
+          cSimPars = lPlot$cSimPars
         )
       
       # replace fully filtered dataset with dynamically filtered dataset
@@ -1901,8 +1897,7 @@ airship <- function(
           cID = "ldplot",
           dfFilter = defaults_input(),
           dfData = data_filteredR(),
-          cSimPars = lPlot$cSimPars,
-          cInputNames = names_inputsR()
+          cSimPars = lPlot$cSimPars
         )
 
       ##### Empty plot
@@ -1954,8 +1949,7 @@ airship <- function(
           cID = "ldplot",
           dfFilter = defaults_input(),
           dfData = data_filteredR(),
-          cSimPars = lPlot$cSimPars,
-          cInputNames = names_inputsR()
+          cSimPars = lPlot$cSimPars
         )
 
       # replace fully filtered dataset with dynamically filtered dataset

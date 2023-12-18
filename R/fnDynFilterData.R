@@ -4,8 +4,7 @@ fnDynFilterData <-
   cID,
   dfFilter,
   dfData,
-  cSimPars,
-  cInputNames
+  cSimPars
   ) {
     
     shiny::moduleServer(

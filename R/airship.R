@@ -464,14 +464,36 @@ airship <- function(
             shiny::br(),
             shiny::br(),
             
-            shiny::actionButton(
-              inputId = "buttonDefault", 
-              label = "Take first row as default values"
+            shiny::conditionalPanel(
+              condition = "input.checkboxFactsData == 0",
+              
+              shiny::actionButton(
+                inputId = "buttonDefault", 
+                label = "Take first row as default values"
+              ),
+              shiny::actionButton(
+                inputId = "buttonDefaultHighlighted", 
+                label = "Take highlighted row as default values"
+              ),
+              
             ),
-            shiny::actionButton(
-              inputId = "buttonDefaultHighlighted", 
-              label = "Take highlighted row as default values"
+            
+            shiny::conditionalPanel(
+              condition = "input.checkboxFactsData == 1",
+              
+              shiny::actionButton(
+                inputId = "buttonScenarios", 
+                label = "Take first scenario as default value"
+              ),
+              shiny::actionButton(
+                inputId = "buttonVariants", 
+                label = "Take first row of variants as default values"
+              ),
+              
             ),
+            
+            shiny::br(),
+            
             shiny::actionButton(
               inputId = "buttonResetDefault", 
               label = "Reset selections"
@@ -1469,6 +1491,9 @@ airship <- function(
       input$buttonDefault
       input$buttonResetDefault # reset selection 
       
+      input$buttonScenarios
+      input$buttonVariants
+      
       for(i in colnames(data_filtered)){
         # transforms variables to factors to be able to choose 1 factor level as default value
         data_filtered[,i] <<- 
@@ -1556,9 +1581,70 @@ airship <- function(
       )
     })
     
+    #### Filter for scenarios/variants ----
+    shiny::observeEvent(input$buttonScenarios, {
+      
+      # Get ScenarioID in first row
+      data_filtered_helper <- 
+        data.frame(
+          lapply(
+            data_filtered, 
+            as.character
+          ), 
+          stringsAsFactor = FALSE
+        )
+      
+      first_row_filters <- paste0(
+        "'[\"", 
+        data_filtered_helper[1,"Scenario.ID"], 
+        "\"]'"
+      )
+      
+      reacVals$first_row_filters_string <- paste0( 
+        "list(NULL, ",
+        paste0(
+          "list(search = ", 
+          first_row_filters, 
+          ")", 
+          collapse = ", "
+        ),
+        ")"
+      )
+    })
+    
+    shiny::observeEvent(input$buttonVariants, {
+      
+      # Get Variants in first row
+      data_filtered_helper <- 
+        data.frame(
+          lapply(
+            data_filtered, 
+            as.character
+          ), 
+          stringsAsFactor = FALSE
+        )
+      
+      first_row_filters <- paste0(
+        "'[\"", 
+        data_filtered_helper[1, -1], 
+        "\"]'"
+      )
+      
+      reacVals$first_row_filters_string <- paste0( 
+        "list(NULL, ",
+        paste0(
+          "list(search = ", 
+          c("NULL", first_row_filters), 
+          ")", 
+          collapse = ", "
+        ),
+        ")"
+      )
+    })
+    
     
     #### Reset filters----
-    shiny::observeEvent(input$buttonResetDefault ,{
+    shiny::observeEvent(input$buttonResetDefault, {
       reacVals$first_row_filters_string <- "NULL"
     })
     

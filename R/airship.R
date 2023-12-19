@@ -456,49 +456,62 @@ airship <- function(
           shinydashboard::tabItem(
             tabName = "default",
             
-            shiny::br(),
-            shiny::h4("Please choose a subset (at least one) of the input variables as focus variables."),
-            shiny::HTML("Focus variables can be investigated further in the plot tabs. By specifying a default value for input variables, they are treated as focus variables."),
-            shiny::br(),
-            shiny::HTML("If focus variables are not chosen to be displayed in a plot, the displayed dataset is filtered according to the chosen default values."),
-            shiny::br(),
+            shiny::h1("Would you like to use focus variables?"),
+            
             shiny::br(),
             
-            shiny::conditionalPanel(
-              condition = "input.checkboxFactsData == 0",
-              
-              shiny::actionButton(
-                inputId = "buttonDefault", 
-                label = "Take first row as default values"
-              ),
-              shiny::actionButton(
-                inputId = "buttonDefaultHighlighted", 
-                label = "Take highlighted row as default values"
-              ),
-              
+            shiny::checkboxInput(
+              inputId = "checkboxFocusVariables",
+              label = "Use focus variables"
             ),
             
             shiny::conditionalPanel(
-              condition = "input.checkboxFactsData == 1",
+              condition = "input.checkboxFocusVariables != 0",
+              
+              shiny::br(),
+              shiny::h4("Please choose a subset (at least one) of the input variables as focus variables."),
+              shiny::HTML("Focus variables can be investigated further in the plot tabs. By specifying a default value for input variables, they are treated as focus variables."),
+              shiny::br(),
+              shiny::HTML("If focus variables are not chosen to be displayed in a plot, the displayed dataset is filtered according to the chosen default values."),
+              shiny::br(),
+              shiny::br(),
+              
+              shiny::conditionalPanel(
+                condition = "input.checkboxFactsData == 0",
+                
+                shiny::actionButton(
+                  inputId = "buttonDefault", 
+                  label = "Take first row as default values"
+                ),
+                shiny::actionButton(
+                  inputId = "buttonDefaultHighlighted", 
+                  label = "Take highlighted row as default values"
+                ),
+                
+              ),
+              
+              shiny::conditionalPanel(
+                condition = "input.checkboxFactsData == 1",
+                
+                shiny::actionButton(
+                  inputId = "buttonScenarios", 
+                  label = "Take first scenario as default value"
+                ),
+                shiny::actionButton(
+                  inputId = "buttonVariants", 
+                  label = "Take first row of variants as default values"
+                ),
+                
+              ),
+              
+              shiny::br(),
               
               shiny::actionButton(
-                inputId = "buttonScenarios", 
-                label = "Take first scenario as default value"
+                inputId = "buttonResetDefault", 
+                label = "Reset selections"
               ),
-              shiny::actionButton(
-                inputId = "buttonVariants", 
-                label = "Take first row of variants as default values"
-              ),
-              
+              DT::dataTableOutput("chooseDT")
             ),
-            
-            shiny::br(),
-            
-            shiny::actionButton(
-              inputId = "buttonResetDefault", 
-              label = "Reset selections"
-            ),
-            DT::dataTableOutput("chooseDT")
           ),
           
           ### Boxplot ----
@@ -1596,7 +1609,7 @@ airship <- function(
       
       first_row_filters <- paste0(
         "'[\"", 
-        data_filtered_helper[1,"Scenario.ID"], 
+        data_filtered_helper[1,1], 
         "\"]'"
       )
       
@@ -1752,12 +1765,12 @@ airship <- function(
       
       airship:::fnFacetGridUpdateInput(
         cID = "boxplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorLong()
       )
       
       airship:::fnColorUpdateInput(
         cID = "boxplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorLong()
       )
       
       airship:::fnDownloadUpdateInput(
@@ -1791,7 +1804,8 @@ airship <- function(
           cID = "boxplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
-          cSimPars = lPlot$cSimPars
+          cSimPars = lPlot$cSimPars,
+          bFocusVariables = input$checkboxFocusVariables
         )
       
       ##### Empty plot 
@@ -1842,7 +1856,8 @@ airship <- function(
           cID = "boxplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
-          cSimPars = lPlot$cSimPars
+          cSimPars = lPlot$cSimPars,
+          bFocusVariables = input$checkboxFocusVariables
         )
       
       # replace fully filtered dataset with dynamically filtered dataset

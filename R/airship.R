@@ -1743,7 +1743,7 @@ airship <- function(
       )
     })
     
-    ### Check if filter is overspecified --
+    ### Check if filter is overspecified ----
     isOverspecified <- shiny::reactive({
       
       dfFilter <- data.frame(as.list(gsub("\\[\"|\"\\]", "", defaults_input())))
@@ -1751,14 +1751,60 @@ airship <- function(
       
       # If only one variable or less is chosen, cannot be overspecified
       if (is.null(dfFilter)) {
+        
         bIsOverspecified <- 0
+        
       } else if (ncol(dfFilter) == 1) {
+        
         bIsOverspecified <- 0
+        
       } else {
+        
         # Reduce by one dimension to see if still unique
-        dfFilterReduced <- dfFilter[,1:(ncol(dfFilter) - 1)]
-        dfMerge <- merge(dfFilterReduced, dfData)
-        bIsOverspecified <- ifelse(nrow(dfMerge) == 1, 1, 0)
+        # Create all possible combinations
+        # First case of if is only necessary because in case of two columns, 
+        # removal of one column turns df into vector
+        if (ncol(dfFilter) == 2) {
+          
+          dfFilterReduced1 <- dfFilter[,-1, drop = FALSE]
+          dfFilterReduced2 <- dfFilter[,-2, drop = FALSE]
+          
+          dfMerge1 <- merge(dfFilterReduced1, dfData)
+          dfMerge2 <- merge(dfFilterReduced2, dfData)
+          
+          bIsOverspecified1 <- as.logical(ifelse(nrow(dfMerge1) == 1, 1, 0))
+          bIsOverspecified2 <- as.logical(ifelse(nrow(dfMerge2) == 1, 1, 0))
+          
+          bIsOverspecified <- any(c(bIsOverspecified1, bIsOverspecified2))
+          
+        } else {
+          
+          vIsOverspecified <- rep(NULL, ncol(dfFilter))
+          
+          for (i in 1:ncol(dfFilter)) {
+            
+            dfFilterReduced <- dfFilter[,-i]
+            dfMerge <- merge(dfFilterReduced, dfData)
+            vIsOverspecified[i] <- as.logical(ifelse(nrow(dfMerge) == 1, 1, 0))
+            
+          }
+          
+          bIsOverspecified <- any(vIsOverspecified)
+          
+        }
+        
+        # # Debugging
+        # assign(
+        #   x = "filter", 
+        #   value = dfFilter, 
+        #   envir = .GlobalEnv
+        # )
+        # assign(
+        #   x = "data", 
+        #   value = dfData, 
+        #   envir = .GlobalEnv
+        # )
+        
       }
       
       bIsOverspecified
@@ -1770,7 +1816,7 @@ airship <- function(
       shinyalert::shinyalert("Warning!", "You have overspecified the focus variables. This likely means you have chosen a default value for a variable that was already fully explained through your previous choices.", type = "warning")
     })
     
-    ### Check if filter is impossible --
+    ### Check if filter is impossible ----
     isImpossible <- shiny::reactive({
       
       dfFilter <- data.frame(as.list(gsub("\\[\"|\"\\]", "", defaults_input())))

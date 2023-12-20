@@ -1393,7 +1393,7 @@ airship <- function(
                     tryCatch(vctrs::vec_cast(sample(x, size = min(250, length(x))), integer()), 
                              error = function(x){NA})))
               ) & 
-                dplyr::between(length(unique(x)), 1.01, 12.01)
+                dplyr::between(length(unique(x)), 1.01, 20.01)
             }
           )
       )
@@ -1405,6 +1405,50 @@ airship <- function(
       
       nm <- names(
         data_prefiltered() %>% 
+          dplyr::select_if(
+            \(x){
+              (
+                is_string(x) | 
+                  is.factor(x) | 
+                  !all(is.na(
+                    tryCatch(vctrs::vec_cast(sample(x, size = min(250, length(x))), integer()),
+                             error = function(x){NA})))
+              ) & 
+                dplyr::between(length(unique(x)), 1.01, 500.01)
+            }
+          )
+      )
+      
+      nm
+    })
+    
+    ## names_agg_intORfactor ----
+    # names of variables that are factor or integer valued and have a short (<=12) unique length
+    names_agg_intORfactorShort <- shiny::reactive({
+      
+      nm <- names(
+        data_filteredR() %>% 
+          dplyr::select_if(
+            \(x){
+              (
+                is_string(x) | 
+                  is.factor(x) | 
+                  !all(is.na(
+                    tryCatch(vctrs::vec_cast(sample(x, size = min(250, length(x))), integer()), 
+                             error = function(x){NA})))
+              ) & 
+                dplyr::between(length(unique(x)), 1.01, 20.01)
+            }
+          )
+      )
+      
+      nm
+    })
+    # names of variables that are factor or integer valued and have a long (<500) unique length
+    names_agg_intORfactorLong <- shiny::reactive({
+      
+      nm <- names(
+        data_filteredR() %>% 
           dplyr::select_if(
             \(x){
               (
@@ -1765,7 +1809,7 @@ airship <- function(
       
       airship:::fnFacetGridUpdateInput(
         cID = "boxplot",
-        cNamesInputs = names_unagg_intORfactorLong()
+        cNamesInputs = names_unagg_intORfactorShort()
       )
       
       airship:::fnColorUpdateInput(
@@ -1905,12 +1949,12 @@ airship <- function(
       
       airship:::fnFacetGridUpdateInput(
         cID = "scatterplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorShort()
       )
       
       airship:::fnColorUpdateInput(
         cID = "scatterplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_unagg_intORfactorLong()
       )
       
       airship:::fnDownloadUpdateInput(
@@ -1944,7 +1988,8 @@ airship <- function(
           cID = "scatterplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
-          cSimPars = lPlot$cSimPars
+          cSimPars = lPlot$cSimPars,
+          bFocusVariables = input$checkboxFocusVariables
         )
       
       ##### Empty plot 
@@ -1995,7 +2040,8 @@ airship <- function(
           cID = "scatterplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
-          cSimPars = lPlot$cSimPars
+          cSimPars = lPlot$cSimPars,
+          bFocusVariables = input$checkboxFocusVariables
         )
       
       # replace fully filtered dataset with dynamically filtered dataset
@@ -2037,18 +2083,18 @@ airship <- function(
       
       airship:::fnXYUpdateInput(
         cID = "ldplot",
-        cNamesX = names(defaults_input()),
+        cNamesX = names_agg_intORfactorLong(),
         cNamesY = names_outputsR()
       )
       
       airship:::fnFacetGridUpdateInput(
         cID = "ldplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_agg_intORfactorShort()
       )
       
       airship:::fnLDPlotUpdateInput(
         cID = "ldplot",
-        cNamesInputs = names(defaults_input())
+        cNamesInputs = names_agg_intORfactorShort()
       )
       
       airship:::fnDownloadUpdateInput(
@@ -2092,7 +2138,8 @@ airship <- function(
           cID = "ldplot",
           dfFilter = defaults_input(),
           dfData = data_filteredR(),
-          cSimPars = lPlot$cSimPars
+          cSimPars = lPlot$cSimPars,
+          bFocusVariables = input$checkboxFocusVariables
         )
 
       ##### Empty plot
@@ -2144,7 +2191,8 @@ airship <- function(
           cID = "ldplot",
           dfFilter = defaults_input(),
           dfData = data_filteredR(),
-          cSimPars = lPlot$cSimPars
+          cSimPars = lPlot$cSimPars,
+          bFocusVariables = input$checkboxFocusVariables
         )
 
       # replace fully filtered dataset with dynamically filtered dataset

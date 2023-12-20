@@ -61,22 +61,6 @@ fnDynFilterData <-
               dfFinal <- dfData
             }
             
-            if (cID == "ldplot") {
-              
-              if (!input$checkboxColor) {
-                
-                dfFinal <- 
-                  dfFinal %>%
-                  tidyr::pivot_longer(
-                    cols = input$y,
-                    names_to = "OC",
-                    values_to = "value"
-                  )
-                
-              }
-              
-            }
-            
           }, error = function(e) {
             err_ <- ""
             shiny::validate(
@@ -88,9 +72,25 @@ fnDynFilterData <-
           }
           )
           
+      }
+      
+      if (cID == "ldplot") {
+        
+        if (!input$checkboxColor) {
+          
+          dfFinal <- 
+            dfFinal %>%
+            tidyr::pivot_longer(
+              cols = input$y,
+              names_to = "OC",
+              values_to = "value"
+            )
+          
         }
         
-        return(dfFinal) # return data frame
+      }
+        
+      return(dfFinal) # return data frame
         
       }
     )

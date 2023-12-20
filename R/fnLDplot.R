@@ -159,25 +159,25 @@ fnLDplotColorUI <-
     
   }
 
-fnLDPlotColorUpdateInput <- 
-  function(
-    cID,
-    cNamesInputs
-  ) {
-    shiny::moduleServer(
-      cID, 
-      function(input, output, session) 
-      {
-        ### Color Input -----
-        shiny::updateSelectInput(
-          session = session,
-          inputId = "colVar",
-          choices = cNamesInputs
-        )
-        
-      })
-    
-  }
+# fnLDPlotColorUpdateInput <- 
+#   function(
+#     cID,
+#     cNamesInputs
+#   ) {
+#     shiny::moduleServer(
+#       cID, 
+#       function(input, output, session) 
+#       {
+#         ### Color Input -----
+#         shiny::updateSelectInput(
+#           session = session,
+#           inputId = "colVar",
+#           choices = cNamesInputs
+#         )
+#         
+#       })
+#     
+#   }
 
 # fnLDPlotErrorbarUpdateInput <- 
 #   function(

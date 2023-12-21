@@ -727,6 +727,7 @@ airship <- function(
       }
       
     }
+    
 
     ## Upload Data Input ----
     # widget for user data upload
@@ -1167,6 +1168,11 @@ airship <- function(
       # }
       
     })
+    
+    # Enable/Disable Plotly toggle based on some threshold in number of rows
+    fnDisablePlotlyToggleServer(cID = "boxplot", data = data_prefiltered, global_session = session)
+    fnDisablePlotlyToggleServer(cID = "scatterplot", data = data_prefiltered, global_session = session)
+    fnDisablePlotlyToggleServer(cID = "ldplot", data = data_prefiltered,  global_session = session)
     
     
     # Define sem function to calculate sem used in deviation method when using replication variable

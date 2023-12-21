@@ -1826,7 +1826,11 @@ airship <- function(
     
     shiny::observeEvent(shiny::req(isOverspecified() == 1), {
       # Show a modal when the button is pressed
-      shinyalert::shinyalert("Warning!", "You have overspecified the focus variables. This likely means you have chosen a default value for a variable that was already fully explained through your previous choices.", type = "warning")
+      shinyalert::shinyalert(
+        "Warning!", 
+        "You have overspecified the focus variables. This likely means you have chosen a default value for a variable that was already fully explained through your previous choices.", 
+        type = "warning"
+      )
     })
     
     ### Check if filter is impossible ----
@@ -1849,7 +1853,11 @@ airship <- function(
     
     shiny::observeEvent(shiny::req(isImpossible() == 1), {
       # Show a modal when the button is pressed
-      shinyalert::shinyalert("Error!", "You have chosen an impossible combination of values. Please select valid default values.", type = "error")
+      shinyalert::shinyalert(
+        "Error!", 
+        "You have chosen an impossible combination of values. Please select valid default values.", 
+        type = "error"
+      )
     })
     
     ## Plots -------------------------------------------------------------------

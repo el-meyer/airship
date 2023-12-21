@@ -329,6 +329,11 @@ airship <- function(
                     condition = "input.checkboxFactsData == 1",
                     
                     shiny::checkboxInput(
+                      inputId = "checkboxPivotOnDose", 
+                      label = "Pivot Longer on Treatment"
+                    ),
+                    
+                    shiny::checkboxInput(
                       inputId = "checkboxFactsConvertNA", 
                       label = "Convert -9999 values to NA"
                     ),
@@ -780,6 +785,10 @@ airship <- function(
           dfCandidate[dfCandidate == -9999] <- NA
         }
         
+        if (input$checkboxPivotOnDose) {
+          dfCandidate <- airship:::fnPivotLongerTreatmentFacts(dfCandidate)
+        }
+        
       }
 
       # Get rid of columns without names
@@ -833,6 +842,10 @@ airship <- function(
 
           if (input$checkboxFactsConvertNA) {
             dfData[dfData == -9999] <- NA
+          }
+          
+          if (input$checkboxPivotOnDose) {
+            dfData <- airship:::fnPivotLongerTreatmentFacts(dfData)
           }
 
         }

@@ -107,3 +107,19 @@ fnReadFacts <- function(
   return(dfCandidate)
   
 }
+
+fnPivotLongerTreatmentFacts <- function(
+    dfData
+) {
+  
+  dfPivotData <- dfData
+  
+  # if(input$toPivotOnDoseData == 1) {
+  #   dfData = dfData %>% pivot_longer(cols = matches("\\.[0-9]+"), names_to = "name", values_to = "value") %>% 
+  #     mutate(Dose = as.integer(gsub(".*\\.([0-9]).*", "\\1", name)), name = gsub("(.*)\\.[0-9]+(.*)", "\\1\\2", name)) %>%
+  #     pivot_wider(names_from = name)
+  # }
+  
+  return(dfPivotData)
+  
+}

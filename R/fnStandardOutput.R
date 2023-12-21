@@ -57,77 +57,91 @@ fnStandardOutputServer <-
       {
         
         tryCatch({
-        
-        # Should Plotly features be enabled
-        if (bEnablePlotly) {
           
-          #### Render Plot ----
-          if (input$bPlotly) {
-            output$Plot <- plotly::renderPlotly({
-              plotly::ggplotly(lPlot()$lggPlot)
+          # if(nrow(lPlot()$lData) > 100000 & input$bPlotly) {
+          #   
+          #   shinyalert::shinyalert("Warning!", "Your plotted dataset is larger than 100k rows. Interactive features will be disabled.", type = "warning")
+          #     
+          #   bEnablePlotly <- FALSE
+          # 
+          #   shinyWidgets::updateSwitchInput(
+          #       session = session,
+          #       inputId = "bPlotly",
+          #       value = FALSE
+          #     )
+          #   
+          #   }
+          
+          # Should Plotly features be enabled
+          if (bEnablePlotly) {
+            
+            #### Render Plot ----
+            if (input$bPlotly) {
+              output$Plot <- plotly::renderPlotly({
+                plotly::ggplotly(lPlot()$lggPlot)
+              })
+            } else {
+              output$Plot <- shiny::renderPlot({
+                lPlot()$lggPlot
+              })
+            }
+            
+            
+            #### Render UI ----
+            output$PlotOutput <- shiny::renderUI({
+              if (input$bPlotly) {
+                plotly::plotlyOutput(
+                  shiny::NS(cID, "Plot"),
+                  height = input$plotheight,
+                  width = input$plotwidth
+                )
+              } else {
+                shiny::plotOutput(
+                  shiny::NS(cID, "Plot"),
+                  height = input$plotheight,
+                  width = input$plotwidth
+                )
+              }
             })
+            
           } else {
+            
+            #### Render Plot ----
             output$Plot <- shiny::renderPlot({
               lPlot()$lggPlot
             })
-          }
-          
-          
-          #### Render UI ----
-          output$PlotOutput <- shiny::renderUI({
-            if (input$bPlotly) {
-              plotly::plotlyOutput(
-                shiny::NS(cID, "Plot"),
-                height = input$plotheight,
-                width = input$plotwidth
-              )
-            } else {
+            
+            
+            #### Render UI ----
+            output$PlotOutput <- shiny::renderUI({
               shiny::plotOutput(
                 shiny::NS(cID, "Plot"),
                 height = input$plotheight,
                 width = input$plotwidth
               )
-            }
+            })
+            
+          }
+          
+          
+          #### Render Code -----
+          output$Code <- shiny::renderText({
+            paste(lPlot()$lCode, collapse = "")
           })
           
-        } else {
-          
-          #### Render Plot ----
-          output$Plot <- shiny::renderPlot({
-            lPlot()$lggPlot
-          })
-          
-          
-          #### Render UI ----
-          output$PlotOutput <- shiny::renderUI({
-            shiny::plotOutput(
-              shiny::NS(cID, "Plot"),
-              height = input$plotheight,
-              width = input$plotwidth
+          #### Render Dataset ----
+          output$PlotData <- DT::renderDT(
+            {
+              lPlot()$lData
+            },
+            extensions = "ColReorder",
+            options = list(
+              scrollX = TRUE,
+              dom = 'Bfrtip',
+              colReorder = TRUE
             )
-          })
-          
-        }
-        
-        
-        #### Render Code -----
-        output$Code <- shiny::renderText({
-          paste(lPlot()$lCode, collapse = "")
-        })
-        
-        #### Render Dataset ----
-        output$PlotData <- DT::renderDT(
-          {
-            lPlot()$lData
-          },
-          extensions = "ColReorder",
-          options = list(
-            scrollX = TRUE,
-            dom = 'Bfrtip',
-            colReorder = TRUE
           )
-        )
-        
+          
         }, error = function(e) {
           err_ <- ""
           shiny::validate(

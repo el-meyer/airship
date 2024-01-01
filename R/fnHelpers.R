@@ -114,11 +114,35 @@ fnPivotLongerTreatmentFacts <- function(
   
   dfPivotData <- dfData
   
-  # if(input$toPivotOnDoseData == 1) {
-  #   dfData = dfData %>% pivot_longer(cols = matches("\\.[0-9]+"), names_to = "name", values_to = "value") %>% 
-  #     mutate(Dose = as.integer(gsub(".*\\.([0-9]).*", "\\1", name)), name = gsub("(.*)\\.[0-9]+(.*)", "\\1\\2", name)) %>%
-  #     pivot_wider(names_from = name)
-  # }
+  # # In original data, problem that e.g. param.10 interferes with logic and therefore thinks its a dose
+  # dfPivotData <-
+  #   dfData %>%
+  #   tidyr::pivot_longer(
+  #     cols = matches("\\.[0-9]+"),
+  #     names_to = "name",
+  #     values_to = "value"
+  #   ) %>%
+  #   # Here we need to add that the first match per column name should correspond to the dose
+  #   # Currently it is the last match
+  #   dplyr::mutate(
+  #     Dose = as.integer(gsub(
+  #       ".*\\.([0-9]).*",
+  #       "\\1",
+  #       name
+  #     )),
+  #     name = gsub(
+  #       "(.*)\\.[0-9]+(.*)",
+  #       "\\1\\2",
+  #       name
+  #     )
+  #   ) %>%
+  #   dplyr::group_by(name) %>%
+  #   dplyr::mutate(row = row_number()) %>%
+  #   tidyr::pivot_wider(
+  #     names_from = name,
+  #     values_from = value
+  #   ) %>%
+  #   dplyr::select(-row)
   
   return(dfPivotData)
   

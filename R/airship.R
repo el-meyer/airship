@@ -740,6 +740,7 @@ airship <- function(
       }
       
     }
+    
 
     ## Upload Data Input ----
     # widget for user data upload
@@ -1210,6 +1211,28 @@ airship <- function(
       # }
       
     })
+    
+    # Enable/Disable Plotly ----
+    
+    # Enable/Disable Plotly toggle based on some threshold in number of rows
+    airship:::fnDisablePlotlyToggleServer(
+      cID = "boxplot",
+      data = shiny::reactive({boxplot_get()$lData}),
+      global_session = session
+    )
+    
+    airship:::fnDisablePlotlyToggleServer(
+      cID = "scatterplot",
+      data = shiny::reactive({scatterplot_get()$lData}),
+      global_session = session
+    )
+    
+    # This makes the app crash sometimes and LDPlot disappear.
+    airship:::fnDisablePlotlyToggleServer(
+      cID = "ldplot",
+      data = shiny::reactive({ldplot_get()$lData}),
+      global_session = session
+    )
     
     
     # Define sem function to calculate sem used in deviation method when using replication variable

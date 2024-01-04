@@ -58,20 +58,6 @@ fnStandardOutputServer <-
         
         tryCatch({
           
-          # if(nrow(lPlot()$lData) > 100000 & input$bPlotly) {
-          #   
-          #   shinyalert::shinyalert("Warning!", "Your plotted dataset is larger than 100k rows. Interactive features will be disabled.", type = "warning")
-          #     
-          #   bEnablePlotly <- FALSE
-          # 
-          #   shinyWidgets::updateSwitchInput(
-          #       session = session,
-          #       inputId = "bPlotly",
-          #       value = FALSE
-          #     )
-          #   
-          #   }
-          
           # Should Plotly features be enabled
           if (bEnablePlotly) {
             

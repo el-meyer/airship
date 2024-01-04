@@ -46,7 +46,7 @@ fnStyleOptionsUI <-
           
           shiny::conditionalPanel(
             condition = "input.checkboxTheme != 0",
-            ns = NS(cID),
+            ns = shiny::NS(cID),
             
             shiny::radioButtons(
               inputId = shiny::NS(cID, "plottheme"),

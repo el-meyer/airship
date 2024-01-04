@@ -2,7 +2,7 @@
 
 ## General Information                
 
-This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext).
+This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the core app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext). Please note that the app has evolved since the paper was published.
 
 ## Installation and Execution
 
@@ -33,7 +33,7 @@ Please see the [reference manual](https://el-meyer.github.io/airship/) for more 
 
 ## Funding
 
-Development is currently funded by [Berry Consultants](https://www.berryconsultants.com/) and was previously funded by EU-PEARL. 
+Elias Laurin Meyer is a salaried employee of [Berry Consultants](https://www.berryconsultants.com/) and was previously a member of the EU-PEARL consortium. 
 
 EU-PEARL (EU Patient-cEntric clinicAl tRial pLatforms) project has
 received funding from the Innovative Medicines Initiative (IMI) 2 Joint

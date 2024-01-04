@@ -1,0 +1,10 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "An interactive R-Shiny app for quickly visualizing a tidy, long dataset with multiple dimensions with an application in clinical trial simulations for platform trials",
+  author   = "Elias Laurin Meyer and Constantin Kumaus and Michal Majka and Franz Koenig",
+  journal= "SoftwareX",
+  volume= "22",
+  pages= "101347",
+  year= "2023",
+  publisher= "Elsevier"
+)

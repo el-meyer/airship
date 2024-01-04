@@ -7,24 +7,26 @@ Authors@R:
           given = "Elias Laurin",
           family = "Meyer",
           role = c("aut", "cre"),
-          email = "elias@berryconsultants.net"
+          email = "elias@berryconsultants.net",
+          comment = c(ORCID = "0000-0002-6893-3304")
         ),
         person(
           given = "Constantin",
           family = "Kumaus",
-          role = c("ctb")
+          role = c("aut", "ctb")
         ),
         person(
           given = "Michal",
           family = "Majka",
-          role = c("ctb"),
+          role = c("aut", "ctb"),
           email = "michalmajka@hotmail.com",
           comment = c(ORCID = "0000-0002-7524-8014")
         ),
         person(
           given = "Franz",
           family = "Koenig",
-          role = c("ctb")
+          role = c("aut", "ctb"),
+          comment = c(ORCID = "0000-0002-6893-3304")
         )
       )
 Description: This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the app can be found in Meyer et al. <DOI:10.1016/j.softx.2023.101347> or the vignette.
@@ -59,5 +61,6 @@ Imports:
 LazyData: true
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggpubr
 VignetteBuilder: knitr

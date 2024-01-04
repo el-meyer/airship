@@ -78,6 +78,8 @@ fnDynFilterData <-
         
         if (!input$checkboxColor) {
           
+          tryCatch({
+          
           dfFinal <- 
             dfFinal %>%
             tidyr::pivot_longer(
@@ -85,6 +87,17 @@ fnDynFilterData <-
               names_to = "OC",
               values_to = "value"
             )
+          
+          }, error = function(e) {
+            err_ <- ""
+            shiny::validate(
+              shiny::need(
+                err_ != "",
+                "Error preparing long dataset for LDPlot.\nIf you haven't changed the dataset or have to wait too long, please report a bug in fnDynFilterData."
+              )
+            )
+          }
+          )
           
         }
         

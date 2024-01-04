@@ -109,40 +109,43 @@ fnReadFacts <- function(
 }
 
 fnPivotLongerTreatmentFacts <- function(
-    dfData
+    dfData,
+    nDoses
 ) {
   
-  dfPivotData <- dfData
+  # dfPivotData <- dfData
   
-  # # In original data, problem that e.g. param.10 interferes with logic and therefore thinks its a dose
-  # dfPivotData <-
-  #   dfData %>%
-  #   tidyr::pivot_longer(
-  #     cols = matches("\\.[0-9]+"),
-  #     names_to = "name",
-  #     values_to = "value"
-  #   ) %>%
-  #   # Here we need to add that the first match per column name should correspond to the dose
-  #   # Currently it is the last match
-  #   dplyr::mutate(
-  #     Dose = as.integer(gsub(
-  #       ".*\\.([0-9]).*",
-  #       "\\1",
-  #       name
-  #     )),
-  #     name = gsub(
-  #       "(.*)\\.[0-9]+(.*)",
-  #       "\\1\\2",
-  #       name
-  #     )
-  #   ) %>%
-  #   dplyr::group_by(name) %>%
-  #   dplyr::mutate(row = row_number()) %>%
-  #   tidyr::pivot_wider(
-  #     names_from = name,
-  #     values_from = value
-  #   ) %>%
-  #   dplyr::select(-row)
+  # Problem that e.g. param.10 interferes with logic and therefore thinks its a dose
+  # Hence we need to limit the columns to exclude such input vectors
+  
+  # For now, use a "hack" which is to ask the user for the number of doses and 
+  # remove rows from the final dataset that have a larger dose
+  
+  dfPivotData <-
+    dfData %>%
+    tidyr::pivot_longer(
+      cols = tidyselect::matches("\\.[0-9]+"),
+      names_to = "name",
+      values_to = "value"
+    ) %>% 
+    dplyr::mutate(
+      # Here we need to add that the first match per column name should correspond to the dose
+      Dose = as.integer(gsub(
+        ".*?\\.(\\d+).*",
+        "\\1",
+        name
+      )),
+      name = gsub(
+        "(.*?\\.)\\d+(.*)",
+        "\\1\\2",
+        name
+      )
+    ) %>%
+    dplyr::filter(Dose <= nDoses) %>%
+    tidyr::pivot_wider(
+      names_from = name,
+      values_from = value
+    ) 
   
   return(dfPivotData)
   

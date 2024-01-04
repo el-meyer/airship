@@ -330,7 +330,20 @@ airship <- function(
                     
                     shiny::checkboxInput(
                       inputId = "checkboxPivotOnDose", 
-                      label = "Pivot Longer on Treatment"
+                      label = "Pivot Longer on Doses/Treatments"
+                    ),
+                    
+                    shiny::conditionalPanel(
+                      condition = "input.checkboxPivotOnDose == 1",
+                      
+                      shiny::numericInput(
+                        inputId = "nDoses",
+                        label = "Number of Doses/Treatments",
+                        value = 1,
+                        step = 1, 
+                        min = 1
+                      )
+                      
                     ),
                     
                     shiny::checkboxInput(
@@ -786,7 +799,22 @@ airship <- function(
         }
         
         if (input$checkboxPivotOnDose) {
-          dfCandidate <- airship:::fnPivotLongerTreatmentFacts(dfCandidate)
+          
+          dfCandidate <- 
+            tryCatch({ 
+              airship:::fnPivotLongerTreatmentFacts(
+                dfData = dfCandidate,
+                nDoses = input$nDoses
+              )
+            }, error = function(e) {
+              validate(
+                need(
+                  FALSE, 
+                  message = "An error occured. Maybe the wrong number of treatments/doses was selected. If this error persists, contact the package developers and report an issue in fnPivotLongerTreatmentFacts."
+                )
+              )
+            })
+          
         }
         
       }
@@ -845,7 +873,22 @@ airship <- function(
           }
           
           if (input$checkboxPivotOnDose) {
-            dfData <- airship:::fnPivotLongerTreatmentFacts(dfData)
+            
+            dfData <- 
+              tryCatch({ 
+                airship:::fnPivotLongerTreatmentFacts(
+                  dfData = dfData,
+                  nDoses = input$nDoses
+                )
+              }, error = function(e) {
+                validate(
+                  need(
+                    FALSE, 
+                    message = "An error occured. Maybe the wrong number of treatments/doses was selected. If this error persists, contact the package developers and report an issue in fnPivotLongerTreatmentFacts."
+                  )
+                )
+              })
+            
           }
 
         }

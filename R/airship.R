@@ -348,12 +348,14 @@ airship <- function(
                     
                     shiny::checkboxInput(
                       inputId = "checkboxFactsConvertNA", 
-                      label = "Convert -9999 values to NA"
+                      label = "Convert -9999 values to NA",
+                      value = TRUE
                     ),
                     
                     shiny::checkboxInput(
                       inputId = "checkboxRemoveConstants", 
-                      label = "Remove columns with constant values"
+                      label = "Remove columns with constant values",
+                      value = TRUE
                     ),
                     
                   ),

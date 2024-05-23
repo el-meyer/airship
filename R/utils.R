@@ -21,3 +21,9 @@
   packageStartupMessage("https://github.com/el-meyer/airship/issues")
   packageStartupMessage(rule)
 }
+
+utils::globalVariables(c("inputs", "outputs", "data_filtered"))
+
+fnSatisfyCMDCheck <- function() {
+  Cairo::Cairo
+}

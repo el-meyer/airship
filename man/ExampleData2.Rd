@@ -9,14 +9,18 @@ An object of class \code{data.frame} with 10080 rows and 18 columns.
 }
 \source{
 https://github.com/el-meyer/airship/blob/master/data/ExampleDataNASH.csv
-ExampleData2 <- read.csv("data/ExampleDataNash.csv")
-for (i in c(3,6,7)) {ExampleData2\link{,i} <- as.factor(ExampleData2\link{,i})}
-usethis::use_data(ExampleData2, overwrite = TRUE)
 }
 \usage{
 ExampleData2
 }
 \description{
 Simulated dataset from Meyer et al. (2022) https://doi.org/10.1002/pst.2194.
+}
+\examples{
+\dontrun{
+ExampleData2 <- read.csv("data/ExampleDataNash.csv")
+for (i in c(3,6,7)) {ExampleData2[,i] <- as.factor(ExampleData2[,i])}
+usethis::use_data(ExampleData2, overwrite = TRUE)
+}
 }
 \keyword{datasets}

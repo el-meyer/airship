@@ -4,7 +4,9 @@
 #' Outcomes depend on four input variables in a very simple manner.
 #' For each set of input variables, 1000 replications are simulated.
 #'
-#' @source 
+#' @examples
+#'  
+#' \dontrun{
 #' library(mvtnorm)
 #' 
 #' input1 <- c("A", "B", "C")
@@ -40,4 +42,5 @@
 #' 
 #' ExampleData1 <- scenarios
 #' usethis::use_data(ExampleData1)
+#' }
 "ExampleData1"

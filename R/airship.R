@@ -28,6 +28,8 @@
 #' @importFrom stats "median"
 #' @importFrom rlang "!!" "is_string"
 #' 
+#' @import shiny shinyBS
+#' 
 #' @export
 airship <- function(
  dfData = NULL,
@@ -121,7 +123,8 @@ airship <- function(
     "magrittr",
     "shinyjs",
     "data.table",
-    "shinyalert"
+    "shinyalert",
+    "vctrs"
   )
   
   "%>%" <- dplyr::"%>%"
@@ -772,8 +775,8 @@ airship <- function(
               use_data_table = dt_pkg_available
             )
           }, error = function(e) {
-              validate(
-                need(
+              shiny::validate(
+                shiny::need(
                   FALSE, 
                   message = "Dataset could not be loaded. Consider skipping rows."
                 )
@@ -810,8 +813,8 @@ airship <- function(
                 nDoses = input$nDoses
               )
             }, error = function(e) {
-              validate(
-                need(
+              shiny::validate(
+                shiny::need(
                   FALSE, 
                   message = "An error occured. Maybe the wrong number of treatments/doses was selected. If this error persists, contact the package developers and report an issue in fnPivotLongerTreatmentFacts."
                 )
@@ -884,8 +887,8 @@ airship <- function(
                   nDoses = input$nDoses
                 )
               }, error = function(e) {
-                validate(
-                  need(
+                shiny::validate(
+                  shiny::need(
                     FALSE, 
                     message = "An error occured. Maybe the wrong number of treatments/doses was selected. If this error persists, contact the package developers and report an issue in fnPivotLongerTreatmentFacts."
                   )
@@ -1278,11 +1281,11 @@ airship <- function(
         shiny::req(ind_inputendR())
         shiny::req(ind_outputstartR())      
         
-        inputs <<- colnames(
+        inputs <- colnames(
           data_full_norep()
         )[1:ind_inputendR()]
         
-        outputs <<- colnames(
+        outputs <- colnames(
           data_full_norep()
         )[ind_outputstartR():ncol(data_full_norep())]
         

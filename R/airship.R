@@ -655,14 +655,23 @@ airship <- function(
           shinydashboard::tabItem(
             tabName = "help",
             
-            shiny::h2("Thank you for using AIRSHIP!"),
-            shiny::HTML("Get started by clicking on the 'Data' tab and then choose/upload a dataset."),
-            shiny::h3("Resources"),
-            shiny::HTML(
+            shiny::column(
+              width = 3,
+              shiny::h2("Thank you for using AIRSHIP!"),
+              shiny::textOutput("VersionNumber"),
+            ),
+            
+            shiny::column(
+              width = 8,
+              shiny::hr(),
+              shiny::HTML("Get started by clicking on the 'Data' tab and then choose/upload a dataset."),
+              shiny::hr(),
+              shiny::HTML(
               "For more information on the app, as well as instructions on how to use it, please refer to either the 
               <a target='_blank' rel='noopener' href='https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html'> Vignette</a>,
               <a target='_blank' rel='noopener' href='https://github.com/el-meyer/airship'> Github repository</a> or
               <a target='_blank' rel='noopener' href='https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext'> SoftwareX publication</a>."
+              )
             )
           )
         )
@@ -2362,6 +2371,11 @@ airship <- function(
       cID = "ldplot",
       lPlot = ldplot_get
     )
+    
+    #### Retreive Version Number -----
+    output$VersionNumber <- shiny::renderText({
+      paste0("You are running version ", getNamespaceVersion("airship"))
+    })
     
     ## Handle Session closing ----
     session$onSessionEnded(function() {

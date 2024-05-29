@@ -42,7 +42,7 @@ This toy example dataset has the following structure:
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
 DT::datatable(
-  airship::ExampleData1,
+  head(airship::ExampleData1),
     filter = "bottom",
     class = 'cell-border stripe',
     extensions = c('Scroller', 'FixedColumns'),
@@ -108,7 +108,7 @@ Remember the structure of our example data:
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
 DT::datatable(
-  airship::ExampleData1,
+  head(airship::ExampleData1),
     filter = "bottom",
     class = 'cell-border stripe',
     extensions = c('Scroller', 'FixedColumns'),

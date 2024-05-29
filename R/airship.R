@@ -1294,6 +1294,11 @@ airship <- function(
           data_full_norep()
         )[1:ind_inputendR()]
         
+        # Add Doses if FACTS dataset
+        if (input$checkboxFactsData && input$checkboxPivotOnDose) {
+          inputs <- c(inputs, "Dose")
+        }
+        
         outputs <- colnames(
           data_full_norep()
         )[ind_outputstartR():ncol(data_full_norep())]
@@ -1453,9 +1458,14 @@ airship <- function(
     ## names_outputsR ----
     # outputvariables
     names_outputsR <- shiny::reactive({
-      colnames(
+      names <- colnames(
         data_filteredR()
       )[ind_outputstartR():ncol(data_filteredR())]
+      # Remove Doses if FACTS dataset
+      if (input$checkboxFactsData && input$checkboxPivotOnDose) {
+        names <- names[-which(names == "Dose")]
+      }
+      names
     })
     
     
@@ -2295,7 +2305,7 @@ airship <- function(
           lPlot$lData
         )
 
-      ##### Boxplot specific function
+      ##### LD Plot specific function
       lPlot <-
         airship:::fnLDplotServer(
           cID = "ldplot",

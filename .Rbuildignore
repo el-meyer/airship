@@ -1,8 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^old$
-^data/ExampleDataFACTS\.csv$
-^data/ExampleDataFACTS2\.csv$
-^data/ExampleDataNASH\.csv$
+^extra$
 ^LICENSE$
 ^docs$
+^doc$

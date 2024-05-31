@@ -93,7 +93,7 @@ fnDynFilterData <-
             shiny::validate(
               shiny::need(
                 err_ != "",
-                "Error preparing long dataset for LDPlot.\nIf you haven't changed the dataset or have to wait too long, please report a bug in fnDynFilterData."
+                "Error preparing long dataset for LDPlot. This might be due to no y-axis variable being specified.\nIf you haven't changed the dataset or have to wait too long, please report a bug in fnDynFilterData."
               )
             )
           }

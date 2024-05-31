@@ -385,35 +385,48 @@ fnLDplotServer <-
       function(input, output, session) 
       {
         
-        if (input$checkboxColor) {
+        tryCatch({
           
-          lPlot$lggPlot <-
-            lPlot$lggPlot + 
-            ggplot2::aes(
-              y = !!rlang::sym(input$y[1])
+          if (input$checkboxColor) {
+            
+            lPlot$lggPlot <-
+              lPlot$lggPlot + 
+              ggplot2::aes(
+                y = !!rlang::sym(input$y[1])
+              )
+            
+            # Update Code ----
+            lPlot$lCode$ldplot <-
+              paste0(
+                " + ggplot2::aes(y = ",
+                input$y[1],
+                ")"
+              )
+            
+          } else {
+            
+            lPlot$lggPlot <-
+              lPlot$lggPlot + 
+              ggplot2::aes(
+                y = value
+              )
+            
+            # Update Code ----
+            lPlot$lCode$ldplot <-
+              " + ggplot2::aes(y = value)"
+            
+          }
+          
+        }, error = function(e) {
+          err_ <- ""
+          shiny::validate(
+            shiny::need(
+              err_ != "",
+              "No valid y-variable specified.\nIf you can't explain this error message, please report a bug in fnLDplotServer."
             )
-          
-          # Update Code ----
-          lPlot$lCode$ldplot <-
-            paste0(
-              " + ggplot2::aes(y = ",
-              input$y[1],
-              ")"
-            )
-          
-        } else {
-          
-          lPlot$lggPlot <-
-            lPlot$lggPlot + 
-            ggplot2::aes(
-              y = value
-            )
-          
-          # Update Code ----
-          lPlot$lCode$ldplot <-
-            " + ggplot2::aes(y = value)"
-          
+          )
         }
+        )
         
         if(input$checkboxLine){
           

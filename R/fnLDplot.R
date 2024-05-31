@@ -125,7 +125,11 @@ fnLDplotColorUI <-
             inputId = shiny::NS(cID, "dropdownColors")
           ),
           draggable = TRUE
-        )
+        ),
+        
+        shiny::h3(shiny::br()),
+        
+        shiny::h3(shiny::br())
         
       ),
       

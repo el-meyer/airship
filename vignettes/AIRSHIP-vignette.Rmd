@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 ## General Information                
 
-This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more technical description of a previous version of the app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext).
+This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more technical description of a previous version of the app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext). The app is optimized for [FACTS](https://www.berryconsultants.com/software/facts/) simulation output files, but can be used with any dataset in .csv format.
 
 The app is part of the **airship** R package, which can be downloaded from Github using:
 
@@ -83,7 +83,7 @@ There are two types of supported data: Datasets that contain individual simulati
 
 First, the user needs to choose whether 
 
-a. the example dataset is used
+a. one of the example datasets is used
 b. FACTS aggregated simulations file is uploaded 
 c. custom dataset is uploaded
 

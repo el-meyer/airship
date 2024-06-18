@@ -21,6 +21,8 @@ fnStyleOptionsUI <-
         shiny::column(
           width = 4,
           
+          shiny::h4("Warning: Changing the plot dimensions will reset the graph."),
+          
           shiny::sliderInput(
             inputId = shiny::NS(cID, "plotwidth"),
             label = "Plot width (px)",
@@ -35,33 +37,6 @@ fnStyleOptionsUI <-
             value = 600,
             min = 300,
             max = 1000
-          ),
-          
-          shiny::hr(),
-          
-          shiny::checkboxInput(
-            inputId = shiny::NS(cID, "checkboxTheme"),
-            label = "Change the theme?"
-          ),
-          
-          shiny::conditionalPanel(
-            condition = "input.checkboxTheme != 0",
-            ns = shiny::NS(cID),
-            
-            shiny::radioButtons(
-              inputId = shiny::NS(cID, "plottheme"),
-              label = "Select the theme",
-              choices = c(
-                "theme_gray", 
-                "theme_bw", 
-                "theme_linedraw",
-                "theme_light",
-                "theme_dark",
-                "theme_minimal", 
-                "theme_classic"
-              )
-            )
-            
           )
         ),
         
@@ -155,6 +130,33 @@ fnStyleOptionsUI <-
             )
             
           ),
+          
+          shiny::hr(),
+          
+          shiny::checkboxInput(
+            inputId = shiny::NS(cID, "checkboxTheme"),
+            label = "Change the theme?"
+          ),
+          
+          shiny::conditionalPanel(
+            condition = "input.checkboxTheme != 0",
+            ns = shiny::NS(cID),
+            
+            shiny::radioButtons(
+              inputId = shiny::NS(cID, "plottheme"),
+              label = "Select the theme",
+              choices = c(
+                "theme_gray", 
+                "theme_bw", 
+                "theme_linedraw",
+                "theme_light",
+                "theme_dark",
+                "theme_minimal", 
+                "theme_classic"
+              )
+            )
+            
+          )
           
         )
         

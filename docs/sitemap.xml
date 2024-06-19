@@ -4,7 +4,19 @@
     <loc>/404.html</loc>
   </url>
   <url>
+    <loc>/LICENSE-text.html</loc>
+  </url>
+  <url>
     <loc>/articles/AIRSHIP-vignette.html</loc>
+  </url>
+  <url>
+    <loc>/articles/Example1-Boxplot.html</loc>
+  </url>
+  <url>
+    <loc>/articles/Example1.html</loc>
+  </url>
+  <url>
+    <loc>/articles/Examples.html</loc>
   </url>
   <url>
     <loc>/articles/index.html</loc>
@@ -16,19 +28,16 @@
     <loc>/index.html</loc>
   </url>
   <url>
-    <loc>/LICENSE-text.html</loc>
+    <loc>/reference/ExampleData1.html</loc>
+  </url>
+  <url>
+    <loc>/reference/ExampleData2.html</loc>
   </url>
   <url>
     <loc>/reference/airship.html</loc>
   </url>
   <url>
     <loc>/reference/airship_new.html</loc>
-  </url>
-  <url>
-    <loc>/reference/ExampleData1.html</loc>
-  </url>
-  <url>
-    <loc>/reference/ExampleData2.html</loc>
   </url>
   <url>
     <loc>/reference/index.html</loc>

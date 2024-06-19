@@ -29,21 +29,12 @@ devtools::install_github("el-meyer/airship")
 
 ## Documentation
 
-Please see the [reference manual](https://el-meyer.github.io/airship/) for more information on the usage of this package, or jump directly to the [vignette](https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html).
+Please see the [reference manual](https://el-meyer.github.io/airship/) for more information on the usage of this package, or jump directly to the [vignette](https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html) or [example](https://el-meyer.github.io/airship/articles/Example1.html). 
 
 ## Funding
 
 Elias Laurin Meyer is a salaried employee of [Berry Consultants](https://www.berryconsultants.com/) and was previously a member of the EU-PEARL consortium. 
 
-EU-PEARL (EU Patient-cEntric clinicAl tRial pLatforms) project has
-received funding from the Innovative Medicines Initiative (IMI) 2 Joint
-Undertaking (JU) under grant agreement No 853966. This Joint Undertaking
-receives support from the European Union’s Horizon 2020 research and
-innovation program and EFPIA and Children’s Tumor Foundation, Global
-Alliance for TB Drug Development non-profit organization, Springworks
-Therapeutics Inc. This publication reflects the authors’ views. Neither
-IMI nor the European Union, EFPIA, or any Associated Partners are
-responsible for any use that may be made of the information contained
-herein.
+EU-PEARL (EU Patient-cEntric clinicAl tRial pLatforms) project has received funding from the Innovative Medicines Initiative (IMI) 2 Joint Undertaking (JU) under grant agreement No 853966. This Joint Undertaking receives support from the European Union’s Horizon 2020 research and innovation program and EFPIA and Children’s Tumor Foundation, Global Alliance for TB Drug Development non-profit organization, Springworks Therapeutics Inc. This publication reflects the authors’ views. Neither IMI nor the European Union, EFPIA, or any Associated Partners are responsible for any use that may be made of the information contained herein.
 
 

@@ -1,7 +1,8 @@
-pandoc: 3.1.1
-pkgdown: 2.0.7
+pandoc: 3.1.11
+pkgdown: 2.0.9
 pkgdown_sha: ~
 articles:
   AIRSHIP-vignette: AIRSHIP-vignette.html
-last_built: 2024-01-04T16:31Z
+  Example1: Example1.html
+last_built: 2024-06-19T09:52Z
 

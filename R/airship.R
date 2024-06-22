@@ -2409,17 +2409,23 @@ airship <- function(
     
     
     onRestore(function(state) {
+      
+      shinydashboard::updateTabItems(
+        session = session,
+        inputId = "sidebarMenu",
+        selected = "data"
+      ) 
+      
       shiny::showNotification(paste0("Restored session: ", basename(state$dir)), duration = 5, type = "message")
     })
-     
+    
   }
-  
-  shiny::enableBookmarking(store = "server")
   
   # Run Shiny App ----
   shiny::shinyApp(
     ui = ui, 
     server = server, 
+    enableBookmarking = "server",
     options = list(launch.browser = TRUE)
   )
   

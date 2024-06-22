@@ -208,7 +208,7 @@ airship <- function(
   
   
   # UI ----
-  ui <- 
+  ui <- function(request) { 
     
     shinydashboard::dashboardPage(
       # title in browser window tab
@@ -268,6 +268,13 @@ airship <- function(
             text = "Line/Dotplot", 
             tabName = "ldplot", 
             icon = shiny::icon("chart-line")
+          ),
+          
+          shinydashboard::menuItem(
+            selected = FALSE,
+            text = "Bookmarking",
+            tabName = "bookmark",
+            icon = shiny::icon("floppy-disk")
           ),
           
           ### Help ----
@@ -651,6 +658,14 @@ airship <- function(
             
           ),
           
+          shinydashboard::tabItem(
+            tabName = "bookmark",
+            shiny::column(
+              width = 12,
+              bookmarkButton()  
+            )
+          ),
+          
           ### HELP ----
           shinydashboard::tabItem(
             tabName = "help",
@@ -677,7 +692,7 @@ airship <- function(
         )
       )
     )   
-  
+  }
   
   
   # Server ----
@@ -2392,7 +2407,14 @@ airship <- function(
       shiny::stopApp()
     })
     
+    
+    onRestore(function(state) {
+      shiny::showNotification(paste0("Restored session: ", basename(state$dir)), duration = 5, type = "message")
+    })
+     
   }
+  
+  shiny::enableBookmarking(store = "server")
   
   # Run Shiny App ----
   shiny::shinyApp(

@@ -1,12 +1,12 @@
 ---
-title: "Example - Toy Data Set"
+title: "Example - Toy Data"
 output:
   rmarkdown::html_document:
     toc: true
     toc_depth: 2
     toc_float: true
 vignette: >
-  %\VignetteIndexEntry{Example - Toy Data Set}
+  %\VignetteIndexEntry{Example - Toy Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

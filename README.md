@@ -2,7 +2,7 @@
 
 ## General Information                
 
-This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the core app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext). Please note that the app has evolved since the paper was published.
+This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the core app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext). Please note that the app has evolved since the paper was published. The app is optimized for [FACTS](https://www.berryconsultants.com/software/facts/) simulation output files, but can be used with any dataset in .csv format.
 
 ## Installation and Execution
 
@@ -29,7 +29,7 @@ devtools::install_github("el-meyer/airship")
 
 ## Documentation
 
-Please see the [reference manual](https://el-meyer.github.io/airship/) for more information on the usage of this package, or jump directly to the [vignette](https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html) or [example](https://el-meyer.github.io/airship/articles/Example1.html). 
+Please see the [reference manual](https://el-meyer.github.io/airship/) for more information on the usage of this package. You can also directly jump to the [vignette](https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html) or one of the examples: [example1](https://el-meyer.github.io/airship/articles/Example1.html) and [example2](https://el-meyer.github.io/airship/articles/Example2.html). 
 
 ## Funding
 

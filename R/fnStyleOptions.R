@@ -23,8 +23,12 @@ fnStyleOptionsUI <-
           
           shiny::h4("Warning: Changing the plot dimensions will reset the graph."),
           
+          # Don't use namespaced IDs for sliders that control the height and width 
+          # of standard plot outputs. Namespaced IDs imply some strange reactivity 
+          # that re-generates the plot with default inputs.
+          
           shiny::sliderInput(
-            inputId = shiny::NS(cID, "plotwidth"),
+            inputId = paste0(cID, "plotwidth"),
             label = "Plot width (px)",
             value = 1000,
             min = 600,
@@ -32,7 +36,7 @@ fnStyleOptionsUI <-
           ),
           
           shiny::sliderInput(
-            inputId = shiny::NS(cID, "plotheight"),
+            inputId = paste0(cID, "plotheight"),
             label = "Plot height (px)",
             value = 600,
             min = 300,

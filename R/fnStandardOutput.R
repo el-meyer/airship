@@ -48,7 +48,9 @@ fnStandardOutputServer <-
   function(
     cID,
     lPlot,
-    bEnablePlotly = TRUE
+    bEnablePlotly = TRUE,
+    plotWidth,
+    plotHeight
   ) {
     
     shiny::moduleServer(
@@ -78,14 +80,14 @@ fnStandardOutputServer <-
               if (input$bPlotly) {
                 plotly::plotlyOutput(
                   shiny::NS(cID, "Plot"),
-                  height = input$plotheight,
-                  width = input$plotwidth
+                  height = plotHeight(),
+                  width = plotWidth()
                 )
               } else {
                 shiny::plotOutput(
                   shiny::NS(cID, "Plot"),
-                  height = input$plotheight,
-                  width = input$plotwidth
+                  height = plotHeight(),
+                  width = plotWidth()
                 )
               }
             })
@@ -102,8 +104,8 @@ fnStandardOutputServer <-
             output$PlotOutput <- shiny::renderUI({
               shiny::plotOutput(
                 shiny::NS(cID, "Plot"),
-                height = input$plotheight,
-                width = input$plotwidth
+                height = plotHeight(),
+                width = plotWidth()
               )
             })
             

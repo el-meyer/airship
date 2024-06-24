@@ -2079,9 +2079,12 @@ airship <- function(
     
     #### Create Standard Output -----
     shiny::observe({
+      cID <- "boxplot"
       airship:::fnStandardOutputServer(
-        cID = "boxplot",
-        lPlot = boxplot_get
+        cID = cID,
+        lPlot = boxplot_get,
+        plotWidth = reactive(input[[paste0(cID, "plotwidth")]]),
+        plotHeight = reactive(input[[paste0(cID, "plotheight")]])
       )
     })
     
@@ -2219,9 +2222,12 @@ airship <- function(
     
     #### Create Standard Output -----
     shiny::observe({
+      cID <- "scatterplot"
       airship:::fnStandardOutputServer(
-        cID = "scatterplot",
-        lPlot = scatterplot_get
+        cID = cID,
+        lPlot = scatterplot_get,
+        plotWidth = reactive(input[[paste0(cID, "plotwidth")]]),
+        plotHeight = reactive(input[[paste0(cID, "plotheight")]])
       )
     })
     
@@ -2370,9 +2376,12 @@ airship <- function(
 
     #### Create Standard Output -----
     shiny::observe({
+      cID <- "ldplot"
       airship:::fnStandardOutputServer(
-        cID = "ldplot",
-        lPlot = ldplot_get
+        cID = cID,
+        lPlot = ldplot_get,
+        plotWidth = reactive(input[[paste0(cID, "plotwidth")]]),
+        plotHeight = reactive(input[[paste0(cID, "plotheight")]])
       )
     })
 

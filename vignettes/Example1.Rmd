@@ -47,17 +47,17 @@ DT::datatable(
 
 Two outcomes (*output1* and *output2*) were simulated using four simulation input variables (*input1-4*). The input variables take three different values each and for every unique combination of input variables, the outcomes were simulated 1000 times (*replications*) following some random mechanism.
 
-Notice how if you scroll down, you see two datasets displayed: "Original Data" and "Summarized Data". As the dataset we used in this example contains individual simulation results, AIRSHIP automatically creates a dataset that summarizes all the outcome variables (in this case "output1" and "output2") across all levels of the input variables (if you are unsure what that means, refer to the [vignette](AIRSHIP-vignette.html)). Different plot tabs will use different datasets for plotting, e.g. the "Boxplot" and "Scatterplot" tab will use the "Original Data", whereas the "Line/Dotplot" tab will use the "Summarized Data". 
+Notice how when you scroll down, you see two datasets displayed: "Original Data" and "Summarized Data". As the dataset we used in this example contains individual simulation results, AIRSHIP automatically creates a dataset that summarizes all the outcome variables (in this case "output1" and "output2") across all levels of the input variables (if you are unsure what that means, refer to the [vignette](AIRSHIP-vignette.html)). Different plot tabs will use different datasets for plotting, e.g. the "Boxplot" and "Scatterplot" tab will use the "Original Data", whereas the "Line/Dotplot" tab will use the "Summarized Data". 
 
 ![](Images/Data2-Example1.png){#id .class width=100% height=50%}
 
-# Focus Variables
+# Focus Variables 
 
-For simplicity, we declare all input variables as focus variables (meaning we don't want to lump together data across several of the levels of these variables) and use the first level of each of the input variables as default values. We can do this by checking the "Use focus variables" checkbox and clicking the "Take first row as default es" button.
+For simplicity, we declare all input variables as focus variables (meaning we don't want to lump together data across several of the levels of these variables) and use the first level of each of the input variables as default values. We can do this by checking the "Use focus variables" checkbox and clicking the "Take first row as default values" button.
 
 ![](Images/FocusVariables-Example1.png){#id .class width=100% height=50%}
 
-# Boxplot
+# Boxplot 
 
 When selecting the Boxplot tab, the following figure is automatically created:
 
@@ -83,7 +83,7 @@ Let's download the plot and have a look at the final result:
 
 ![](Images/Example1.png){#id .class width=100% height=50%}
 
-# Scatterplot
+# Scatterplot 
 
 Using the same dataset as in the boxplot example before, a scatterplot that shows the relationship between "output1" and "output2" by "input1", "input2" and "input3" could be constructed like this:
 
@@ -93,7 +93,7 @@ In case we are unhappy with the automatically chosen colors, we can easily chang
 
 ![](Images/ColorDropdown-Example1.png){#id .class width=100% height=50%}
 
-# Line/Dotplot
+# Line/Dotplot 
 
 In this tab, we can plot the summarized data across the different levels of focus variables. It also allows us to change the linetype/shapetype depending on other variables in the dataset. In a first step, let's create the following plot:
 

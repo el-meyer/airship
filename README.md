@@ -27,9 +27,11 @@ The development version can be installed using:
 devtools::install_github("el-meyer/airship")
 ```
 
+In some instances, the installation may fail and error with an uninformative "lazy-loading" error. Installing [Rtools](https://cran.r-project.org/bin/windows/Rtools/) may solve the problem. This is particularly true when running Windows on a VM on an ARM based machine.
+
 ## Documentation
 
-Please see the [reference manual](https://el-meyer.github.io/airship/) for more information on the usage of this package. You can also directly jump to the [vignette](https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html) or one of the examples: [example1](https://el-meyer.github.io/airship/articles/Example1.html) and [example2](https://el-meyer.github.io/airship/articles/Example2.html). 
+Please see the [reference manual](https://el-meyer.github.io/airship/) for more information on the usage of this package. You can also directly jump to the [vignette](https://el-meyer.github.io/airship/articles/AIRSHIP-vignette.html) or one of the examples: [example1](https://el-meyer.github.io/airship/articles/Example1.html) and [example2](https://el-meyer.github.io/airship/articles/Example2.html).
 
 ## Funding
 

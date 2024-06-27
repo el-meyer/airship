@@ -1,0 +1,58 @@
+---
+title: "AIRSHIP-FACTS integration"
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+vignette: >
+  %\VignetteIndexEntry{AIRSHIP-FACTS integration}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# General
+
+If you have a FACTS design with more than one scenario (or design variant), you may want to use AIRSHIP to compare the scenarios (or design variants). AIRSHIP uses the aggregated simulation file, so in a first step you need to aggregate the simulation results:
+
+![](Images/Aggregate-FACTSIntegration.png){#id .class width=100% height=50%}
+
+After aggregation, you can select "Explore Results" and then "Compare Scenarios in Airship".
+
+![](Images/OpenInAirship-FACTSIntegration.png){#id .class width=100% height=50%}
+
+FACTS will prompt you to choose an aggregated simulation file. Select the one you created previously and clock "Load".
+
+![](Images/OpenAggregated-FACTSIntegration.png){#id .class width=100% height=50%}
+
+FACTS will now open a Powershell terminal and run the required commands to run AIRSHIP and load the selected dataset. If this is your first time running AIRSHIP, you might have to install AIRSHIP, which should be done automatically, but might take a few minutes. If the terminal closes without opening AIRSHIP or errors, see the Troubleshooting section for more information. 
+
+![](Images/Terminal-FACTSIntegration.png){#id .class width=100% height=50%}
+
+# Troubleshooting
+
+We are aware of the following issues:
+
+-) Some machines, especially ARM based Windows machines, require installation of [Rtools](https://cran.r-project.org/bin/windows/Rtools/) prior to being able to install AIRSHIP. Failure to install Rtools might results in an uninformative lazy-loading error when trying to install AIRSHIP.
+
+-) Some machines have permission errors when installing new R packages. You can easily test this by opening RGui and trying to install any packages from CRAN. If you get a permission error, the folder that is selected for package installation is not writeable. Often this is automatically solved by downloading and installing RStudio and installing any package from CRAN through RStudio.
+
+-) Sometimes, a lazy-load error appears related to some dependency not being installed properly. Try to re-install the dependency, restarting your machine might help. This is a common R issue. 
+
+The easiest way to proceed if you have any issues with the AIRSHIP installation through the terminal is to open an instance of RGui or RStudio and try to install AIRSHIP manually using:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("el-meyer/airship@*release")
+```
+
+This will automatically install the latest stable release of AIRSHIP and throw readable error messages if the installation fails.
+
+If you have troubles installing AIRSHIP and none of these solutions worked for you, please reach out to elias@berryconsultants.net, we are happy to help you.

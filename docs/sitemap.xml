@@ -10,16 +10,10 @@
     <loc>/articles/AIRSHIP-vignette.html</loc>
   </url>
   <url>
-    <loc>/articles/Example1-Boxplot.html</loc>
-  </url>
-  <url>
     <loc>/articles/Example1.html</loc>
   </url>
   <url>
     <loc>/articles/Example2.html</loc>
-  </url>
-  <url>
-    <loc>/articles/Examples.html</loc>
   </url>
   <url>
     <loc>/articles/IntegrationFACTS.html</loc>
@@ -41,9 +35,6 @@
   </url>
   <url>
     <loc>/reference/airship.html</loc>
-  </url>
-  <url>
-    <loc>/reference/airship_new.html</loc>
   </url>
   <url>
     <loc>/reference/index.html</loc>

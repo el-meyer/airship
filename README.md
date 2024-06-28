@@ -1,4 +1,4 @@
-# AIRSHIP - An Interactive R-SHIny apP for visualizing data <img src="man/figures/logo.png" align="right" width="125" alt="" />
+# AIRSHIP - An Interactive R-SHIny apP for data visualization <img src="man/figures/logo.png" align="right" width="125" alt="" />
 
 &nbsp;
 

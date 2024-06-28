@@ -1,4 +1,6 @@
-# AIRSHIP - An Interactive R-SHIny apP for visualizing tidy long data <img src="man/figures/logo.png" align="right" height="139" alt="" />
+<img src="man/figures/logo.png" align="right" height="139" alt="" />
+
+# AIRSHIP - An Interactive R-SHIny apP for visualizing tidy long data
 
 ## General Information                
 

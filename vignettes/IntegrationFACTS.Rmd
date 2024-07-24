@@ -36,6 +36,9 @@ FACTS will now open a Powershell terminal and run the required commands to run A
 
 ![](Images/Terminal-FACTSIntegration.png){#id .class width=100% height=50%}
 
+Looking for more information on how to use AIRSHIP? Check out our examples that guide you through the usage and features step-by-step. You should start with [Example 1](https://el-meyer.github.io/airship/articles/Example1.html) and then go on to [Example 2](https://el-meyer.github.io/airship/articles/Example2.html), which is dedicated to FACTS data.
+
+
 # Troubleshooting
 
 We are aware of the following issues:

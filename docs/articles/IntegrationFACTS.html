@@ -131,6 +131,14 @@ should start with <a href="https://el-meyer.github.io/airship/articles/Example1.
 <div class="section level2">
 <h2 id="troubleshooting">Troubleshooting<a class="anchor" aria-label="anchor" href="#troubleshooting"></a>
 </h2>
+<p>The easiest way to proceed if you have any issues with the AIRSHIP
+installation through the terminal is to open an instance of RGui or
+RStudio and try to install AIRSHIP manually using:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"el-meyer/airship@*release"</span><span class="op">)</span></span></code></pre></div>
+<p>This will automatically install the latest stable release of AIRSHIP
+and throw readable error messages if the installation fails.</p>
 <p>We are aware of the following issues:</p>
 <p>-) Some machines, especially ARM based Windows machines, require
 installation of <a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link">Rtools</a> prior
@@ -144,18 +152,14 @@ is selected for package installation is not writeable. Often this is
 automatically solved by downloading and installing RStudio and
 installing any package from CRAN through RStudio.</p>
 <p>-) Sometimes, a lazy-load error appears related to some dependency
-not being installed properly. Try to re-install the dependency,
-restarting your machine might help. This is a common R issue.</p>
-<p>The easiest way to proceed if you have any issues with the AIRSHIP
-installation through the terminal is to open an instance of RGui or
-RStudio and try to install AIRSHIP manually using:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"el-meyer/airship@*release"</span><span class="op">)</span></span></code></pre></div>
-<p>This will automatically install the latest stable release of AIRSHIP
-and throw readable error messages if the installation fails.</p>
+not being installed properly. Try to re-install the dependency using
+RGui or RStudio; restarting your machine might also help. This is a
+common R issue.</p>
+<p>-) Some ARM based Windows machines, particularly when Windows is run
+in a virtual machine, require manual debugging and we are unable to
+offer a reproducible solution at this time.</p>
 <p>If you have troubles installing AIRSHIP and none of these solutions
-worked for you, please reach out to <a href="mailto:elias@berryconsultants.net" class="email">elias@berryconsultants.net</a>, we are happy to help
+worked for you, please reach out to <a href="mailto:facts@berryconsultants.net" class="email">facts@berryconsultants.net</a>, we are happy to help
 you.</p>
 </div>
   </div>

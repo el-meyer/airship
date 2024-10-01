@@ -41,14 +41,6 @@ Looking for more information on how to use AIRSHIP? Check out our examples that 
 
 # Troubleshooting
 
-We are aware of the following issues:
-
--) Some machines, especially ARM based Windows machines, require installation of [Rtools](https://cran.r-project.org/bin/windows/Rtools/) prior to being able to install AIRSHIP. Failure to install Rtools might results in an uninformative lazy-loading error when trying to install AIRSHIP.
-
--) Some machines have permission errors when installing new R packages. You can easily test this by opening RGui and trying to install any packages from CRAN. If you get a permission error, the folder that is selected for package installation is not writeable. Often this is automatically solved by downloading and installing RStudio and installing any package from CRAN through RStudio.
-
--) Sometimes, a lazy-load error appears related to some dependency not being installed properly. Try to re-install the dependency, restarting your machine might help. This is a common R issue. 
-
 The easiest way to proceed if you have any issues with the AIRSHIP installation through the terminal is to open an instance of RGui or RStudio and try to install AIRSHIP manually using:
 
 ``` r
@@ -58,4 +50,14 @@ devtools::install_github("el-meyer/airship@*release")
 
 This will automatically install the latest stable release of AIRSHIP and throw readable error messages if the installation fails.
 
-If you have troubles installing AIRSHIP and none of these solutions worked for you, please reach out to elias@berryconsultants.net, we are happy to help you.
+We are aware of the following issues:
+
+-) Some machines, especially ARM based Windows machines, require installation of [Rtools](https://cran.r-project.org/bin/windows/Rtools/) prior to being able to install AIRSHIP. Failure to install Rtools might results in an uninformative lazy-loading error when trying to install AIRSHIP.
+
+-) Some machines have permission errors when installing new R packages. You can easily test this by opening RGui and trying to install any packages from CRAN. If you get a permission error, the folder that is selected for package installation is not writeable. Often this is automatically solved by downloading and installing RStudio and installing any package from CRAN through RStudio.
+
+-) Sometimes, a lazy-load error appears related to some dependency not being installed properly. Try to re-install the dependency using RGui or RStudio; restarting your machine might also help. This is a common R issue. 
+
+-) Some ARM based Windows machines, particularly when Windows is run in a virtual machine, require manual debugging and we are unable to offer a reproducible solution at this time.
+
+If you have troubles installing AIRSHIP and none of these solutions worked for you, please reach out to facts@berryconsultants.net, we are happy to help you.

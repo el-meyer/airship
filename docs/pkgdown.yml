@@ -1,4 +1,4 @@
-pandoc: '3.2'
+pandoc: '3.5'
 pkgdown: 2.0.9
 pkgdown_sha: ~
 articles:
@@ -6,5 +6,5 @@ articles:
   Example1: Example1.html
   Example2: Example2.html
   IntegrationFACTS: IntegrationFACTS.html
-last_built: 2024-10-01T14:43Z
+last_built: 2024-11-19T08:37Z
 

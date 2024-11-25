@@ -4,7 +4,7 @@
 
 ## General Information                
 
-This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the core app can be found in [Meyer et al](https://www.softxjournal.com/article/S2352-7110(23)00043-2/fulltext). Please note that the app has evolved since the paper was published. The app is optimized for [FACTS](https://www.berryconsultants.com/software/facts/) - Fixed and Adaptive Clinical Trial Simulator - simulation output files, but can be used with any dataset in .csv format. 
+This app is designed to plot simulation results of clinical trials. Its main feature is allowing users to simultaneously investigate the impact of several simulation input dimensions through dynamic filtering of the simulation results. A more detailed description of the core app can be found in [Meyer et al](https://www.softxjournal.com/action/showPdf?pii=S2352-7110%2823%2900043-2). Please note that the app has evolved since the paper was published. The app is optimized for [FACTS](https://www.berryconsultants.com/software/facts/) - Fixed and Adaptive Clinical Trial Simulator - simulation output files, but can be used with any dataset in .csv format. 
 
 The app can be installed and run locally, or accessed through the [live version](https://shiny.berryconsultants.com/airship/).
 

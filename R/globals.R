@@ -1,0 +1,11 @@
+utils::globalVariables(
+  c(
+    "data_filtered",
+    "OC",
+    "value",
+    "name",
+    "Dose",
+    "Flags",
+    "Random.Number.Seed"
+    )
+  )

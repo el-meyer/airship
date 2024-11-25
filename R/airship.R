@@ -544,34 +544,34 @@ airship <- function(
             shiny::fluidRow(
               shiny::column(
                 width = 3,
-                airship:::fnDefaultValueDropdownUI("boxplot"),
+                fnDefaultValueDropdownUI("boxplot"),
                 shiny::hr(),
-                airship:::fnTogglePlotlyUI("boxplot"),
-                airship:::fnStyleOptionsUI("boxplot"),
-                airship:::fnDownloadUI("boxplot"),
+                fnTogglePlotlyUI("boxplot"),
+                fnStyleOptionsUI("boxplot"),
+                fnDownloadUI("boxplot"),
                 shiny::hr()
               ),
               
               shiny::column(
                 width = 3,
-                airship:::fnXYUI("boxplot"),
-                airship:::fnFacetGridUI("boxplot"),
+                fnXYUI("boxplot"),
+                fnFacetGridUI("boxplot"),
                 
               ),
               
               shiny::column(
                 width = 3,
-                airship:::fnColorUI("boxplot")
+                fnColorUI("boxplot")
               ),
               
               shiny::column(
                 width = 3,
-                airship:::fnBoxplotUI("boxplot")
+                fnBoxplotUI("boxplot")
               ),
               
             ),
             
-            airship:::fnStandardOutputUI("boxplot"),
+            fnStandardOutputUI("boxplot"),
             
           ),
           
@@ -582,34 +582,34 @@ airship <- function(
             shiny::fluidRow(
               shiny::column(
                 width = 3,
-                airship:::fnDefaultValueDropdownUI("scatterplot"),
+                fnDefaultValueDropdownUI("scatterplot"),
                 shiny::hr(),
-                airship:::fnTogglePlotlyUI("scatterplot"),
-                airship:::fnStyleOptionsUI("scatterplot"),
-                airship:::fnDownloadUI("scatterplot"),
+                fnTogglePlotlyUI("scatterplot"),
+                fnStyleOptionsUI("scatterplot"),
+                fnDownloadUI("scatterplot"),
                 shiny::hr()
               ),
               
               shiny::column(
                 width = 3,
-                airship:::fnXYUI("scatterplot"),
-                airship:::fnFacetGridUI("scatterplot"),
+                fnXYUI("scatterplot"),
+                fnFacetGridUI("scatterplot"),
                 
               ),
               
               shiny::column(
                 width = 3,
-                airship:::fnColorUI("scatterplot")
+                fnColorUI("scatterplot")
               ),
               
               shiny::column(
                 width = 3,
-                airship:::fnScatterplotUI("scatterplot")
+                fnScatterplotUI("scatterplot")
               ),
               
             ),
             
-            airship:::fnStandardOutputUI("scatterplot"),
+            fnStandardOutputUI("scatterplot"),
             
           ),
           
@@ -620,34 +620,34 @@ airship <- function(
             shiny::fluidRow(
               shiny::column(
                 width = 3,
-                airship:::fnDefaultValueDropdownUI("ldplot"),
+                fnDefaultValueDropdownUI("ldplot"),
                 shiny::hr(),
-                airship:::fnTogglePlotlyUI("ldplot"),
-                airship:::fnStyleOptionsUI("ldplot"),
-                airship:::fnDownloadUI("ldplot"),
+                fnTogglePlotlyUI("ldplot"),
+                fnStyleOptionsUI("ldplot"),
+                fnDownloadUI("ldplot"),
                 shiny::hr()
               ),
               
               shiny::column(
                 width = 3,
-                airship:::fnXYUI("ldplot"),
-                airship:::fnFacetGridUI("ldplot"),
+                fnXYUI("ldplot"),
+                fnFacetGridUI("ldplot"),
                 
               ),
               
               shiny::column(
                 width = 3,
-                airship:::fnLDplotColorUI("ldplot")
+                fnLDplotColorUI("ldplot")
               ),
               
               shiny::column(
                 width = 3,
-                airship:::fnLDplotUI("ldplot")
+                fnLDplotUI("ldplot")
               ),
               
             ),
             
-            airship:::fnStandardOutputUI("ldplot"),
+            fnStandardOutputUI("ldplot"),
             
           ),
           
@@ -686,6 +686,8 @@ airship <- function(
     input, 
     output
   ){
+    
+    data_filtered <- NULL # only for CRAN check global variables
     
     ## dfData check ----
     ## Check if dataset was provided and if yes, hide upload
@@ -775,7 +777,7 @@ airship <- function(
         
         dfCandidate <-
           tryCatch({ 
-            airship:::fnReadCSV(
+            fnReadCSV(
               inFile$datapath,
               header = TRUE,
               sep = input$sep,
@@ -796,7 +798,7 @@ airship <- function(
         
         dfCandidate <-
           try(
-            airship:::fnReadFacts(
+            fnReadFacts(
               inFile$datapath,
               bUseFread = dt_pkg_available
             )
@@ -817,7 +819,7 @@ airship <- function(
           
           dfCandidate <- 
             tryCatch({ 
-              airship:::fnPivotLongerTreatmentFacts(
+              fnPivotLongerTreatmentFacts(
                 dfData = dfCandidate,
                 nDoses = input$nDoses
               )
@@ -891,7 +893,7 @@ airship <- function(
             
             dfData <- 
               tryCatch({ 
-                airship:::fnPivotLongerTreatmentFacts(
+                fnPivotLongerTreatmentFacts(
                   dfData = dfData,
                   nDoses = input$nDoses
                 )
@@ -1229,20 +1231,20 @@ airship <- function(
     # Enable/Disable Plotly ----
     
     # Enable/Disable Plotly toggle based on some threshold in number of rows
-    airship:::fnDisablePlotlyToggleServer(
+    fnDisablePlotlyToggleServer(
       cID = "boxplot",
       data = shiny::reactive({boxplot_get()$lData}),
       global_session = session
     )
     
-    airship:::fnDisablePlotlyToggleServer(
+    fnDisablePlotlyToggleServer(
       cID = "scatterplot",
       data = shiny::reactive({scatterplot_get()$lData}),
       global_session = session
     )
     
     # This makes the app crash sometimes and LDPlot disappear.
-    airship:::fnDisablePlotlyToggleServer(
+    fnDisablePlotlyToggleServer(
       cID = "ldplot",
       data = shiny::reactive({ldplot_get()$lData}),
       global_session = session
@@ -1958,23 +1960,23 @@ airship <- function(
     
     shiny::observe({
       
-      airship:::fnXYUpdateInput(
+      fnXYUpdateInput(
         cID = "boxplot",
         cNamesX = names_unagg_intORfactorLong(),
         cNamesY = names_outputsR_unaggregated()
       )
       
-      airship:::fnFacetGridUpdateInput(
+      fnFacetGridUpdateInput(
         cID = "boxplot",
         cNamesInputs = names_unagg_intORfactorShort()
       )
       
-      airship:::fnColorUpdateInput(
+      fnColorUpdateInput(
         cID = "boxplot",
         cNamesInputs = names_unagg_intORfactorLong()
       )
       
-      airship:::fnDownloadUpdateInput(
+      fnDownloadUpdateInput(
         cID = "boxplot"
       )
       
@@ -1982,7 +1984,7 @@ airship <- function(
     
     #### Create Color Dropdown ----
     shiny::observe({
-      airship:::fnColorCreateDropdown(
+      fnColorCreateDropdown(
         cID = "boxplot",
         dfPrefilter = data_prefiltered()
       )
@@ -2001,7 +2003,7 @@ airship <- function(
       
       ##### Initial plot data 
       lPlot$lData <-
-        airship:::fnDynFilterData(
+        fnDynFilterData(
           cID = "boxplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
@@ -2017,28 +2019,28 @@ airship <- function(
       
       ##### Boxplot specific function 
       lPlot <-
-        airship:::fnBoxplotServer(
+        fnBoxplotServer(
           cID = "boxplot",
           lPlot = lPlot
         )
       
       ##### XY 
       lPlot <- 
-        airship:::fnXYServer(
+        fnXYServer(
           cID = "boxplot",
           lPlot = lPlot
         )
       
       ##### Facet 
       lPlot <-
-        airship:::fnFacetGridServer(
+        fnFacetGridServer(
           cID = "boxplot",
           lPlot = lPlot
         )
       
       ##### Color 
       lPlot <- 
-        airship:::fnColorServer(
+        fnColorServer(
           cID = "boxplot",
           lPlot = lPlot,
           dfPrefilter = data_prefiltered()
@@ -2046,14 +2048,14 @@ airship <- function(
       
       ##### Style Options 
       lPlot <- 
-        airship:::fnStyleOptionsServer(
+        fnStyleOptionsServer(
           cID = "boxplot",
           lPlot = lPlot
         )
       
       ##### Final Plot Data 
       lPlot$lData <-
-        airship:::fnDynFilterData(
+        fnDynFilterData(
           cID = "boxplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
@@ -2072,7 +2074,7 @@ airship <- function(
     })
     
     #### Display DV Dropdown ------
-    airship:::fnDefaultValueDropdownServer(
+    fnDefaultValueDropdownServer(
       cID = "boxplot",
       dfDefaultValues = defaults_input
     )
@@ -2080,7 +2082,7 @@ airship <- function(
     #### Create Standard Output -----
     shiny::observe({
       cID <- "boxplot"
-      airship:::fnStandardOutputServer(
+      fnStandardOutputServer(
         cID = cID,
         lPlot = boxplot_get,
         plotWidth = reactive(input[[paste0(cID, "plotwidth")]]),
@@ -2089,7 +2091,7 @@ airship <- function(
     })
     
     #### Download Handler ------
-    airship:::fnDownloadServer(
+    fnDownloadServer(
       cID = "boxplot",
       lPlot = boxplot_get
     )
@@ -2101,23 +2103,23 @@ airship <- function(
     
     shiny::observe({
       
-      airship:::fnXYUpdateInput(
+      fnXYUpdateInput(
         cID = "scatterplot",
         cNamesX = names_outputsR_unaggregated(),
         cNamesY = names_outputsR_unaggregated()
       )
       
-      airship:::fnFacetGridUpdateInput(
+      fnFacetGridUpdateInput(
         cID = "scatterplot",
         cNamesInputs = names_unagg_intORfactorShort()
       )
       
-      airship:::fnColorUpdateInput(
+      fnColorUpdateInput(
         cID = "scatterplot",
         cNamesInputs = names_unagg_intORfactorLong()
       )
       
-      airship:::fnDownloadUpdateInput(
+      fnDownloadUpdateInput(
         cID = "scatterplot"
       )
       
@@ -2125,7 +2127,7 @@ airship <- function(
     
     #### Create Color Dropdown ----
     shiny::observe({
-      airship:::fnColorCreateDropdown(
+      fnColorCreateDropdown(
         cID = "scatterplot",
         dfPrefilter = data_prefiltered()
       )
@@ -2144,7 +2146,7 @@ airship <- function(
       
       ##### Initial plot data 
       lPlot$lData <-
-        airship:::fnDynFilterData(
+        fnDynFilterData(
           cID = "scatterplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
@@ -2160,28 +2162,28 @@ airship <- function(
       
       ##### Boxplot specific function 
       lPlot <-
-        airship:::fnScatterplotServer(
+        fnScatterplotServer(
           cID = "scatterplot",
           lPlot = lPlot
         )
       
       ##### XY 
       lPlot <- 
-        airship:::fnXYServer(
+        fnXYServer(
           cID = "scatterplot",
           lPlot = lPlot
         )
       
       ##### Facet 
       lPlot <-
-        airship:::fnFacetGridServer(
+        fnFacetGridServer(
           cID = "scatterplot",
           lPlot = lPlot
         )
       
       ##### Color 
       lPlot <- 
-        airship:::fnColorServer(
+        fnColorServer(
           cID = "scatterplot",
           lPlot = lPlot,
           dfPrefilter = data_prefiltered()
@@ -2189,14 +2191,14 @@ airship <- function(
       
       ##### Style Options 
       lPlot <- 
-        airship:::fnStyleOptionsServer(
+        fnStyleOptionsServer(
           cID = "scatterplot",
           lPlot = lPlot
         )
       
       ##### Final Plot Data 
       lPlot$lData <-
-        airship:::fnDynFilterData(
+        fnDynFilterData(
           cID = "scatterplot",
           dfFilter = defaults_input(),
           dfData = data_prefiltered(),
@@ -2215,7 +2217,7 @@ airship <- function(
     })
     
     #### Display DV Dropdown ------
-    airship:::fnDefaultValueDropdownServer(
+    fnDefaultValueDropdownServer(
       cID = "scatterplot",
       dfDefaultValues = defaults_input
     )
@@ -2223,7 +2225,7 @@ airship <- function(
     #### Create Standard Output -----
     shiny::observe({
       cID <- "scatterplot"
-      airship:::fnStandardOutputServer(
+      fnStandardOutputServer(
         cID = cID,
         lPlot = scatterplot_get,
         plotWidth = reactive(input[[paste0(cID, "plotwidth")]]),
@@ -2232,7 +2234,7 @@ airship <- function(
     })
     
     #### Download Handler ------
-    airship:::fnDownloadServer(
+    fnDownloadServer(
       cID = "scatterplot",
       lPlot = scatterplot_get
     )
@@ -2244,23 +2246,23 @@ airship <- function(
     
     shiny::observe({
       
-      airship:::fnXYUpdateInput(
+      fnXYUpdateInput(
         cID = "ldplot",
         cNamesX = names_agg_intORfactorLong(),
         cNamesY = names_outputsR()
       )
       
-      airship:::fnFacetGridUpdateInput(
+      fnFacetGridUpdateInput(
         cID = "ldplot",
         cNamesInputs = names_agg_intORfactorShort()
       )
       
-      airship:::fnLDPlotUpdateInput(
+      fnLDPlotUpdateInput(
         cID = "ldplot",
         cNamesInputs = names_agg_intORfactorShort()
       )
       
-      airship:::fnDownloadUpdateInput(
+      fnDownloadUpdateInput(
         cID = "ldplot"
       )
       
@@ -2268,7 +2270,7 @@ airship <- function(
     
     #### Create Color Dropdown ----
     shiny::observe({
-      airship:::fnLDPlotColorCreateDropdown(
+      fnLDPlotColorCreateDropdown(
         cID = "ldplot",
         dfPrefilter = data_prefiltered(),
         cNamesOutput = names_outputsR(),
@@ -2278,7 +2280,7 @@ airship <- function(
     
     #### Create Error Bar Dropdown ----
     # shiny::observe({
-    #   airship:::fnLDPlotErrorbarUpdateInput(
+    #   fnLDPlotErrorbarUpdateInput(
     #     cID = "ldplot",
     #     cNamesOutputs = names_outputsR()
     #   )
@@ -2297,7 +2299,7 @@ airship <- function(
 
       ##### Initial plot data
       lPlot$lData <-
-        airship:::fnDynFilterData(
+        fnDynFilterData(
           cID = "ldplot",
           dfFilter = defaults_input(),
           dfData = data_filteredR(),
@@ -2313,28 +2315,28 @@ airship <- function(
 
       ##### LD Plot specific function
       lPlot <-
-        airship:::fnLDplotServer(
+        fnLDplotServer(
           cID = "ldplot",
           lPlot = lPlot
         )
 
       ##### XY
       lPlot <-
-        airship:::fnXYServer(
+        fnXYServer(
           cID = "ldplot",
           lPlot = lPlot
         )
 
       ##### Facet
       lPlot <-
-        airship:::fnFacetGridServer(
+        fnFacetGridServer(
           cID = "ldplot",
           lPlot = lPlot
         )
 
       ##### Color
       lPlot <-
-        airship:::fnLDPlotColorServer(
+        fnLDPlotColorServer(
           cID = "ldplot",
           lPlot = lPlot,
           dfPrefilter = data_prefiltered(),
@@ -2343,14 +2345,14 @@ airship <- function(
 
       ##### Style Options
       lPlot <-
-        airship:::fnStyleOptionsServer(
+        fnStyleOptionsServer(
           cID = "ldplot",
           lPlot = lPlot
         )
 
       ##### Final Plot Data
       lPlot$lData <-
-        airship:::fnDynFilterData(
+        fnDynFilterData(
           cID = "ldplot",
           dfFilter = defaults_input(),
           dfData = data_filteredR(),
@@ -2369,7 +2371,7 @@ airship <- function(
     })
 
     #### Display DV Dropdown ------
-    airship:::fnDefaultValueDropdownServer(
+    fnDefaultValueDropdownServer(
       cID = "ldplot",
       dfDefaultValues = defaults_input
     )
@@ -2377,7 +2379,7 @@ airship <- function(
     #### Create Standard Output -----
     shiny::observe({
       cID <- "ldplot"
-      airship:::fnStandardOutputServer(
+      fnStandardOutputServer(
         cID = cID,
         lPlot = ldplot_get,
         plotWidth = reactive(input[[paste0(cID, "plotwidth")]]),
@@ -2386,7 +2388,7 @@ airship <- function(
     })
 
     #### Download Handler ------
-    airship:::fnDownloadServer(
+    fnDownloadServer(
       cID = "ldplot",
       lPlot = ldplot_get
     )

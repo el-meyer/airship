@@ -60,7 +60,7 @@ fnReadFacts <- function(
   ) - 1
   
   dfCandidate <-
-    airship:::fnReadCSV(
+    fnReadCSV(
       file,
       header = TRUE,
       sep = ",",

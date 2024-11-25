@@ -5,3 +5,17 @@
 ^docs$
 ^doc$
 ^logo$
+^pkgdown$
+^man/figures$
+^man/logo.png$
+^vignettes/Example1\.Rmd$
+^vignettes/Example2\.Rmd$
+^vignettes/IntegrationFACTS\.Rmd$
+^vignettes/Example1\.html$
+^vignettes/Example2\.html$
+^vignettes/IntegrationFACTS\.html$
+^vignettes/Example1\.R$
+^vignettes/Example2\.R$
+^vignettes/IntegrationFACTS\.R$
+^vignettes/Data$
+^vignettes/Images$

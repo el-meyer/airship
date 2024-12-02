@@ -1,4 +1,4 @@
-#' Runs the app "AIRSHIP".
+#' Runs the Shiny app "AIRSHIP".
 #'
 #' @param dfData Dataset that should be plotted by Airship; can be NULL if 
 #'               upload should be done within the app.
@@ -15,9 +15,8 @@
 #'
 #' @examples
 #'
-#' \dontrun{
+#' if(interactive()){
 #' airship()
-#' airship(data)
 #' }
 #' 
 #' # See Vignette.

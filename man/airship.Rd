@@ -2,7 +2,7 @@
 % Please edit documentation in R/airship.R
 \name{airship}
 \alias{airship}
-\title{Runs the app "AIRSHIP".}
+\title{Runs the Shiny app "AIRSHIP".}
 \usage{
 airship(
   dfData = NULL,
@@ -27,13 +27,12 @@ Character name of simulation replication variable.}
 No return value
 }
 \description{
-Runs the app "AIRSHIP".
+Runs the Shiny app "AIRSHIP".
 }
 \examples{
 
-\dontrun{
+if(interactive()){
 airship()
-airship(data)
 }
 
 # See Vignette.

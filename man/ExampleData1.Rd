@@ -16,10 +16,7 @@ Outcomes depend on four input variables in a very simple manner.
 For each set of input variables, 1000 replications are simulated.
 }
 \examples{
- 
-\dontrun{
-library(mvtnorm)
-
+\donttest{
 input1 <- c("A", "B", "C")
 input2 <- c(1, 2, 3)
 input3 <- c("Z", "Y", "X")
@@ -40,9 +37,9 @@ for (i in 1:nrow(scenarios)) {
   var <- ifelse(scenarios$input1[i] == "A", 1, 10)
   cor <- ifelse(scenarios$input3[i] == "Z", 0.7, 0.1)
   
-  out <- rmvnorm(
+  out <- mvtnorm::rmvnorm(
     1, 
-    mean = c(scenarios$input1[i], scenarios$input3[i]),
+    mean = c(scenarios$input2[i], scenarios$input4[i]),
     sigma = matrix(c(var, cor, cor, var), nrow = 2)
   )
   
@@ -52,7 +49,7 @@ for (i in 1:nrow(scenarios)) {
 }
 
 ExampleData1 <- scenarios
-usethis::use_data(ExampleData1)
+# usethis::use_data(ExampleData1)
 }
 }
 \keyword{datasets}

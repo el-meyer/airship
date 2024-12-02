@@ -1,6 +1,6 @@
 Package: airship
 Title: Visualization of Simulated Datasets with Multiple Simulation Input Dimensions
-Version: 1.4.2
+Version: 1.4.3
 Authors@R: 
     c(
         person(
@@ -58,7 +58,8 @@ Imports:
     shinyjs,
     data.table,
     shinyalert,
-    vctrs
+    vctrs,
+    mvtnorm
 LazyData: true
 Suggests: 
     knitr,

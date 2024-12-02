@@ -101,72 +101,75 @@ airship <- function(
     )
   }
   
-  # Install dependencies --------
-  dependencies <- c(
-    "shiny",
-    "DT",
-    "shinybusy",
-    "plotly",
-    "dplyr",
-    "tidyselect",
-    "tidyr",
-    "stringr",
-    "shinyBS",
-    "colourpicker",
-    "shinyWidgets",
-    "shinydashboard",
-    "scales",
-    "Cairo",
-    "ggplot2",
-    "rlang",
-    "magrittr",
-    "shinyjs",
-    "data.table",
-    "shinyalert",
-    "vctrs"
-  )
-  
   "%>%" <- dplyr::"%>%"
   
-  installed_packages_ <- utils::installed.packages()[ ,"Package"]
-  ind_missing_package <- !dependencies %in% installed_packages_
+  # Part below commented out after adding to CRAN
+  # # Install dependencies --------
+  # dependencies <- c(
+  #   "shiny",
+  #   "DT",
+  #   "shinybusy",
+  #   "plotly",
+  #   "dplyr",
+  #   "tidyselect",
+  #   "tidyr",
+  #   "stringr",
+  #   "shinyBS",
+  #   "colourpicker",
+  #   "shinyWidgets",
+  #   "shinydashboard",
+  #   "scales",
+  #   "Cairo",
+  #   "ggplot2",
+  #   "rlang",
+  #   "magrittr",
+  #   "shinyjs",
+  #   "data.table",
+  #   "shinyalert",
+  #   "vctrs"
+  # )
+  # 
+  # installed_packages_ <- utils::installed.packages()[ ,"Package"]
+  # ind_missing_package <- !dependencies %in% installed_packages_
+  # 
+  # if (any(ind_missing_package)) {
+  #   n_missing_packages <- sum(ind_missing_package)
+  #   stop(
+  #     "Some dependencies are missing. Please install ",
+  #     ifelse(
+  #       n_missing_packages == 1, 
+  #       "the", 
+  #       "these"
+  #     ),
+  #     " missing package",
+  #     ifelse(
+  #       n_missing_packages > 1, 
+  #       "s", 
+  #       ""
+  #     ),
+  #     " by running :\n ",
+  #     "install.packages(",
+  #     ifelse(
+  #       n_missing_packages > 1, 
+  #       "c('", 
+  #       "'"
+  #     ),
+  #     paste0(
+  #       "", 
+  #       dependencies[ind_missing_package], 
+  #       collapse = "','"
+  #     ),
+  #     ifelse(
+  #       n_missing_packages > 1, 
+  #       "'))", 
+  #       "')"
+  #     )
+  #   )
+  # }
+  # 
+  # dt_pkg_available <- "data.table" %in% installed_packages_
   
-  if (any(ind_missing_package)) {
-    n_missing_packages <- sum(ind_missing_package)
-    stop(
-      "Some dependencies are missing. Please install ",
-      ifelse(
-        n_missing_packages == 1, 
-        "the", 
-        "these"
-      ),
-      " missing package",
-      ifelse(
-        n_missing_packages > 1, 
-        "s", 
-        ""
-      ),
-      " by running :\n ",
-      "install.packages(",
-      ifelse(
-        n_missing_packages > 1, 
-        "c('", 
-        "'"
-      ),
-      paste0(
-        "", 
-        dependencies[ind_missing_package], 
-        collapse = "','"
-      ),
-      ifelse(
-        n_missing_packages > 1, 
-        "'))", 
-        "')"
-      )
-    )
-  }
-  
-  dt_pkg_available <- "data.table" %in% installed_packages_
+  dt_pkg_available <- TRUE
   
   # Global Options ----
   options(shiny.sanitize.errors = FALSE) 

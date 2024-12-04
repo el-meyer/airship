@@ -40,6 +40,5 @@
 #' }
 #' 
 #' ExampleData1 <- scenarios
-#' # usethis::use_data(ExampleData1)
 #' }
 "ExampleData1"

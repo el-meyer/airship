@@ -49,7 +49,6 @@ for (i in 1:nrow(scenarios)) {
 }
 
 ExampleData1 <- scenarios
-# usethis::use_data(ExampleData1)
 }
 }
 \keyword{datasets}

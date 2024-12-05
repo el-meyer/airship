@@ -103,16 +103,20 @@
 <div class="section level2">
 <h2 id="installation-and-execution">Installation and Execution<a class="anchor" aria-label="anchor" href="#installation-and-execution"></a>
 </h2>
-<p>You can install the latest stable version from <a href="https://github.com/el-meyer/airship" class="external-link">GitHub</a> using:</p>
+<p>You have a choice of installing <em>airship</em> from either CRAN or Github. Github offers both the latest stable version, as well as the development version. CRAN offers a stable version that is either consistent with the latest stable version on Github, or older.</p>
+<p>You can install the latest stable version from <a href="https://cran.r-project.org/web/packages/airship/index.html" class="external-link">CRAN</a> using</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"el-meyer/airship@*release"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"airship"</span><span class="op">)</span></span></code></pre></div>
 <p>and run the app using:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">airship</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/airship.html">airship</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>The development version can be installed using:</p>
+<p>You can install the latest stable version from <a href="https://github.com/el-meyer/airship" class="external-link">GitHub</a> using:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"el-meyer/airship@*release"</span><span class="op">)</span></span></code></pre></div>
+<p>The development version can be installed using:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"el-meyer/airship"</span><span class="op">)</span></span></code></pre></div>
 <p>In some instances, the installation may fail and error with an uninformative “lazy-loading” error. Installing <a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link">Rtools</a> may solve the problem. This is particularly true when running Windows on a VM on an ARM based machine.</p>
@@ -135,6 +139,7 @@
     <div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=airship" class="external-link">View on CRAN</a></li>
 <li><a href="https://github.com/el-meyer/airship/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/el-meyer/airship/issues" class="external-link">Report a bug</a></li>
 </ul>

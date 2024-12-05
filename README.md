@@ -10,11 +10,12 @@ The app can be installed and run locally, or accessed through the [live version]
 
 ## Installation and Execution
 
-You can install the latest stable version from [GitHub](https://github.com/el-meyer/airship) using:
+You have a choice of installing *airship* from either CRAN or Github. Github offers both the latest stable version, as well as the development version. CRAN offers a stable version that is either consistent with the latest stable version on Github, or older.
+
+You can install the latest stable version from [CRAN](https://cran.r-project.org/web/packages/airship/index.html) using 
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("el-meyer/airship@*release")
+install.packages("airship")
 ```
 
 and run the app using:
@@ -22,6 +23,13 @@ and run the app using:
 ``` r
 library(airship)
 airship()
+```
+
+You can install the latest stable version from [GitHub](https://github.com/el-meyer/airship) using:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("el-meyer/airship@*release")
 ```
 
 The development version can be installed using:

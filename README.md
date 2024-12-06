@@ -39,7 +39,7 @@ The development version can be installed using:
 devtools::install_github("el-meyer/airship")
 ```
 
-In some instances, the installation may fail and error with an uninformative "lazy-loading" error. Installing [Rtools](https://cran.r-project.org/bin/windows/Rtools/) may solve the problem. This is particularly true when running Windows on a VM on an ARM based machine.
+In some instances, the installation may fail and error with an uninformative "lazy-loading" error. Installing [Rtools](https://cran.r-project.org/bin/windows/Rtools/) may solve the problem. This is particularly true when running Windows on a VM on an ARM based machine. We have included a troubleshooting guide [here](https://el-meyer.github.io/airship/articles/IntegrationFACTS.html#troubleshooting).
 
 ## Documentation
 

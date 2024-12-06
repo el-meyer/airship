@@ -39,25 +39,33 @@ FACTS will now open a Powershell terminal and run the required commands to run A
 Looking for more information on how to use AIRSHIP? Check out our examples that guide you through the usage and features step-by-step. You should start with [Example 1](https://el-meyer.github.io/airship/articles/Example1.html) and then go on to [Example 2](https://el-meyer.github.io/airship/articles/Example2.html), which is dedicated to FACTS data.
 
 
-# Troubleshooting
+# Troubleshooting {#troubleshooting}
 
-The easiest way to proceed if you have any issues with the AIRSHIP installation through the terminal is to open an instance of RGui or RStudio and try to install AIRSHIP manually using:
+The easiest way to proceed if you have any issues with the AIRSHIP installation through the terminal is to open an instance of RGui (not R Studio) and try to install AIRSHIP manually using either
+
+``` r
+install.packages("airship")
+```
+
+to get the latest stable version from CRAN, or
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("el-meyer/airship@*release")
 ```
 
-This will automatically install the latest stable release of AIRSHIP and throw readable error messages if the installation fails.
+to get the latest stable version from Github. 
 
 We are aware of the following issues:
 
--) Some machines, especially ARM based Windows machines, require installation of [Rtools](https://cran.r-project.org/bin/windows/Rtools/) prior to being able to install AIRSHIP. Failure to install Rtools might results in an uninformative lazy-loading error when trying to install AIRSHIP.
+-) Some machines, especially ARM based Windows machines, require installation of [Rtools](https://cran.r-project.org/bin/windows/Rtools/) prior to being able to install AIRSHIP. Make sure to install the correct version for your machine (i.e. if you are running an ARM machine, install the ARM version of Rtools). Failure to install Rtools might results in an uninformative lazy-loading error when trying to install AIRSHIP.
+
+-) Make sure to install the R version that is correct for your machine (i.e. if you are running an ARM machine, install [R for ARM](https://www.r-project.org/nosvn/winutf8/aarch64/R-4/)). 
+
+-) ARM Windows machines are not fully compatible with RStudio. Make sure to install AIRSHIP using the terminal or through RGui. 
 
 -) Some machines have permission errors when installing new R packages. You can easily test this by opening RGui and trying to install any packages from CRAN. If you get a permission error, the folder that is selected for package installation is not writeable. Often this is automatically solved by downloading and installing RStudio and installing any package from CRAN through RStudio.
 
 -) Sometimes, a lazy-load error appears related to some dependency not being installed properly. Try to re-install the dependency using RGui or RStudio; restarting your machine might also help. This is a common R issue. 
-
--) Some ARM based Windows machines, particularly when Windows is run in a virtual machine, require manual debugging and we are unable to offer a reproducible solution at this time.
 
 If you have troubles installing AIRSHIP and none of these solutions worked for you, please reach out to facts@berryconsultants.net, we are happy to help you.
